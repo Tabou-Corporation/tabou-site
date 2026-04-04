@@ -1,0 +1,26 @@
+[
+  {
+    "number": 1,
+    "title": "Prise de contact",
+    "description": "Rejoignez notre Discord et ouvrez un ticket de recrutement, ou contactez directement un officier en jeu. Présentez-vous brièvement : SP, expérience, disponibilité, ce que vous cherchez.",
+    "duration": "Immédiat"
+  },
+  {
+    "number": 2,
+    "title": "Entretien Discord",
+    "description": "Un officier vous contacte pour un échange vocal de 15-20 minutes. Pas de test, pas de QCM. Une conversation directe pour voir si le fit est mutuel.",
+    "duration": "1 à 3 jours"
+  },
+  {
+    "number": 3,
+    "title": "Période d'essai",
+    "description": "Si l'entretien est positif, vous intégrez Tabou avec le rang candidat. Période de 2-4 semaines pour valider l'engagement mutuel et la cohésion.",
+    "duration": "2 à 4 semaines"
+  },
+  {
+    "number": 4,
+    "title": "Intégration complète",
+    "description": "Après la période d'essai et validation collective, vous devenez membre à part entière. Accès complet aux ressources, aux systèmes et aux opérations.",
+    "duration": "Définitif"
+  }
+]

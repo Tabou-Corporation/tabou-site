@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Variables CSS globales ─────────────────────────────────────────────── */
+:root {
+  --color-bg-deep: #050403;
+  --color-bg-surface: #0d0f12;
+  --color-bg-elevated: #15191e;
+  --color-text-primary: #e8e1d3;
+  --color-text-secondary: #b8ae98;
+  --color-text-muted: #7a7268;
+  --color-gold: #f0b030;
+  --color-gold-light: #f7cc6a;
+  --color-gold-dark: #d08f30;
+  --color-border: #242830;
+}
+
+/* ─── Reset et base ───────────────────────────────────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-bg-deep text-text-primary font-body;
+    min-height: 100vh;
+  }
+
+  /* Sélection de texte */
+  ::selection {
+    background-color: rgba(240, 176, 48, 0.25);
+    color: var(--color-text-primary);
+  }
+
+  /* Scrollbar personnalisée (Webkit) */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(240, 176, 48, 0.3);
+  }
+
+  /* Focus visible global */
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+
+  /* Titres — font display par défaut */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  /* Liens de base */
+  a {
+    @apply text-inherit;
+  }
+}
+
+/* ─── Utilitaires personnalisés ───────────────────────────────────────────── */
+@layer utilities {
+  /* Texte avec dégradé gold */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #f7cc6a 0%, #f0b030 40%, #d08f30 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Barre décorative gold sous un titre */
+  .after-gold-bar::after {
+    content: '';
+    display: block;
+    width: 2.5rem;
+    height: 2px;
+    background: var(--color-gold);
+    margin-top: 0.75rem;
+  }
+
+  /* Container avec padding section cohérent */
+  .py-section {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+
+  .py-section-lg {
+    padding-top: 8rem;
+    padding-bottom: 8rem;
+  }
+
+  /* Visibilité conditionnelle (utilisé par les guards UI en V2+) */
+  .role-gated {
+    display: none;
+  }
+}
+
+/* ─── Composants globaux ──────────────────────────────────────────────────── */
+@layer components {
+  /* Ligne décorative gold */
+  .gold-line {
+    @apply block h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent;
+  }
+}

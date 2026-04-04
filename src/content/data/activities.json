@@ -1,0 +1,98 @@
+[
+  {
+    "id": "small-gang-pvp",
+    "name": "Small Gang PvP",
+    "category": "pvp",
+    "icon": "Crosshair",
+    "description": "Groupes de 5 à 15 pilotes, doctrine adaptée, engagement ciblé. La base de notre activité quotidienne en nul-sec.",
+    "tags": ["Nul-sec", "Flotte", "Doctrine"]
+  },
+  {
+    "id": "blops",
+    "name": "Black Ops",
+    "category": "pvp",
+    "icon": "Eye",
+    "description": "Cyno furtif, déploiement chirurgical, élimination de cibles à haute valeur. Réservé aux membres confirmés.",
+    "tags": ["Blops", "Furtif", "Haute valeur"]
+  },
+  {
+    "id": "roaming",
+    "name": "Roaming",
+    "category": "pvp",
+    "icon": "Navigation",
+    "description": "Sorties offensives dans les systèmes adjacents. Chercher le combat, documenter l'espace, évaluer les menaces.",
+    "tags": ["Offensif", "Nul-sec", "Roam"]
+  },
+  {
+    "id": "structure-warfare",
+    "name": "Structure Warfare",
+    "category": "pvp",
+    "icon": "Shield",
+    "description": "Anchoring, défense et destruction de structures. Participation aux opérations d'alliance selon les priorités stratégiques.",
+    "tags": ["Alliance", "Stratégique", "Structure"]
+  },
+  {
+    "id": "escalations",
+    "name": "Escalations & Anoms",
+    "category": "pve",
+    "icon": "Zap",
+    "description": "Anomalies nul-sec et escalades complexes. Revenus optimisés, risque géré, rotation organisée entre membres.",
+    "tags": ["Revenus", "Nul-sec", "PvE"]
+  },
+  {
+    "id": "incursions",
+    "name": "Incursions",
+    "category": "pve",
+    "icon": "Target",
+    "description": "Incursions Sansha coordinées. Participation selon disponibilité, isk/heure optimal.",
+    "tags": ["Incursion", "Sansha", "ISK"]
+  },
+  {
+    "id": "relic-data",
+    "name": "Exploration Relic / Data",
+    "category": "exploration",
+    "icon": "Compass",
+    "description": "Sites reliques et données en nul-sec et wormhole. Revenus variables, jeu en solo ou en duo discret.",
+    "tags": ["Exploration", "Solo", "Wormhole"]
+  },
+  {
+    "id": "wormhole-diving",
+    "name": "Wormhole Diving",
+    "category": "exploration",
+    "icon": "Globe",
+    "description": "Plongée dans les wormholes pour reconnaissance, pillage ou accès furtif. Risque élevé, récompense proportionnelle.",
+    "tags": ["WH", "Furtif", "Reconnaissance"]
+  },
+  {
+    "id": "production",
+    "name": "Production & Doctrine",
+    "category": "industry",
+    "icon": "Factory",
+    "description": "Fabrication des ships de doctrine, munitions, modules — contribution directe à la logistique opérationnelle.",
+    "tags": ["Industrie", "Doctrine", "Logistique"]
+  },
+  {
+    "id": "trade",
+    "name": "Commerce & Arbitrage",
+    "category": "industry",
+    "icon": "TrendingUp",
+    "description": "Achats en marché, arbitrage entre hubs, financement de la corp. Activité secondaire valorisée.",
+    "tags": ["Commerce", "ISK", "Marché"]
+  },
+  {
+    "id": "alliance-ops",
+    "name": "Opérations d'Alliance",
+    "category": "collective",
+    "icon": "Users",
+    "description": "Participation aux stratops et campagnes d'alliance. Présence attendue lors des appels prioritaires.",
+    "tags": ["Alliance", "Stratop", "Corp"]
+  },
+  {
+    "id": "intel-scanning",
+    "name": "Renseignement & Scan",
+    "category": "collective",
+    "icon": "Radio",
+    "description": "Surveillance des couloirs d'entrée, reporting d'activité hostile, scan de chaînes. Rôle essentiel souvent sous-estimé.",
+    "tags": ["Intel", "Scan", "Support"]
+  }
+]

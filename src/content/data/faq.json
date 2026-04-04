@@ -1,0 +1,86 @@
+[
+  {
+    "id": "faq-recrutement-1",
+    "category": "Recrutement",
+    "question": "Est-ce que le recrutement est ouvert ?",
+    "answer": "Oui, le recrutement est actuellement ouvert pour des profils sélectionnés. Nous recrutons en continu, mais nous acceptons peu. Consultez la page Recrutement pour connaître les profils recherchés."
+  },
+  {
+    "id": "faq-recrutement-2",
+    "category": "Recrutement",
+    "question": "Quel est le minimum de SP requis ?",
+    "answer": "Nous demandons généralement 20M SP minimum, mais ce n'est pas une règle absolue. Un profil de 15M SP très spécialisé et maîtrisé peut passer. L'expérience compte autant que les chiffres."
+  },
+  {
+    "id": "faq-recrutement-3",
+    "category": "Recrutement",
+    "question": "Est-ce que je dois parler français ?",
+    "answer": "Tabou est une corporation francophone. Le français est la langue principale sur Discord et en fleet. Une compréhension basique est suffisante si vous êtes bilingue, mais les fleets se font en français."
+  },
+  {
+    "id": "faq-recrutement-4",
+    "category": "Recrutement",
+    "question": "J'ai peu d'expérience en nul-sec. Puis-je quand même postuler ?",
+    "answer": "Si vous avez les SP, la volonté d'apprendre et un comportement mature, oui. Nous n'attendons pas des pilotes parfaits, mais des pilotes honnêtes sur leurs limites et disposés à progresser."
+  },
+  {
+    "id": "faq-corp-1",
+    "category": "Vie en corporation",
+    "question": "Y a-t-il un quota d'activité obligatoire ?",
+    "answer": "Non, il n'y a pas de quota de connexion ou de kill par semaine. Ce que nous attendons, c'est une présence cohérente dans le temps et une communication ouverte si vous devez vous absenter."
+  },
+  {
+    "id": "faq-corp-2",
+    "category": "Vie en corporation",
+    "question": "Est-ce qu'il y a un SRP (remplacement de ships) ?",
+    "answer": "Oui. Le SRP est actif pour les ships perdus en fleet officielle suivant la doctrine. Les pertes hors doctrine ou solo ne sont pas couvertes sauf exception décidée par les officiers."
+  },
+  {
+    "id": "faq-corp-3",
+    "category": "Vie en corporation",
+    "question": "Comment se passe le déménagement vers le homeworld ?",
+    "answer": "Nous aidons à l'intégration logistique via notre réseau de jump freighter et de couloirs WH. Les détails sont fournis lors de l'intégration. Prévoyez 1-2 semaines pour finaliser le déménagement."
+  },
+  {
+    "id": "faq-corp-4",
+    "category": "Vie en corporation",
+    "question": "Est-ce que je peux avoir des comptes alts ?",
+    "answer": "Oui, les alts sont les bienvenus. Nous demandons à les déclarer aux officiers lors de l'intégration pour des raisons de sécurité corp (OPSEC). Les alts industriels / scan sont particulièrement valorisés."
+  },
+  {
+    "id": "faq-jeu-1",
+    "category": "Jeu & Mécanique",
+    "question": "Quelle est votre timezone principale ?",
+    "answer": "Nous sommes principalement actifs en EU TZ (18h00-23h00 CET/CEST). Nous avons quelques membres US TZ mais la masse critique est européenne."
+  },
+  {
+    "id": "faq-jeu-2",
+    "category": "Jeu & Mécanique",
+    "question": "Avez-vous une doctrine imposée ?",
+    "answer": "Oui. Pour les fleets officielles, nous avons des doctrines définies pour garantir la cohésion et la lisibilité en combat. Les ships de doctrine sont accessibles via la corp ou fabriqués en interne. Le fitting solo est libre."
+  },
+  {
+    "id": "faq-jeu-3",
+    "category": "Jeu & Mécanique",
+    "question": "Est-ce que vous faites du wormhole ?",
+    "answer": "Nous utilisons les wormholes comme vecteurs d'accès et d'exploration, pas comme résidence principale. Des membres pratiquent l'exploration WH solo. Des opérations blops passent régulièrement par des chaînes WH."
+  },
+  {
+    "id": "faq-jeu-4",
+    "category": "Jeu & Mécanique",
+    "question": "Est-ce que Tabou fait partie d'une alliance ?",
+    "answer": "Nous opérons soit de façon indépendante soit via des arrangements avec des alliances partenaires selon la période. L'état actuel est communiqué lors de l'entretien de recrutement."
+  },
+  {
+    "id": "faq-start-1",
+    "category": "Par où commencer",
+    "question": "Comment postuler ?",
+    "answer": "Rejoignez notre Discord, ouvrez un ticket de recrutement et présentez-vous. Un officier vous répondra sous 48h. Vous pouvez aussi contacter directement un officier en jeu."
+  },
+  {
+    "id": "faq-start-2",
+    "category": "Par où commencer",
+    "question": "Je ne suis pas encore sûr de vouloir postuler. Je peux juste regarder ?",
+    "answer": "Oui. Le Discord est ouvert. Vous pouvez rejoindre, observer, poser des questions sans aucun engagement. Nous préférons un candidat qui prend le temps de comprendre qui nous sommes."
+  }
+]
