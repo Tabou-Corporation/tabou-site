@@ -139,8 +139,9 @@ export default function NewCalendarEventPage() {
                   </div>
                 </label>
 
-                {/* Champ caché pour envoyer "none" quand désactivé */}
-                <input type="hidden" name="recurrence" value={recurring ? undefined : "none"} />
+                {!recurring && (
+                  <input type="hidden" name="recurrence" value="none" />
+                )}
 
                 {recurring && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
