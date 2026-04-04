@@ -5,8 +5,9 @@ import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/fr";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, User, Check, HelpCircle, XCircle, Send, RefreshCw } from "lucide-react";
+import { X, Clock, User, Check, HelpCircle, XCircle, Send, RefreshCw, Trash2 } from "lucide-react";
 import { rsvpEvent, cancelRsvp, notifyDiscordEvent } from "@/lib/actions/rsvp";
+import { deleteCalendarEvent } from "@/lib/actions/content";
 import { cn } from "@/lib/utils/cn";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../app/(member)/membre/calendrier/calendar.css";
@@ -233,9 +234,9 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                 {/* Participants */}
                 <ParticipantList participations={selectedEvent.participations} currentUserId={currentUserId} />
 
-                {/* Discord — officer only */}
+                {/* Actions officer */}
                 {isOfficer && (
-                  <div className="pt-2 border-t border-border-subtle">
+                  <div className="pt-2 border-t border-border-subtle space-y-2">
                     <button
                       onClick={handleDiscord}
                       disabled={discordSent}
@@ -249,6 +250,16 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                       <Send size={14} />
                       {discordSent ? "Envoyé sur Discord ✓" : "Notifier sur Discord"}
                     </button>
+                    <form action={deleteCalendarEvent.bind(null, selectedEvent.eventId)}>
+                      <button
+                        type="submit"
+                        onClick={() => setSelectedEvent(null)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-red-400/20 text-red-400/60 rounded hover:border-red-400/50 hover:text-red-400 hover:bg-red-400/5 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                        Supprimer l&apos;événement
+                      </button>
+                    </form>
                   </div>
                 )}
               </div>
