@@ -15,6 +15,9 @@ build/
 .env.test.local
 .env.production.local
 
+# Backups DB (données potentiellement sensibles)
+backups/
+
 # Misc
 .DS_Store
 *.pem
