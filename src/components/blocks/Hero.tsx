@@ -208,14 +208,14 @@ export function Hero({
 
       {/* ── Scroll indicator ─────────────────────────────────────────── */}
       <div className="relative z-10 flex justify-center pb-6">
-        <div className="animate-bounce-slow flex flex-col items-center gap-1">
-          <span className="text-text-muted text-2xs tracking-widest uppercase">Découvrir</span>
+        <div className="animate-bounce-slow flex flex-col items-center gap-2">
+          <span className="text-gold animate-pulse text-sm font-semibold tracking-extra-wide uppercase">Découvrir</span>
           <svg
-            width="20"
-            height="20"
+            width="28"
+            height="28"
             viewBox="0 0 20 20"
             fill="none"
-            className="text-gold/60"
+            className="text-gold animate-pulse"
           >
             <path
               d="M10 4v10m0 0l-4-4m4 4l4-4"
