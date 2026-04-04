@@ -163,9 +163,13 @@ model CalendarEvent {
   startAt     DateTime
   endAt       DateTime?
   /// Type : op | training | social | other
-  type        String    @default("op")
-  authorId    String
-  createdAt   DateTime  @default(now())
+  type              String    @default("op")
+  /// Récurrence : none | weekly | biweekly | monthly
+  recurrence        String    @default("none")
+  /// Date de fin de récurrence (null = pas de récurrence)
+  recurrenceEndAt   DateTime?
+  authorId          String
+  createdAt         DateTime  @default(now())
 
   author         User                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
   participations EventParticipation[]

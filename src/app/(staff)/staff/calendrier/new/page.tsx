@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { createCalendarEvent } from "@/lib/actions/content";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/Separator";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 
 const inputClass = [
   "w-full bg-bg-elevated border rounded px-3 py-2.5",
@@ -23,8 +23,15 @@ const EVENT_TYPES = [
   { value: "other",    label: "Autre" },
 ];
 
+const RECURRENCE_OPTIONS = [
+  { value: "weekly",   label: "Chaque semaine" },
+  { value: "biweekly", label: "Toutes les 2 semaines" },
+  { value: "monthly",  label: "Chaque mois" },
+];
+
 export default function NewCalendarEventPage() {
   const [state, action, pending] = useActionState(createCalendarEvent, {});
+  const [recurring, setRecurring] = useState(false);
 
   return (
     <div className="py-10 sm:py-14">
@@ -41,7 +48,7 @@ export default function NewCalendarEventPage() {
 
         <div className="mb-8">
           <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-2">
-            Zone recrutement
+            Zone staff
           </p>
           <h1 className="font-display font-bold text-3xl text-text-primary">
             Nouvel événement
@@ -58,6 +65,8 @@ export default function NewCalendarEventPage() {
           </CardHeader>
           <CardBody>
             <form action={action} className="space-y-5">
+
+              {/* Titre + Type */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2 space-y-1.5">
                   <label className="block text-text-secondary text-sm font-medium">
@@ -81,31 +90,24 @@ export default function NewCalendarEventPage() {
                 </div>
               </div>
 
+              {/* Dates */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block text-text-secondary text-sm font-medium">
                     Date et heure de début <span className="text-red-400 text-xs">*</span>
                   </label>
-                  <input
-                    name="startAt"
-                    type="datetime-local"
-                    required
-                    className={inputClass}
-                  />
-                  <p className="text-text-muted text-xs">Heure locale — sera affiché en EVE Time (UTC)</p>
+                  <input name="startAt" type="datetime-local" required className={inputClass} />
+                  <p className="text-text-muted text-xs">Heure locale — affiché en EVE Time (UTC)</p>
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-text-secondary text-sm font-medium">
                     Fin <span className="text-text-muted font-normal">(optionnel)</span>
                   </label>
-                  <input
-                    name="endAt"
-                    type="datetime-local"
-                    className={inputClass}
-                  />
+                  <input name="endAt" type="datetime-local" className={inputClass} />
                 </div>
               </div>
 
+              {/* Description */}
               <div className="space-y-1.5">
                 <label className="block text-text-secondary text-sm font-medium">
                   Description <span className="text-text-muted font-normal">(optionnel)</span>
@@ -116,6 +118,55 @@ export default function NewCalendarEventPage() {
                   placeholder="Doctrine, objectif, point de rendez-vous…"
                   className={`${inputClass} resize-y`}
                 />
+              </div>
+
+              {/* Récurrence */}
+              <div className="border border-border-subtle rounded p-4 space-y-4">
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={recurring}
+                      onChange={(e) => setRecurring(e.target.checked)}
+                    />
+                    <div className="w-9 h-5 bg-bg-elevated border border-border rounded-full peer-checked:bg-gold/80 transition-colors" />
+                    <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-text-muted rounded-full transition-transform peer-checked:translate-x-4 peer-checked:bg-white" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RefreshCw size={14} className="text-text-muted" />
+                    <span className="text-sm font-medium text-text-secondary">Événement récurrent</span>
+                  </div>
+                </label>
+
+                {/* Champ caché pour envoyer "none" quand désactivé */}
+                <input type="hidden" name="recurrence" value={recurring ? undefined : "none"} />
+
+                {recurring && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <label className="block text-text-secondary text-sm font-medium">
+                        Se répète
+                      </label>
+                      <select name="recurrence" defaultValue="weekly" className={inputClass}>
+                        {RECURRENCE_OPTIONS.map((r) => (
+                          <option key={r.value} value={r.value}>{r.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-text-secondary text-sm font-medium">
+                        Jusqu&apos;au <span className="text-red-400 text-xs">*</span>
+                      </label>
+                      <input
+                        name="recurrenceEndAt"
+                        type="date"
+                        required={recurring}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {state.error && (

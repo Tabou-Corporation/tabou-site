@@ -6,6 +6,7 @@ import { hasMinRole } from "@/types/roles";
 import { Container } from "@/components/layout/Container";
 import { Separator } from "@/components/ui/Separator";
 import { CorpCalendar } from "@/components/blocks/CorpCalendar";
+import { expandRecurringEvents } from "@/lib/utils/recurrence";
 import { Plus } from "lucide-react";
 import type { UserRole } from "@/types/roles";
 
@@ -34,13 +35,23 @@ export default async function CalendrierPage() {
     orderBy: { startAt: "asc" },
   });
 
-  const serialized = events.map((e) => ({
-    id: e.id,
+  // Expand recurring events into individual occurrences
+  const expanded = expandRecurringEvents(
+    events.map((e) => ({
+      ...e,
+      recurrenceEndAt: e.recurrenceEndAt ?? null,
+    }))
+  );
+
+  const serialized = expanded.map(({ occurrenceId, startAt, endAt, base: e }) => ({
+    id: occurrenceId,
+    eventId: e.id,
     title: e.title,
     type: e.type,
     description: e.description,
-    startAt: e.startAt,
-    endAt: e.endAt,
+    recurrence: e.recurrence,
+    startAt,
+    endAt,
     authorName: e.author.name,
     participations: e.participations.map((p) => ({
       userId: p.userId,
@@ -49,7 +60,8 @@ export default async function CalendrierPage() {
     })),
   }));
 
-  const upcomingCount = events.filter(e => e.startAt >= new Date()).length;
+  const now = new Date();
+  const upcomingCount = serialized.filter(e => e.startAt >= now).length;
   const myRsvpCount   = events.filter(e =>
     e.participations.some(p => p.userId === session.user.id && p.status === "GOING")
   ).length;

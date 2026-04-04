@@ -128,6 +128,8 @@ export async function createCalendarEvent(
   if (!["op", "training", "social", "other"].includes(type)) return { error: "Type d'événement invalide." };
   const startAtRaw = formData.get("startAt") as string | null;
   const endAtRaw = formData.get("endAt") as string | null;
+  const recurrence = (formData.get("recurrence") as string | null) ?? "none";
+  const recurrenceEndAtRaw = formData.get("recurrenceEndAt") as string | null;
 
   if (!title) return { error: "Le titre est requis." };
   if (!startAtRaw) return { error: "La date de début est requise." };
@@ -137,6 +139,15 @@ export async function createCalendarEvent(
 
   if (isNaN(startAt.getTime())) return { error: "Date de début invalide." };
 
+  if (!["none", "weekly", "biweekly", "monthly"].includes(recurrence)) {
+    return { error: "Récurrence invalide." };
+  }
+
+  const recurrenceEndAt = recurrenceEndAtRaw ? new Date(recurrenceEndAtRaw) : null;
+  if (recurrence !== "none" && !recurrenceEndAt) {
+    return { error: "Une date de fin est requise pour les événements récurrents." };
+  }
+
   await prisma.calendarEvent.create({
     data: {
       title,
@@ -144,6 +155,8 @@ export async function createCalendarEvent(
       type,
       startAt,
       ...(endAt ? { endAt } : {}),
+      recurrence,
+      ...(recurrenceEndAt ? { recurrenceEndAt } : {}),
       authorId: user.id!,
     },
   });

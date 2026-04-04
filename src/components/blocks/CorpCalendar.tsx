@@ -5,7 +5,7 @@ import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/fr";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, User, Check, HelpCircle, XCircle, Send } from "lucide-react";
+import { X, Clock, User, Check, HelpCircle, XCircle, Send, RefreshCw } from "lucide-react";
 import { rsvpEvent, cancelRsvp, notifyDiscordEvent } from "@/lib/actions/rsvp";
 import { cn } from "@/lib/utils/cn";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -19,10 +19,12 @@ const localizer = momentLocalizer(moment);
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface CalendarEvent {
-  id: string;
+  id: string;         // occurrenceId (unique par occurrence)
+  eventId: string;    // id base de l'événement (pour RSVP)
   title: string;
   type: string;
   description: string | null;
+  recurrence: string;
   startAt: Date;
   endAt: Date | null;
   authorName: string | null;
@@ -172,6 +174,20 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                   </div>
                 </div>
 
+                {/* Récurrence */}
+                {selectedEvent.recurrence !== "none" && (
+                  <div className="flex items-center gap-3">
+                    <RefreshCw size={16} className="text-text-muted flex-shrink-0" />
+                    <p className="text-sm text-text-secondary">
+                      {{
+                        weekly:   "Se répète chaque semaine",
+                        biweekly: "Se répète toutes les 2 semaines",
+                        monthly:  "Se répète chaque mois",
+                      }[selectedEvent.recurrence] ?? "Récurrent"}
+                    </p>
+                  </div>
+                )}
+
                 {/* Organisateur */}
                 <div className="flex items-center gap-3">
                   <User size={16} className="text-text-muted flex-shrink-0" />
@@ -196,7 +212,7 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                     Ma participation
                   </p>
                   <RsvpButtons
-                    eventId={selectedEvent.id}
+                    eventId={selectedEvent.eventId}
                     currentStatus={
                       selectedEvent.participations.find(p => p.userId === currentUserId)?.status ?? null
                     }
