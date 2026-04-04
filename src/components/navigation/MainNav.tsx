@@ -63,10 +63,10 @@ export function MainNav() {
               aria-label="Tabou — Accueil"
             >
               <Image
-                src={CORPORATIONS.tabou.logoUrl(64)}
+                src={CORPORATIONS.tabou.logoUrl(128)}
                 alt="Logo Tabou"
-                width={40}
-                height={40}
+                width={56}
+                height={56}
                 className="rounded-sm opacity-90 group-hover:opacity-100 transition-opacity duration-[180ms]"
                 unoptimized
               />

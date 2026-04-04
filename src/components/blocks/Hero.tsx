@@ -2,7 +2,6 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/layout/Container";
 import { cn } from "@/lib/utils/cn";
-import { CORPORATIONS } from "@/lib/constants/corporations";
 import type { CTAConfig } from "@/types/content";
 
 interface HeroStat {
@@ -109,20 +108,6 @@ export function Hero({
       {/* ── Contenu principal — centré ───────────────────────────────── */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
         <div className="max-w-2xl mx-auto text-center animate-fade-in">
-          {/* Logo corporation */}
-          <div className="flex items-center justify-center gap-4 mb-10">
-            <Image
-              src={CORPORATIONS.tabou.logoUrl(128)}
-              alt="Tabou Corporation"
-              width={80}
-              height={80}
-              className="rounded-md border border-gold/30 shadow-lg shadow-gold/10 sm:w-[96px] sm:h-[96px]"
-              unoptimized
-            />
-            <p className="font-display font-bold text-2xl sm:text-3xl text-text-primary tracking-[0.25em]">
-              TABOU
-            </p>
-          </div>
 
           {eyebrow && (
             <p className="text-gold text-xs sm:text-sm font-semibold tracking-extra-wide uppercase mb-4">
