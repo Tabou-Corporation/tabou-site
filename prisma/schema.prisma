@@ -99,8 +99,10 @@ model Application {
   status      ApplicationStatus @default(PENDING)
   /// Skillpoints déclarés par le candidat
   spCount       Int?
-  /// Pseudo Discord du candidat (pour contact recruteur)
+  /// Pseudo Discord du candidat (lisibilité)
   discordHandle String?
+  /// ID numérique Discord — permet le lien direct discord.com/users/{id}
+  discordId     String?
   /// Disponibilités / timezone déclarées par le candidat
   availability  String?
   /// Texte de motivation

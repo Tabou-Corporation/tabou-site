@@ -22,11 +22,15 @@ export async function submitApplication(
   if (!session?.user?.id) return { error: "Non authentifié." };
 
   const discordHandle = (formData.get("discordHandle") as string | null)?.trim() ?? "";
+  const discordId     = (formData.get("discordId")     as string | null)?.trim().replace(/\D/g, "") || null;
   const availability  = (formData.get("availability")  as string | null)?.trim() || null;
   const motivation    = (formData.get("motivation")     as string | null)?.trim() ?? "";
   const spCountRaw    =  formData.get("spCount") as string | null;
 
   if (!discordHandle) return { error: "Le pseudo Discord est requis." };
+  if (discordId && !/^\d{17,20}$/.test(discordId)) {
+    return { error: "L'ID Discord doit être un nombre de 17 à 20 chiffres." };
+  }
   if (!motivation)    return { error: "La motivation est requise." };
 
   const spCount = spCountRaw ? parseInt(spCountRaw, 10) : null;
@@ -44,6 +48,7 @@ export async function submitApplication(
     data: {
       userId: session.user.id,
       discordHandle,
+      discordId,
       availability,
       motivation,
       spCount,

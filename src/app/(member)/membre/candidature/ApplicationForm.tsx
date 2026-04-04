@@ -78,6 +78,34 @@ export function ApplicationForm() {
         </p>
       </div>
 
+      {/* ID Discord — optionnel mais permet le lien direct */}
+      <div className="space-y-1.5">
+        <label htmlFor="discordId" className="block text-text-secondary text-sm font-medium">
+          ID Discord <span className="text-text-muted font-normal">(optionnel — recommandé)</span>
+        </label>
+        <input
+          id="discordId"
+          name="discordId"
+          type="text"
+          inputMode="numeric"
+          placeholder="ex: 123456789012345678"
+          className={inputClass}
+        />
+        <details className="group">
+          <summary className="text-text-muted text-xs cursor-pointer hover:text-text-secondary transition-colors list-none flex items-center gap-1">
+            <span className="group-open:hidden">▶</span>
+            <span className="hidden group-open:inline">▼</span>
+            Comment trouver mon ID Discord ?
+          </summary>
+          <ol className="mt-2 space-y-1 text-text-muted text-xs leading-relaxed list-decimal list-inside pl-1 border-l border-border-subtle ml-2 pl-3">
+            <li>Ouvre Discord → Paramètres (⚙) → Confidentialité et sécurité</li>
+            <li>Active le <strong className="text-text-secondary">Mode développeur</strong></li>
+            <li>Reviens sur ton profil, fais un clic droit sur ton nom</li>
+            <li>Clique sur <strong className="text-text-secondary">Copier l&apos;identifiant</strong></li>
+          </ol>
+        </details>
+      </div>
+
       {/* Skillpoints */}
       <div className="space-y-1.5">
         <label htmlFor="spCount" className="block text-text-secondary text-sm font-medium">
