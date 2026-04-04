@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { CheckCircle } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Section, SectionHeader } from "@/components/blocks/Section";
 import { CTAPanel } from "@/components/blocks/CTAPanel";

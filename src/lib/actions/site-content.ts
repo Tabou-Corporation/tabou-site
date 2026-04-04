@@ -3,8 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
-import { revalidateTag } from "next/cache";
-import { SITE_CONTENT_TAG } from "@/lib/site-content/loader";
+import { revalidatePath } from "next/cache";
 import type { UserRole } from "@/types/roles";
 import type { PageKey } from "@/lib/site-content/types";
 
@@ -16,6 +15,16 @@ const VALID_PAGES: PageKey[] = [
   "activities",
   "contact",
 ];
+
+/** Chemin public correspondant à chaque clé de page */
+const PAGE_PATHS: Record<PageKey, string> = {
+  home:        "/",
+  corporation: "/corporation",
+  recruitment: "/recrutement",
+  faq:         "/faq",
+  activities:  "/activites",
+  contact:     "/contact",
+};
 
 export interface SaveContentState {
   error?: string;
@@ -61,9 +70,10 @@ export async function saveSiteContentAction(
     },
   });
 
-  // Invalider le cache pour cette page et le tag global
-  revalidateTag(SITE_CONTENT_TAG);
-  revalidateTag(`site-content-${page}`);
+  // Invalider le cache HTML de la page publique concernée
+  revalidatePath(PAGE_PATHS[page as PageKey]);
+  // Toujours revalider la home (layout, nav, stats)
+  revalidatePath("/");
 
   return { success: true, page };
 }

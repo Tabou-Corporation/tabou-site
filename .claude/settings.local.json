@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(cmd /c \"taskkill /F /IM node.exe\")",
+      "Bash(cmd /c \"cd /D F:\\\\Documents\\\\Tabou && npx prisma generate 2>&1\")",
+      "Bash(cmd /c \"cd /D F:\\\\Documents\\\\Tabou && npx prisma generate\")",
+      "Bash(powershell -Command \"Get-Process node | Select-Object Id,CPU,WorkingSet | Format-Table\")",
+      "Bash(powershell -Command \"Stop-Process -Id 195352 -Force; Start-Sleep -Seconds 1; Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { ExternalLink, Clock } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Section } from "@/components/blocks/Section";
 import { Card, CardBody } from "@/components/ui/Card";

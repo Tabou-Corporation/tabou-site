@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 import { ArrowRight } from "lucide-react";
 
 import { Hero } from "@/components/blocks/Hero";

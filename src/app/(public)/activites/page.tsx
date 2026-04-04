@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Section, SectionHeader } from "@/components/blocks/Section";
 import { CTAPanel } from "@/components/blocks/CTAPanel";

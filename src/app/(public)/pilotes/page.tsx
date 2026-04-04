@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "Découvrez les pilotes actifs des corporations Tabou et Urban Zone.",
 };
 
-export const revalidate = 300; // rafraîchissement toutes les 5 min
+export const dynamic = "force-dynamic";
 
 export default async function PilotesPage() {
   const members = await prisma.user.findMany({
