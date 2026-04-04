@@ -53,15 +53,18 @@ export function Hero({
             quality={85}
             sizes="100vw"
           />
-          {/* Gradient overlay : sombre à gauche pour le texte, semi-transparent à droite pour l'image */}
+          {/* Gradient overlay : sombre gauche (texte), dégagé droite (image visible) */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-r from-bg-deep via-bg-deep/85 to-bg-deep/30"
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(to right, rgba(5,4,3,0.95) 0%, rgba(5,4,3,0.85) 35%, rgba(5,4,3,0.4) 60%, rgba(5,4,3,0.15) 100%)",
+            }}
           />
           {/* Gradient vertical : assombrir le haut (nav) et le bas (stats) */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-b from-bg-deep/70 via-transparent to-bg-deep/90"
+            className="absolute inset-0 bg-gradient-to-b from-bg-deep/60 via-transparent to-bg-deep/80"
           />
         </>
       ) : (
@@ -93,9 +96,9 @@ export function Hero({
         className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
 
-      {/* ── Contenu principal ────────────────────────────────────────── */}
+      {/* ── Contenu principal — ancré à gauche, 40% max ──────────────── */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
-        <div className="max-w-3xl animate-fade-in">
+        <div className="max-w-2xl animate-fade-in">
           {/* Logo corporation */}
           <div className="flex items-center gap-4 mb-10">
             <Image

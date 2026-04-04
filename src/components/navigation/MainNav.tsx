@@ -72,7 +72,7 @@ export function MainNav() {
                 unoptimized
               />
               <div className="flex flex-col leading-none">
-                <span className="font-display font-bold text-lg text-text-primary tracking-widest group-hover:text-gold transition-colors duration-[180ms]">
+                <span className="font-display font-bold text-xl sm:text-2xl text-text-primary tracking-widest group-hover:text-gold transition-colors duration-[180ms]">
                   TABOU
                 </span>
                 <span className="text-xs text-text-muted font-mono tracking-widest hidden sm:block mt-0.5">
