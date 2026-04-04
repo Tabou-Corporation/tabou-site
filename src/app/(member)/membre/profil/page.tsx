@@ -149,10 +149,6 @@ export default async function ProfilePage() {
               </CardBody>
             </Card>
 
-            <p className="text-text-muted text-xs leading-relaxed px-1">
-              Les données de skillpoints, killboard et assets seront disponibles en V6
-              via l&apos;intégration EVE ESI.
-            </p>
           </div>
         </div>
       </Container>
