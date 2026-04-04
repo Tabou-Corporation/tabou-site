@@ -28,6 +28,7 @@ function createEVEProvider(): OAuthConfig<EVECharacterProfile> {
     id: "eveonline",
     name: "EVE Online",
     type: "oauth",
+    issuer: "https://login.eveonline.com",
     clientId: process.env.EVE_CLIENT_ID ?? "",
     clientSecret: process.env.EVE_CLIENT_SECRET ?? "",
     authorization: {
