@@ -24,10 +24,10 @@ export const FEATURES = {
   recruiterDashboard: true,
 
   // ── V4 : Hub membre ───────────────────────────────────────────────────
-  memberGuides: false,
-  memberCalendar: false,
-  memberDirectory: false,
-  announcements: false,
+  memberGuides: true,
+  memberCalendar: true,
+  memberDirectory: true,
+  announcements: true,
 
   // ── V5 : Backoffice officier/admin ────────────────────────────────────
   adminPanel: false,

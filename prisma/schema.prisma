@@ -61,26 +61,25 @@ model VerificationToken {
 // ─── Tabou — User ─────────────────────────────────────────────────────────────
 
 model User {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   /// Nom du personnage EVE (issu du SSO)
   name          String?
-  /// Non fourni par EVE SSO — toujours null en V2
-  email         String?  @unique
+  /// Non fourni par EVE SSO — toujours null
+  email         String?   @unique
   emailVerified DateTime?
   /// URL du portrait EVE (images.evetech.net)
   image         String?
   /// Rôle dans la corporation — valeurs : public | candidate | member | recruiter | officer | admin
-  role          String   @default("candidate")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  role          String    @default("candidate")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
-
-  // V3+ :
-  applications Application[]
-  // V4+ : announcements Announcement[]
-  // V6+ : character    Character?
+  accounts      Account[]
+  sessions      Session[]
+  applications  Application[]
+  announcements Announcement[]
+  guides        Guide[]
+  events        CalendarEvent[]
 
   @@map("users")
 }
@@ -112,6 +111,58 @@ enum ApplicationStatus {
   INTERVIEW
   ACCEPTED
   REJECTED
+}
+
+// ─── V4 : Annonces ────────────────────────────────────────────────────────────
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  /// Épinglée sur le dashboard membre
+  pinned    Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("announcements")
+}
+
+// ─── V4 : Guides internes ─────────────────────────────────────────────────────
+
+model Guide {
+  id        String   @id @default(cuid())
+  title     String
+  /// Catégorie : general | pvp | logistics | fits | other
+  category  String   @default("general")
+  content   String   @db.Text
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("guides")
+}
+
+// ─── V4 : Calendrier opérations ───────────────────────────────────────────────
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  startAt     DateTime
+  endAt       DateTime?
+  /// Type : op | training | social | other
+  type        String    @default("op")
+  authorId    String
+  createdAt   DateTime  @default(now())
+
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("calendar_events")
 }
 
 // ─── V6+ : Characters ESI ────────────────────────────────────────────────────
