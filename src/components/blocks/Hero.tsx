@@ -156,7 +156,7 @@ export function Hero({
                   href={secondaryCTA.href}
                   variant={secondaryCTA.variant ?? "ghost"}
                   size="lg"
-                  className="animate-pulse"
+                  className="animate-pulse text-gold border-gold/50 hover:border-gold"
                   {...(secondaryCTA.external
                     ? { target: "_blank", rel: "noopener noreferrer" }
                     : {})}
