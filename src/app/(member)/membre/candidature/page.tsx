@@ -82,6 +82,17 @@ export default async function CandidaturePage() {
                   </p>
                 </div>
 
+                {application.discordHandle && (
+                  <div className="space-y-1">
+                    <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
+                      Discord
+                    </p>
+                    <p className="text-text-secondary text-sm font-mono">
+                      {application.discordHandle}
+                    </p>
+                  </div>
+                )}
+
                 {application.spCount && (
                   <div className="space-y-1">
                     <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
@@ -89,6 +100,17 @@ export default async function CandidaturePage() {
                     </p>
                     <p className="text-text-secondary text-sm">
                       {application.spCount.toLocaleString("fr-FR")} SP
+                    </p>
+                  </div>
+                )}
+
+                {application.availability && (
+                  <div className="space-y-1">
+                    <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
+                      Disponibilités
+                    </p>
+                    <p className="text-text-secondary text-sm">
+                      {application.availability}
                     </p>
                   </div>
                 )}

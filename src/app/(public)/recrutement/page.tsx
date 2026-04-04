@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { XCircle, CheckCircle, MessageSquare } from "lucide-react";
+import { XCircle, CheckCircle, Shield, MessageSquare } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/Button";
 import { getRecruitmentContent } from "@/lib/site-content/loader";
 import { RECRUITMENT_META } from "@/content/recruitment";
 import { SITE_CONFIG } from "@/config/site";
+import { auth } from "@/auth";
+import { hasMinRole } from "@/types/roles";
+import type { UserRole } from "@/types/roles";
 
 export const metadata: Metadata = {
   title: RECRUITMENT_META.title,
@@ -20,7 +23,15 @@ export const metadata: Metadata = {
 };
 
 export default async function RecruitmentPage() {
-  const recruitment = await getRecruitmentContent();
+  const [recruitment, session] = await Promise.all([
+    getRecruitmentContent(),
+    auth(),
+  ]);
+
+  const role        = (session?.user?.role ?? null) as UserRole | null;
+  const isCandidate = role === "candidate";
+  const isMember    = role ? hasMinRole(role, "member_uz") : false;
+  const isSuspended = role === "suspended";
 
   return (
     <>
@@ -73,26 +84,73 @@ export default async function RecruitmentPage() {
               </CardBody>
             </Card>
 
-            {/* Discord CTA block */}
+            {/* CTA Candidature */}
             <div className="bg-bg-elevated border border-border-accent rounded-md p-6 space-y-4">
               <div className="flex items-center gap-3">
-                <MessageSquare size={20} className="text-gold" aria-hidden />
+                <Shield size={20} className="text-gold" aria-hidden />
                 <h3 className="font-display font-semibold text-lg text-text-primary">
-                  Discord &mdash; point d&apos;entrée principal
+                  Postuler dans Tabou
                 </h3>
               </div>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Toutes les candidatures passent par Discord. Rejoignez le serveur, ouvrez un ticket de recrutement et présentez-vous.
-              </p>
-              <Button
-                as="a"
-                href={SITE_CONFIG.links.discord}
-                variant="primary"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Postuler sur Discord
-              </Button>
+
+              {/* Déjà membre */}
+              {isMember && (
+                <p className="text-gold text-sm font-semibold">
+                  Vous êtes déjà membre de la corporation.
+                </p>
+              )}
+
+              {/* Suspendu */}
+              {isSuspended && (
+                <p className="text-red-400 text-sm">
+                  Votre accès est suspendu. Contactez un officier sur Discord.
+                </p>
+              )}
+
+              {/* Candidature en cours */}
+              {isCandidate && !isSuspended && (
+                <>
+                  <p className="text-text-secondary text-sm leading-relaxed">
+                    Vous avez déjà un compte candidat. Consultez ou complétez votre candidature.
+                  </p>
+                  <Button as="a" href="/membre/candidature" variant="primary">
+                    Voir ma candidature
+                  </Button>
+                </>
+              )}
+
+              {/* Non connecté */}
+              {!session && (
+                <>
+                  <p className="text-text-secondary text-sm leading-relaxed">
+                    Connexion en un clic avec ton compte EVE Online.
+                    Aucune clé API requise — uniquement ton identité de personnage.
+                  </p>
+                  <Button
+                    as="a"
+                    href="/login?callbackUrl=/membre/candidature"
+                    variant="primary"
+                  >
+                    Postuler avec EVE Online
+                  </Button>
+                  <p className="text-text-muted text-xs">
+                    Après soumission, un recruteur te contactera sur Discord sous 48h.
+                  </p>
+                </>
+              )}
+
+              {/* Lien Discord secondaire — toujours visible */}
+              <div className="pt-2 border-t border-border-subtle">
+                <a
+                  href={SITE_CONFIG.links.discord}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-text-muted text-xs hover:text-text-secondary transition-colors"
+                >
+                  <MessageSquare size={12} />
+                  Rejoindre le Discord de la corporation
+                </a>
+              </div>
             </div>
           </div>
         </div>

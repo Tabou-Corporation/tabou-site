@@ -1,11 +1,5 @@
 {
   "permissions": {
-    "deny": [
-      "Bash(*--force-reset*)",
-      "Bash(*prisma migrate reset*)",
-      "Bash(*DROP TABLE*)",
-      "Bash(*DROP DATABASE*)"
-    ],
     "allow": [
       "WebSearch",
       "Bash(npm install:*)",
@@ -31,7 +25,14 @@
       "Bash(cmd /c \"netstat -ano | findstr :3000\")",
       "Bash(cmd /c \"netstat -ano\")",
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue | Select-Object LocalPort,State,OwningProcess\")",
-      "Bash(powershell -Command \"Stop-Process -Id 142040 -Force -ErrorAction SilentlyContinue; Stop-Process -Id 222776 -Force -ErrorAction SilentlyContinue; Write-Host ''Done''\")"
+      "Bash(powershell -Command \"Stop-Process -Id 142040 -Force -ErrorAction SilentlyContinue; Stop-Process -Id 222776 -Force -ErrorAction SilentlyContinue; Write-Host ''Done''\")",
+      "Bash(npx tsx:*)"
+    ],
+    "deny": [
+      "Bash(*--force-reset*)",
+      "Bash(*prisma migrate reset*)",
+      "Bash(*DROP TABLE*)",
+      "Bash(*DROP DATABASE*)"
     ]
   }
 }

@@ -21,13 +21,13 @@ export async function submitApplication(
   const session = await auth();
   if (!session?.user?.id) return { error: "Non authentifié." };
 
-  const motivation = (formData.get("motivation") as string | null)?.trim() ?? "";
-  const spCountRaw = formData.get("spCount") as string | null;
+  const discordHandle = (formData.get("discordHandle") as string | null)?.trim() ?? "";
+  const availability  = (formData.get("availability")  as string | null)?.trim() || null;
+  const motivation    = (formData.get("motivation")     as string | null)?.trim() ?? "";
+  const spCountRaw    =  formData.get("spCount") as string | null;
 
-  if (!motivation) return { error: "La motivation est requise." };
-  if (motivation.length < 100) {
-    return { error: `La motivation doit faire au moins 100 caractères (${motivation.length}/100).` };
-  }
+  if (!discordHandle) return { error: "Le pseudo Discord est requis." };
+  if (!motivation)    return { error: "La motivation est requise." };
 
   const spCount = spCountRaw ? parseInt(spCountRaw, 10) : null;
   if (spCountRaw && (isNaN(spCount!) || spCount! < 0)) {
@@ -38,14 +38,13 @@ export async function submitApplication(
   const existing = await prisma.application.findFirst({
     where: { userId: session.user.id, status: { not: "REJECTED" } },
   });
-
-  if (existing) {
-    return { error: "Vous avez déjà une candidature en cours." };
-  }
+  if (existing) return { error: "Vous avez déjà une candidature en cours." };
 
   await prisma.application.create({
     data: {
       userId: session.user.id,
+      discordHandle,
+      availability,
       motivation,
       spCount,
     },
@@ -53,6 +52,7 @@ export async function submitApplication(
 
   revalidatePath("/membre");
   revalidatePath("/membre/candidature");
+  revalidatePath("/staff/candidatures");
 
   return { success: true };
 }
@@ -69,7 +69,6 @@ export async function updateApplicationStatus(
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
-  // Récupérer l'application avant modification pour avoir le userId
   const application = await prisma.application.findUnique({ where: { id } });
   if (!application) return;
 
@@ -82,11 +81,11 @@ export async function updateApplicationStatus(
     },
   });
 
-  // Si accepté → promouvoir le candidat en membre
+  // Accepté → promouvoir le candidat en membre
   if (status === "ACCEPTED") {
     await prisma.user.update({
       where: { id: application.userId },
-      data: { role: "member" },
+      data:  { role: "member" },
     });
   }
 
@@ -109,7 +108,7 @@ export async function saveApplicationNotes(
 
   await prisma.application.update({
     where: { id },
-    data: { notes: notes.trim() || null },
+    data:  { notes: notes.trim() || null },
   });
 
   revalidatePath(`/staff/candidatures/${id}`);

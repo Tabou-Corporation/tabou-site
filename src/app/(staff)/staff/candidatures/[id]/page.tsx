@@ -9,7 +9,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageSquare } from "lucide-react";
 import {
   updateApplicationStatus,
   saveApplicationNotes,
@@ -129,6 +129,26 @@ export default async function CandidatureDetailPage({
                 </h2>
               </CardHeader>
               <CardBody className="space-y-4">
+                {/* Discord — mis en avant, c'est le moyen de contact */}
+                {application.discordHandle && (
+                  <div className="flex items-center gap-3 p-3 bg-[#5865F2]/10 border border-[#5865F2]/30 rounded">
+                    <MessageSquare size={16} className="text-[#5865F2] flex-shrink-0" />
+                    <div>
+                      <p className="text-text-muted text-[10px] uppercase tracking-wide font-semibold">
+                        Discord — contacter via
+                      </p>
+                      <p className="text-text-primary text-sm font-mono font-semibold">
+                        {application.discordHandle}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {!application.discordHandle && (
+                  <p className="text-text-muted text-xs italic">
+                    Aucun pseudo Discord renseigné.
+                  </p>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-text-muted text-xs uppercase tracking-wide font-semibold mb-1">
@@ -149,6 +169,16 @@ export default async function CandidatureDetailPage({
                       </p>
                       <p className="text-text-secondary text-sm">
                         {application.spCount.toLocaleString("fr-FR")} SP
+                      </p>
+                    </div>
+                  )}
+                  {application.availability && (
+                    <div className="col-span-2">
+                      <p className="text-text-muted text-xs uppercase tracking-wide font-semibold mb-1">
+                        Disponibilités
+                      </p>
+                      <p className="text-text-secondary text-sm">
+                        {application.availability}
                       </p>
                     </div>
                   )}
