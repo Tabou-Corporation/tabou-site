@@ -32,7 +32,7 @@ export default async function CorporationPage() {
       {/* ── Corps du texte d'intro ─────────────────────────────────────── */}
       <Section bg="surface" spacing="md">
         <div className="max-w-3xl space-y-4">
-          {corp.intro.body.map((paragraph, i) => (
+          {corp.intro.body.slice(1).map((paragraph, i) => (
             <p key={i} className="text-text-secondary leading-relaxed text-lg">
               {paragraph}
             </p>
