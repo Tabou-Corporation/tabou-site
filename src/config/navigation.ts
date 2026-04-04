@@ -25,6 +25,11 @@ export const NAVIGATION: NavigationConfig = {
       visibility: "public",
     },
     {
+      label: "Pilotes",
+      href: "/pilotes",
+      visibility: "public",
+    },
+    {
       label: "FAQ",
       href: "/faq",
       visibility: "public",
@@ -58,6 +63,7 @@ export const NAVIGATION: NavigationConfig = {
       items: [
         { label: "La Corporation", href: "/corporation" },
         { label: "Activités", href: "/activites" },
+        { label: "Pilotes", href: "/pilotes" },
         { label: "Recrutement", href: "/recrutement" },
       ],
     },
