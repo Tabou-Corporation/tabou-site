@@ -118,3 +118,69 @@
     @apply block h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent;
   }
 }
+
+/* ─── Glitch cinématique (logo hero) ─────────────────────────────────────── */
+/* Rafales de parasites toutes les ~8 s, façon transmission corrompue         */
+@keyframes glitch-logo {
+  /* Phase calme ─────────────────────────── */
+  0%,  76%,  79%,  88.5%, 94%, 100% {
+    transform: translate(0, 0);
+    filter: brightness(1) contrast(1) saturate(1);
+    opacity: 1;
+  }
+
+  /* Rafale 1 ────────────────────────────── */
+  76.5% {
+    transform: translate(-6px, 1px);
+    filter: brightness(1.7) contrast(1.3) saturate(0.2);
+    opacity: 0.6;
+  }
+  77% {
+    transform: translate(6px, -1px);
+    filter: brightness(0.4) contrast(1.1);
+    opacity: 0.9;
+  }
+  77.5% {
+    transform: translate(-3px, 2px);
+    filter: brightness(1.3) saturate(0.5);
+    opacity: 1;
+  }
+  78% {
+    transform: translate(0, 0);
+    filter: brightness(1) contrast(1) saturate(1);
+    opacity: 1;
+  }
+
+  /* Rafale 2 ────────────────────────────── */
+  87% {
+    transform: translate(5px, -2px);
+    filter: brightness(1.6) saturate(0.1);
+    opacity: 0.5;
+  }
+  87.5% {
+    transform: translate(-5px, 1px);
+    filter: brightness(0.55) contrast(1.2);
+    opacity: 0.85;
+  }
+  88% {
+    transform: translate(2px, -1px);
+    filter: brightness(1.2);
+    opacity: 0.7;
+  }
+
+  /* Rafale 3 (courte) ───────────────────── */
+  93.3% {
+    transform: translate(-4px, 0);
+    filter: brightness(1.5);
+    opacity: 0.65;
+  }
+  93.7% {
+    transform: translate(4px, 1px);
+    filter: brightness(0.6);
+    opacity: 0.9;
+  }
+}
+
+.animate-glitch-logo {
+  animation: glitch-logo 8s linear infinite;
+}

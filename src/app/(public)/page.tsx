@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { getHomeContent, getActivitiesContent } from "@/lib/site-content/loader";
 import { fetchCorpKills } from "@/lib/zkillboard/fetcher";
 import { fetchTopPilot } from "@/lib/zkillboard/top-pilot";
+import { CORPORATIONS } from "@/lib/constants/corporations";
 import { SITE_CONFIG } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -36,9 +37,7 @@ export default async function HomePage() {
     <>
       {/* ── Hero cinématique ─────────────────────────────────────────── */}
       <Hero
-        eyebrow={home.hero.eyebrow}
-        headline={home.hero.headline}
-        subheadline={home.hero.subheadline}
+        logoUrl={CORPORATIONS.tabou.logoUrl(512)}
         primaryCTA={{ label: "Postuler", href: "/recrutement", variant: "primary" }}
         secondaryCTA={{ label: "En savoir plus", href: "/corporation", variant: "ghost" }}
         backgroundImage={home.hero.backgroundImage ?? "/images/hero-bg.jpg"}

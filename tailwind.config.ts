@@ -100,12 +100,19 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0)", opacity: "0.6" },
           "50%": { transform: "translateY(6px)", opacity: "1" },
         },
+        "ken-burns": {
+          "0%":   { transform: "scale(1.0) translate(0%, 0%)" },
+          "33%":  { transform: "scale(1.07) translate(-1.2%, -0.6%)" },
+          "66%":  { transform: "scale(1.05) translate(0.8%, 0.4%)" },
+          "100%": { transform: "scale(1.1) translate(-0.5%, 0.8%)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.4s ease-out forwards",
         "fade-in-fast": "fade-in-fast 0.2s ease-out forwards",
         shimmer: "shimmer 2.5s ease-in-out infinite",
         "bounce-slow": "bounce-slow 2.5s ease-in-out infinite",
+        "ken-burns": "ken-burns 32s ease-in-out infinite alternate",
       },
 
       // ─── Espacements supplémentaires ──────────────────────────────────────

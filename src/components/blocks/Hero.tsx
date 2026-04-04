@@ -1,8 +1,8 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/layout/Container";
 import { KillFeed } from "@/components/blocks/KillFeed";
 import { TopPilotCard } from "@/components/blocks/TopPilotCard";
+import { HeroBackground } from "@/components/blocks/HeroBackground";
+import { HeroAnimatedContent } from "@/components/blocks/HeroAnimatedContent";
 import { cn } from "@/lib/utils/cn";
 import type { CTAConfig } from "@/types/content";
 import type { KillDisplayEntry } from "@/lib/zkillboard/types";
@@ -15,7 +15,7 @@ interface HeroStat {
 
 interface HeroProps {
   eyebrow?: string;
-  headline: string;
+  headline?: string;
   subheadline?: string;
   primaryCTA?: CTAConfig;
   secondaryCTA?: CTAConfig;
@@ -27,6 +27,8 @@ interface HeroProps {
   kills?: KillDisplayEntry[];
   /** Meilleur pilote all-time affiché au-dessus du kill feed */
   topPilot?: TopPilot | null;
+  /** URL du logo corporation pour le mode emblème */
+  logoUrl?: string;
   className?: string;
 }
 
@@ -40,6 +42,7 @@ export function Hero({
   stats,
   kills,
   topPilot,
+  logoUrl,
   className,
 }: HeroProps) {
   return (
@@ -53,25 +56,8 @@ export function Hero({
       {/* ── Background image ─────────────────────────────────────────── */}
       {backgroundImage ? (
         <>
-          {/* URL externe : balise img native pour éviter les restrictions Next/Image */}
-          {backgroundImage.startsWith("http") ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={backgroundImage}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-[70%_center] lg:object-[65%_center]"
-            />
-          ) : (
-            <Image
-              src={backgroundImage}
-              alt=""
-              fill
-              priority
-              className="object-cover object-[70%_center] lg:object-[65%_center]"
-              quality={85}
-              sizes="100vw"
-            />
-          )}
+          {/* Ken Burns + parallaxe souris (client component) */}
+          <HeroBackground src={backgroundImage} />
           {/* Gradient overlay : sombre gauche (texte), dégagé droite (image visible) */}
           <div
             aria-hidden
@@ -123,67 +109,19 @@ export function Hero({
         </div>
       )}
 
-      {/* ── Contenu principal — centré ───────────────────────────────── */}
+      {/* ── Contenu principal ────────────────────────────────────────── */}
+      {/* Sur desktop, on compense les 210 px du kill feed à gauche      */}
+      {/* pour que le contenu reste visuellement centré sur l'espace libre */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
-        <div className="max-w-2xl mx-auto text-center animate-fade-in">
-
-          {eyebrow && (
-            <p className="text-gold text-xs sm:text-sm font-semibold tracking-extra-wide uppercase mb-4">
-              {eyebrow}
-            </p>
-          )}
-
-          <h1
-            className="font-display font-bold text-5xl sm:text-6xl lg:text-7xl xl:text-8xl text-text-primary leading-[1.02] tracking-tight mb-6"
-            style={{
-              whiteSpace: "pre-line",
-              textShadow: "0 2px 40px rgba(0,0,0,0.8), 0 0 80px rgba(0,0,0,0.5)",
-            }}
-          >
-            {headline}
-          </h1>
-
-          {subheadline && (
-            <p
-              className="text-text-secondary text-lg sm:text-xl leading-relaxed max-w-xl mb-10"
-              style={{ textShadow: "0 1px 20px rgba(0,0,0,0.6)" }}
-            >
-              {subheadline}
-            </p>
-          )}
-
-          {(primaryCTA ?? secondaryCTA) && (
-            <div className="flex flex-wrap justify-center gap-4">
-              {primaryCTA && (
-                <Button
-                  as="a"
-                  href={primaryCTA.href}
-                  variant={primaryCTA.variant ?? "primary"}
-                  size="lg"
-                  className="shadow-glow-gold hover:shadow-glow-gold-md transition-shadow"
-                  {...(primaryCTA.external
-                    ? { target: "_blank", rel: "noopener noreferrer" }
-                    : {})}
-                >
-                  {primaryCTA.label}
-                </Button>
-              )}
-              {secondaryCTA && (
-                <Button
-                  as="a"
-                  href={secondaryCTA.href}
-                  variant={secondaryCTA.variant ?? "ghost"}
-                  size="lg"
-                  className="animate-pulse text-gold border-gold/50 hover:border-gold"
-                  {...(secondaryCTA.external
-                    ? { target: "_blank", rel: "noopener noreferrer" }
-                    : {})}
-                >
-                  {secondaryCTA.label}
-                </Button>
-              )}
-            </div>
-          )}
+        <div className={cn(kills && kills.length > 0 ? "lg:pl-[210px]" : "")}>
+          <HeroAnimatedContent
+            {...(eyebrow     ? { eyebrow }     : {})}
+            {...(headline    ? { headline }    : {})}
+            {...(subheadline ? { subheadline } : {})}
+            {...(primaryCTA   ? { primaryCTA }   : {})}
+            {...(secondaryCTA ? { secondaryCTA } : {})}
+            {...(logoUrl      ? { logoUrl }      : {})}
+          />
         </div>
       </Container>
 

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Rajdhani, Barlow } from "next/font/google";
 import "./globals.css";
 import { SITE_CONFIG } from "@/config/site";
+import { auth } from "@/auth";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ToastProvider } from "@/contexts/ToastContext";
 
@@ -66,11 +67,16 @@ export const viewport: Viewport = {
 };
 
 // ─── Layout root ──────────────────────────────────────────────────────────
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Pré-résoudre la session serveur → injectée dans SessionProvider
+  // pour que useSession() soit immédiatement disponible côté client
+  // sans aller-retour /api/auth/session.
+  const session = await auth();
+
   return (
     <html
       lang="fr"
@@ -78,7 +84,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex flex-col min-h-screen antialiased">
-        <AuthProvider>
+        <AuthProvider session={session}>
           <ToastProvider>
             {children}
           </ToastProvider>
