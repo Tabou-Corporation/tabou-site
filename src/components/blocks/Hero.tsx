@@ -2,9 +2,11 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/layout/Container";
 import { KillFeed } from "@/components/blocks/KillFeed";
+import { TopPilotCard } from "@/components/blocks/TopPilotCard";
 import { cn } from "@/lib/utils/cn";
 import type { CTAConfig } from "@/types/content";
 import type { KillDisplayEntry } from "@/lib/zkillboard/types";
+import type { TopPilot } from "@/lib/zkillboard/top-pilot";
 
 interface HeroStat {
   label: string;
@@ -23,6 +25,8 @@ interface HeroProps {
   stats?: HeroStat[];
   /** Kills récents pour le widget zkillboard */
   kills?: KillDisplayEntry[];
+  /** Meilleur pilote all-time affiché au-dessus du kill feed */
+  topPilot?: TopPilot | null;
   className?: string;
 }
 
@@ -35,6 +39,7 @@ export function Hero({
   backgroundImage,
   stats,
   kills,
+  topPilot,
   className,
 }: HeroProps) {
   return (
@@ -110,9 +115,10 @@ export function Hero({
         className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
 
-      {/* ── Kill Feed — overlay gauche, centré verticalement ──────────── */}
-      {kills && kills.length > 0 && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 hidden lg:block">
+      {/* ── Kill Feed + Top Pilote — overlay gauche, centré verticalement ── */}
+      {(kills && kills.length > 0) && (
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2">
+          {topPilot && <TopPilotCard pilot={topPilot} />}
           <KillFeed initialKills={kills} />
         </div>
       )}
