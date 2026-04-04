@@ -10,7 +10,6 @@ import { NavLink } from "./NavLink";
 import { Button } from "@/components/ui/Button";
 import { UserMenu } from "./UserMenu";
 import { NAVIGATION } from "@/config/navigation";
-import { SITE_CONFIG } from "@/config/site";
 import { CORPORATIONS } from "@/lib/constants/corporations";
 
 export function MainNav() {

@@ -96,12 +96,11 @@ export function Hero({
         className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
 
-      {/* ── Contenu principal — grille 2 colonnes, texte collé à gauche ── */}
+      {/* ── Contenu principal — centré ───────────────────────────────── */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
-        <div className="grid grid-cols-2 lg:grid-cols-3">
-        <div className="col-span-1 animate-fade-in">
+        <div className="max-w-2xl mx-auto text-center animate-fade-in">
           {/* Logo corporation */}
-          <div className="flex items-center gap-4 mb-10">
+          <div className="flex items-center justify-center gap-4 mb-10">
             <Image
               src={CORPORATIONS.tabou.logoUrl(128)}
               alt="Tabou Corporation"
@@ -141,7 +140,7 @@ export function Hero({
           )}
 
           {(primaryCTA ?? secondaryCTA) && (
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap justify-center gap-4">
               {primaryCTA && (
                 <Button
                   as="a"
@@ -171,8 +170,6 @@ export function Hero({
               )}
             </div>
           )}
-        </div>
-        {/* colonne droite vide — laisse respirer l'image */}
         </div>
       </Container>
 
