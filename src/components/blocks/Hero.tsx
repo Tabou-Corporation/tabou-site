@@ -40,7 +40,7 @@ export function Hero({
   return (
     <section
       className={cn(
-        "relative min-h-screen flex overflow-hidden",
+        "relative min-h-screen flex flex-col justify-center overflow-hidden",
         "bg-bg-deep",
         className
       )}
@@ -110,9 +110,9 @@ export function Hero({
         className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
 
-      {/* ── Kill Feed — gauche, centré verticalement ─────────────────── */}
+      {/* ── Kill Feed — overlay gauche, centré verticalement ──────────── */}
       {kills && kills.length > 0 && (
-        <div className="relative z-10 hidden lg:flex items-center self-stretch">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 hidden lg:block">
           <KillFeed initialKills={kills} />
         </div>
       )}
