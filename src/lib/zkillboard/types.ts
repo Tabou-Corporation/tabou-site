@@ -8,7 +8,7 @@ export interface ZkillApiEntry {
   zkb: {
     hash: string;
     totalValue: number;
-    url: string;
+    url?: string;   // pas toujours présent dans la réponse API
     npc: boolean;
     solo: boolean;
   };

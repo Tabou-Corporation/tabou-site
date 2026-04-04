@@ -78,7 +78,8 @@ export async function fetchCorpKills(): Promise<KillDisplayEntry[]> {
       victimName: nameMap[km.victim.character_id]  ?? "Pilote inconnu",
       iskValue:   formatIsk(zkb.totalValue),
       timeAgo:    formatTimeAgo(km.killmail_time),
-      url:        zkb.url,
+      // zkillboard ne retourne pas toujours le champ url — on le construit
+      url: zkb.url ?? `${ZKILL_CONFIG.baseUrl}/kill/${id}/`,
     }));
 
   } catch (err) {
