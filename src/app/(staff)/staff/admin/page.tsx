@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Separator } from "@/components/ui/Separator";
-import { Users, FileText, BookOpen, Calendar, Megaphone, Shield } from "lucide-react";
+import { Users, FileText, BookOpen, Calendar, Megaphone, Shield, PenLine } from "lucide-react";
 import type { UserRole } from "@/types/roles";
 
 export default async function AdminPage() {
@@ -104,6 +105,23 @@ export default async function AdminPage() {
             </Card>
           ))}
         </div>
+
+        {/* CMS */}
+        <Link
+          href="/staff/admin/contenu"
+          className="flex items-center gap-4 p-5 border border-gold/30 rounded-md bg-gold/5 hover:bg-gold/10 transition-colors group mb-8"
+        >
+          <PenLine size={20} className="text-gold flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-display font-semibold text-base text-text-primary">
+              Contenu du site
+            </p>
+            <p className="text-text-muted text-sm mt-0.5">
+              Modifier les textes des pages publiques (accueil, corporation, recrutement, FAQ, activités, contact)
+            </p>
+          </div>
+          <span className="text-gold/60 group-hover:text-gold transition-colors text-sm">→</span>
+        </Link>
 
         {/* Répartition rôles */}
         <Card>

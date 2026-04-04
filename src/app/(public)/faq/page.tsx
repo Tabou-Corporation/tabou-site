@@ -5,7 +5,8 @@ import { Section } from "@/components/blocks/Section";
 import { CTAPanel } from "@/components/blocks/CTAPanel";
 import { FAQGrouped } from "@/components/blocks/FAQAccordion";
 
-import { FAQ_META, FAQ_ITEMS, FAQ_CATEGORIES } from "@/content/faq";
+import { getFaqContent } from "@/lib/site-content/loader";
+import { FAQ_META } from "@/content/faq";
 
 export const metadata: Metadata = {
   title: FAQ_META.title,
@@ -24,7 +25,10 @@ const RECRUITMENT_CTA = {
   variant: "primary" as const,
 };
 
-export default function FAQPage() {
+export default async function FAQPage() {
+  const faqItems = await getFaqContent();
+  const categories = [...new Set(faqItems.map((item) => item.category))];
+
   return (
     <>
       <PageHeader
@@ -35,7 +39,7 @@ export default function FAQPage() {
 
       <Section bg="surface" spacing="lg">
         <div className="max-w-3xl mx-auto">
-          <FAQGrouped items={FAQ_ITEMS} categories={FAQ_CATEGORIES} />
+          <FAQGrouped items={faqItems} categories={categories} />
         </div>
       </Section>
 

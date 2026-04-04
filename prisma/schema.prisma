@@ -165,6 +165,19 @@ model CalendarEvent {
   @@map("calendar_events")
 }
 
+// ─── V5 : CMS — Contenu éditorial ────────────────────────────────────────────
+
+model SiteContent {
+  /// Clé de page : home | corporation | recruitment | faq | activities | contact
+  page      String   @id
+  /// Contenu JSON sérialisé (deep-merged avec les defaults au chargement)
+  content   String   @db.Text
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+
+  @@map("site_content")
+}
+
 // ─── V6+ : Characters ESI ────────────────────────────────────────────────────
 // model Character {
 //   characterId    Int      @id

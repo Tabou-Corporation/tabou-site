@@ -63,6 +63,9 @@ export default async function StaffLayout({ children }: { children: React.ReactN
                 <Link href="/staff/admin" className="text-gold text-xs hover:text-gold-light transition-colors whitespace-nowrap font-semibold">
                   Admin
                 </Link>
+                <Link href="/staff/admin/contenu" className="text-gold/80 text-xs hover:text-gold transition-colors whitespace-nowrap">
+                  Contenu
+                </Link>
               </>
             )}
           </nav>

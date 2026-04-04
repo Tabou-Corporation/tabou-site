@@ -7,26 +7,23 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/Separator";
 
-import {
-  CONTACT_META,
-  CONTACT_INTRO,
-  CONTACT_CHANNELS,
-  CONTACT_FORM_NOTE,
-  CONTACT_AVAILABILITY,
-} from "@/content/contact";
+import { getContactContent } from "@/lib/site-content/loader";
+import { CONTACT_META } from "@/content/contact";
 
 export const metadata: Metadata = {
   title: CONTACT_META.title,
   description: CONTACT_META.description,
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const contact = await getContactContent();
+
   return (
     <>
       <PageHeader
-        eyebrow={CONTACT_INTRO.eyebrow}
-        title={CONTACT_INTRO.headline}
-        description={CONTACT_INTRO.body}
+        eyebrow={contact.intro.eyebrow}
+        title={contact.intro.headline}
+        description={contact.intro.body}
       />
 
       <Section bg="surface" spacing="lg">
@@ -36,17 +33,17 @@ export default function ContactPage() {
             <Clock size={16} className="text-gold/70 flex-shrink-0" aria-hidden />
             <div>
               <span className="text-text-muted text-xs font-semibold tracking-widest uppercase">
-                {CONTACT_AVAILABILITY.label}
+                Disponibilité
               </span>
               <span className="text-text-secondary text-sm ml-3">
-                {CONTACT_AVAILABILITY.detail}
+                {contact.availability}
               </span>
             </div>
           </div>
 
           {/* Canaux */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {CONTACT_CHANNELS.map((channel) => (
+            {contact.channels.map((channel) => (
               <Card key={channel.id} className="h-full">
                 <CardBody className="space-y-3 h-full flex flex-col">
                   <h3 className="font-display font-semibold text-lg text-text-primary">
@@ -58,20 +55,20 @@ export default function ContactPage() {
                   <p className="text-text-muted text-xs font-mono">
                     {channel.detail}
                   </p>
-                  {channel.cta && (
+                  {channel.ctaLabel && channel.ctaHref && (
                     <div className="pt-2">
                       <Button
                         as="a"
-                        href={channel.cta.href}
+                        href={channel.ctaHref}
                         variant="secondary"
                         size="sm"
                         className="w-full"
-                        {...(channel.cta.external
+                        {...(channel.ctaExternal
                           ? { target: "_blank", rel: "noopener noreferrer" }
                           : {})}
                       >
-                        {channel.cta.label}
-                        {channel.cta.external && (
+                        {channel.ctaLabel}
+                        {channel.ctaExternal && (
                           <ExternalLink size={13} aria-hidden />
                         )}
                       </Button>
@@ -84,15 +81,14 @@ export default function ContactPage() {
 
           <Separator className="mb-12" />
 
-          {/* Formulaire — placeholder V1.1+ */}
+          {/* Formulaire — placeholder */}
           <div className="space-y-4">
             <h2 className="font-display font-bold text-2xl text-text-primary">
               Formulaire de contact
             </h2>
             <p className="text-text-secondary text-sm leading-relaxed max-w-lg">
-              {CONTACT_FORM_NOTE}
+              {contact.formNote}
             </p>
-            {/* Formulaire mock non branché – à connecter en V1.1 */}
             <div className="bg-bg-elevated border border-border border-dashed rounded-md p-8 text-center">
               <p className="text-text-muted text-sm">
                 Formulaire de contact — disponible prochainement.

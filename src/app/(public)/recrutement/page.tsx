@@ -8,29 +8,23 @@ import { Separator } from "@/components/ui/Separator";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-import {
-  RECRUITMENT_META,
-  RECRUITMENT_INTRO,
-  WANTED_PROFILES,
-  NOT_ADAPTED_PROFILES,
-  RECRUITMENT_STEPS,
-  REQUIREMENTS,
-  RECRUITMENT_CTA,
-  RECRUITMENT_DISCORD,
-} from "@/content/recruitment";
+import { getRecruitmentContent } from "@/lib/site-content/loader";
+import { RECRUITMENT_META } from "@/content/recruitment";
 
 export const metadata: Metadata = {
   title: RECRUITMENT_META.title,
   description: RECRUITMENT_META.description,
 };
 
-export default function RecruitmentPage() {
+export default async function RecruitmentPage() {
+  const recruitment = await getRecruitmentContent();
+
   return (
     <>
       <PageHeader
-        eyebrow={RECRUITMENT_INTRO.eyebrow}
-        title={RECRUITMENT_INTRO.headline}
-        description={RECRUITMENT_INTRO.body}
+        eyebrow={recruitment.intro.eyebrow}
+        title={recruitment.intro.headline}
+        description={recruitment.intro.body}
       />
 
       {/* ── Profils recherchés ─────────────────────────────────────────── */}
@@ -40,7 +34,7 @@ export default function RecruitmentPage() {
           description="Trois types de pilotes qui s'intègrent naturellement chez Tabou."
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {WANTED_PROFILES.map((profile) => (
+          {recruitment.wantedProfiles.map((profile) => (
             <Card key={profile.title} accent>
               <CardBody className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -75,7 +69,7 @@ export default function RecruitmentPage() {
           description="Autant être directs. Ce n'est pas pour vous si :"
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {NOT_ADAPTED_PROFILES.map((profile) => (
+          {recruitment.notAdaptedProfiles.map((profile) => (
             <Card key={profile.title} className="border-red/20">
               <CardBody className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -112,11 +106,11 @@ export default function RecruitmentPage() {
               description="Un processus simple, en quatre étapes."
             />
             <div className="mt-8">
-              {RECRUITMENT_STEPS.map((step, i) => (
+              {recruitment.steps.map((step, i) => (
                 <RecruitmentStepCard
                   key={step.number}
                   step={step}
-                  isLast={i === RECRUITMENT_STEPS.length - 1}
+                  isLast={i === recruitment.steps.length - 1}
                 />
               ))}
             </div>
@@ -127,10 +121,10 @@ export default function RecruitmentPage() {
             <Card>
               <CardBody className="space-y-4">
                 <h3 className="font-display font-bold text-xl text-text-primary">
-                  {REQUIREMENTS.headline}
+                  {recruitment.requirements.headline}
                 </h3>
                 <ul className="space-y-3">
-                  {REQUIREMENTS.items.map((item) => (
+                  {recruitment.requirements.items.map((item) => (
                     <li key={item} className="flex items-start gap-3">
                       <CheckCircle
                         size={15}
@@ -160,23 +154,23 @@ export default function RecruitmentPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   as="a"
-                  href={RECRUITMENT_CTA.href}
+                  href="https://discord.gg/tabou"
                   variant="primary"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto"
                 >
-                  {RECRUITMENT_CTA.label}
+                  Postuler sur Discord
                 </Button>
                 <Button
                   as="a"
-                  href={RECRUITMENT_DISCORD.href}
+                  href="https://discord.gg/tabou"
                   variant="secondary"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto"
                 >
-                  {RECRUITMENT_DISCORD.label}
+                  Rejoindre le Discord
                 </Button>
               </div>
             </div>

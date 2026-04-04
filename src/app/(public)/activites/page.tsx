@@ -6,13 +6,8 @@ import { CTAPanel } from "@/components/blocks/CTAPanel";
 import { ActivityCard } from "@/components/blocks/ActivityCard";
 import { Separator } from "@/components/ui/Separator";
 
-import {
-  ACTIVITIES_META,
-  ACTIVITIES_INTRO,
-  ACTIVITIES_BY_CATEGORY,
-  CATEGORY_LABELS,
-  ACTIVITIES_CTA,
-} from "@/content/activities";
+import { getActivitiesContent } from "@/lib/site-content/loader";
+import { ACTIVITIES_META, ACTIVITIES_INTRO, CATEGORY_LABELS } from "@/content/activities";
 import type { ActivityCategory } from "@/types/content";
 
 export const metadata: Metadata = {
@@ -36,7 +31,17 @@ const CATEGORY_DESCRIPTIONS: Record<ActivityCategory, string> = {
   collective: "Opérations qui ont besoin de tout le monde.",
 };
 
-export default function ActivitiesPage() {
+export default async function ActivitiesPage() {
+  const activities = await getActivitiesContent();
+
+  const byCategory: Record<ActivityCategory, typeof activities> = {
+    pvp: activities.filter((a) => a.category === "pvp"),
+    pve: activities.filter((a) => a.category === "pve"),
+    exploration: activities.filter((a) => a.category === "exploration"),
+    industry: activities.filter((a) => a.category === "industry"),
+    collective: activities.filter((a) => a.category === "collective"),
+  };
+
   return (
     <>
       <PageHeader
@@ -47,8 +52,8 @@ export default function ActivitiesPage() {
 
       {/* ── Catégories d'activités ─────────────────────────────────────── */}
       {CATEGORY_ORDER.map((category, index) => {
-        const activities = ACTIVITIES_BY_CATEGORY[category];
-        if (activities.length === 0) return null;
+        const categoryActivities = byCategory[category];
+        if (categoryActivities.length === 0) return null;
 
         return (
           <div key={category}>
@@ -60,8 +65,8 @@ export default function ActivitiesPage() {
                 description={CATEGORY_DESCRIPTIONS[category]}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {activities.map((activity) => (
-                  <ActivityCard key={activity.id} activity={activity} />
+                {categoryActivities.map((activity) => (
+                  <ActivityCard key={activity.id} activity={activity as any} />
                 ))}
               </div>
             </Section>
@@ -73,7 +78,7 @@ export default function ActivitiesPage() {
       <CTAPanel
         headline="Ce contenu vous intéresse ?"
         description="Si vous cherchez une corporation sérieuse avec un spectre d'activité réel, consultez notre page recrutement."
-        primaryCTA={ACTIVITIES_CTA}
+        primaryCTA={{ label: "Rejoindre Tabou", href: "/recrutement", variant: "primary" }}
         variant="default"
       />
     </>
