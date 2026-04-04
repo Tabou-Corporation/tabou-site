@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { ApplicationForm } from "./ApplicationForm";
+import { withdrawApplication } from "@/lib/actions/applications";
 import type { UserRole } from "@/types/roles";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -170,6 +171,23 @@ export default async function CandidaturePage() {
                     Félicitations ! Votre candidature a été acceptée.
                     Bienvenue dans Tabou — rafraîchissez la page pour voir votre nouveau statut.
                   </p>
+                )}
+
+                {/* Retrait — uniquement si pas encore accepté */}
+                {(application.status === "PENDING" || application.status === "INTERVIEW") && (
+                  <div className="border-t border-border pt-4">
+                    <form action={withdrawApplication}>
+                      <button
+                        type="submit"
+                        className="text-text-muted text-xs hover:text-red-400 transition-colors underline underline-offset-2"
+                      >
+                        Retirer ma candidature
+                      </button>
+                    </form>
+                    <p className="text-text-muted text-[11px] mt-1">
+                      Tu pourras re-postuler à tout moment.
+                    </p>
+                  </div>
                 )}
               </CardBody>
             </Card>

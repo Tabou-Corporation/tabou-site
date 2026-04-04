@@ -129,6 +129,25 @@ export async function takeChargeApplication(
   revalidatePath("/membre/candidature");
 }
 
+// ─── Candidat : retirer sa candidature ───────────────────────────────────────
+
+export async function withdrawApplication(): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  // Ne supprimer que si en attente ou en entretien (pas si accepté)
+  await prisma.application.deleteMany({
+    where: {
+      userId: session.user.id,
+      status: { in: ["PENDING", "INTERVIEW"] },
+    },
+  });
+
+  revalidatePath("/membre");
+  revalidatePath("/membre/candidature");
+  revalidatePath("/staff/candidatures");
+}
+
 // ─── Recruteur : sauvegarder les notes internes ───────────────────────────────
 
 export async function saveApplicationNotes(
