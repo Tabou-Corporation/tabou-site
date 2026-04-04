@@ -49,7 +49,7 @@ export function Hero({
             alt=""
             fill
             priority
-            className="object-cover object-center"
+            className="object-cover object-[70%_center] lg:object-[65%_center]"
             quality={85}
             sizes="100vw"
           />
@@ -58,7 +58,7 @@ export function Hero({
             aria-hidden
             className="absolute inset-0"
             style={{
-              background: "linear-gradient(to right, rgba(5,4,3,0.95) 0%, rgba(5,4,3,0.85) 35%, rgba(5,4,3,0.4) 60%, rgba(5,4,3,0.15) 100%)",
+              background: "linear-gradient(to right, rgba(5,4,3,0.97) 0%, rgba(5,4,3,0.88) 25%, rgba(5,4,3,0.45) 45%, rgba(5,4,3,0.1) 70%, transparent 100%)",
             }}
           />
           {/* Gradient vertical : assombrir le haut (nav) et le bas (stats) */}
@@ -96,9 +96,9 @@ export function Hero({
         className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
 
-      {/* ── Contenu principal — ancré à gauche, 40% max ──────────────── */}
+      {/* ── Contenu principal — ancré à gauche, ~35% écran ────────────── */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
-        <div className="max-w-2xl animate-fade-in">
+        <div className="max-w-xl lg:max-w-lg animate-fade-in">
           {/* Logo corporation */}
           <div className="flex items-center gap-4 mb-10">
             <Image
