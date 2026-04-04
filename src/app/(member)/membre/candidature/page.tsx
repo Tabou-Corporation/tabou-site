@@ -127,14 +127,42 @@ export default async function CandidaturePage() {
                 {application.status === "PENDING" && (
                   <p className="text-text-muted text-xs leading-relaxed border-t border-border pt-4">
                     Votre candidature est en attente de traitement. Un recruteur vous
-                    contactera sur Discord.
+                    contactera sur Discord sous 48h.
                   </p>
                 )}
 
                 {application.status === "INTERVIEW" && (
-                  <p className="text-gold/80 text-xs leading-relaxed border-t border-border pt-4">
-                    Un recruteur souhaite vous rencontrer. Restez disponible sur Discord.
-                  </p>
+                  <div className="border-t border-border pt-4 space-y-2">
+                    <p className="text-gold/80 text-sm font-semibold">
+                      Un recruteur a pris en charge votre candidature.
+                    </p>
+                    {application.interviewAt ? (
+                      <div className="bg-gold/5 border border-gold/20 rounded px-3 py-2.5">
+                        <p className="text-text-muted text-xs font-semibold uppercase tracking-wide mb-1">
+                          Entretien Discord prévu
+                        </p>
+                        <p className="text-text-primary text-sm font-medium">
+                          {application.interviewAt.toLocaleDateString("fr-FR", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                          })}{" "}
+                          à{" "}
+                          {application.interviewAt.toLocaleTimeString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                        <p className="text-text-muted text-xs mt-0.5">
+                          Heure locale — vérifiez avec le recruteur si besoin.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-text-secondary text-xs">
+                        Restez disponible sur Discord, le recruteur reviendra vers vous.
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {application.status === "ACCEPTED" && (

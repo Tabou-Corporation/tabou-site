@@ -94,6 +94,36 @@ export async function updateApplicationStatus(
   revalidatePath("/membre");
 }
 
+// ─── Recruteur : prendre en charge + planifier entretien ──────────────────────
+
+export async function takeChargeApplication(
+  id: string,
+  formData: FormData
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const role = (session.user.role ?? "candidate") as UserRole;
+  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
+
+  const interviewAtRaw = (formData.get("interviewAt") as string | null)?.trim();
+  const interviewAt    = interviewAtRaw ? new Date(interviewAtRaw) : null;
+
+  await prisma.application.update({
+    where: { id },
+    data: {
+      status:      "INTERVIEW",
+      interviewAt: interviewAt ?? null,
+      reviewedAt:  new Date(),
+      reviewedBy:  session.user.name ?? session.user.id,
+    },
+  });
+
+  revalidatePath("/staff/candidatures");
+  revalidatePath(`/staff/candidatures/${id}`);
+  revalidatePath("/membre/candidature");
+}
+
 // ─── Recruteur : sauvegarder les notes internes ───────────────────────────────
 
 export async function saveApplicationNotes(

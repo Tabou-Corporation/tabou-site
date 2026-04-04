@@ -12,13 +12,14 @@ import { Button } from "@/components/ui/Button";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import {
   updateApplicationStatus,
+  takeChargeApplication,
   saveApplicationNotes,
 } from "@/lib/actions/applications";
 import type { UserRole } from "@/types/roles";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING:   "En attente",
-  INTERVIEW: "Entretien en cours",
+  INTERVIEW: "En cours de traitement",
   ACCEPTED:  "Acceptée",
   REJECTED:  "Refusée",
 };
@@ -56,9 +57,14 @@ export default async function CandidatureDetailPage({
 
   // ── Actions inline (Server Actions via form) ───────────────────────────────
 
-  async function actionSetStatus(status: "PENDING" | "INTERVIEW" | "ACCEPTED" | "REJECTED") {
+  async function actionSetStatus(status: "PENDING" | "ACCEPTED" | "REJECTED") {
     "use server";
     await updateApplicationStatus(id, status);
+  }
+
+  async function actionTakeCharge(formData: FormData) {
+    "use server";
+    await takeChargeApplication(id, formData);
   }
 
   async function actionSaveNotes(formData: FormData) {
@@ -255,28 +261,94 @@ export default async function CandidatureDetailPage({
               </Card>
             )}
 
-            {/* Changer le statut */}
+            {/* Prendre en charge */}
+            {application.status === "PENDING" && (
+              <Card>
+                <CardHeader>
+                  <h2 className="font-display font-semibold text-sm text-text-primary">
+                    Prendre en charge
+                  </h2>
+                </CardHeader>
+                <CardBody>
+                  <form action={actionTakeCharge} className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-text-muted text-xs font-medium">
+                        Date d&apos;entretien Discord{" "}
+                        <span className="font-normal">(optionnel)</span>
+                      </label>
+                      <input
+                        name="interviewAt"
+                        type="datetime-local"
+                        defaultValue={
+                          application.interviewAt
+                            ? application.interviewAt.toISOString().slice(0, 16)
+                            : ""
+                        }
+                        className={[
+                          "w-full bg-bg-elevated border rounded px-3 py-2",
+                          "text-text-primary text-xs",
+                          "border-border focus:border-gold/60 focus:outline-none",
+                          "transition-colors duration-150",
+                        ].join(" ")}
+                      />
+                      <p className="text-text-muted text-[11px]">
+                        Heure locale — pense à préciser EVE Time au candidat.
+                      </p>
+                    </div>
+                    <Button type="submit" variant="secondary" size="sm" className="w-full">
+                      Prendre en charge
+                    </Button>
+                  </form>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Modifier l'entretien si déjà en cours */}
+            {application.status === "INTERVIEW" && (
+              <Card className="border-gold/20">
+                <CardHeader>
+                  <h2 className="font-display font-semibold text-sm text-text-primary">
+                    Entretien planifié
+                  </h2>
+                </CardHeader>
+                <CardBody>
+                  <form action={actionTakeCharge} className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-text-muted text-xs font-medium">
+                        Date d&apos;entretien Discord
+                      </label>
+                      <input
+                        name="interviewAt"
+                        type="datetime-local"
+                        defaultValue={
+                          application.interviewAt
+                            ? application.interviewAt.toISOString().slice(0, 16)
+                            : ""
+                        }
+                        className={[
+                          "w-full bg-bg-elevated border rounded px-3 py-2",
+                          "text-text-primary text-xs",
+                          "border-border focus:border-gold/60 focus:outline-none",
+                          "transition-colors duration-150",
+                        ].join(" ")}
+                      />
+                    </div>
+                    <Button type="submit" variant="ghost" size="sm" className="w-full">
+                      Mettre à jour la date
+                    </Button>
+                  </form>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Décision finale */}
             <Card>
               <CardHeader>
                 <h2 className="font-display font-semibold text-sm text-text-primary">
-                  Changer le statut
+                  Décision
                 </h2>
               </CardHeader>
               <CardBody className="space-y-2">
-                {application.status !== "INTERVIEW" && (
-                  <form action={actionSetStatus.bind(null, "INTERVIEW")}>
-                    <Button type="submit" variant="secondary" size="sm" className="w-full">
-                      Passer en entretien
-                    </Button>
-                  </form>
-                )}
-                {application.status !== "PENDING" && (
-                  <form action={actionSetStatus.bind(null, "PENDING")}>
-                    <Button type="submit" variant="ghost" size="sm" className="w-full">
-                      Remettre en attente
-                    </Button>
-                  </form>
-                )}
                 {application.status !== "ACCEPTED" && (
                   <form action={actionSetStatus.bind(null, "ACCEPTED")}>
                     <Button type="submit" variant="primary" size="sm" className="w-full">
@@ -288,6 +360,13 @@ export default async function CandidatureDetailPage({
                   <form action={actionSetStatus.bind(null, "REJECTED")}>
                     <Button type="submit" variant="danger" size="sm" className="w-full">
                       Refuser
+                    </Button>
+                  </form>
+                )}
+                {application.status !== "PENDING" && (
+                  <form action={actionSetStatus.bind(null, "PENDING")}>
+                    <Button type="submit" variant="ghost" size="sm" className="w-full">
+                      Remettre en attente
                     </Button>
                   </form>
                 )}

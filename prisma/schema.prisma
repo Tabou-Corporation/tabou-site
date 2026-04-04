@@ -107,6 +107,8 @@ model Application {
   motivation    String?         @db.Text
   /// Notes internes recruteur
   notes         String?         @db.Text
+  /// Date/heure de l'entretien Discord (optionnel)
+  interviewAt   DateTime?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   reviewedAt  DateTime?

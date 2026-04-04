@@ -42,7 +42,7 @@ const ROLE_BADGE_VARIANT: Record<UserRole, "muted" | "gold" | "default"> = {
 
 const APP_STATUS_LABEL: Record<string, string> = {
   PENDING:   "En attente de traitement",
-  INTERVIEW: "Entretien en cours",
+  INTERVIEW: "En cours de traitement",
   ACCEPTED:  "Candidature acceptée",
   REJECTED:  "Candidature refusée",
 };
