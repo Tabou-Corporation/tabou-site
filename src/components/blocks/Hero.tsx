@@ -110,14 +110,9 @@ export function Hero({
               className="rounded-md border border-gold/30 shadow-lg shadow-gold/10 sm:w-[96px] sm:h-[96px]"
               unoptimized
             />
-            <div>
-              <p className="font-display font-bold text-2xl sm:text-3xl text-text-primary tracking-[0.25em]">
-                TABOU
-              </p>
-              <p className="text-gold/80 text-xs font-semibold tracking-extra-wide uppercase mt-1">
-                [{CORPORATIONS.tabou.ticker}] · EVE Online
-              </p>
-            </div>
+            <p className="font-display font-bold text-2xl sm:text-3xl text-text-primary tracking-[0.25em]">
+              TABOU
+            </p>
           </div>
 
           {eyebrow && (
