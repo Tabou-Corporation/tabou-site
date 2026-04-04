@@ -1,35 +1,13 @@
 import { redirect } from "next/navigation";
-import Image from "next/image";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
 import { Container } from "@/components/layout/Container";
-import { Card, CardBody } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
-import { CORPORATIONS } from "@/lib/constants/corporations";
-import { Users } from "lucide-react";
+import { PilotGrid } from "@/components/blocks/PilotGrid";
 import type { UserRole } from "@/types/roles";
 
-const ROLE_LABELS: Record<string, string> = {
-  candidate:  "Candidat",
-  member_uz:  "Urban Zone",
-  member:     "Membre",
-  officer:    "Officier",
-  director:   "Directeur",
-  ceo:        "CEO",
-  admin:      "Administrateur",
-};
-
-const ROLE_BADGE: Record<string, "muted" | "gold" | "default"> = {
-  candidate:  "muted",
-  member_uz:  "default",
-  member:     "muted",
-  officer:    "gold",
-  director:   "gold",
-  ceo:        "gold",
-  admin:      "gold",
-};
+export const dynamic = "force-dynamic";
 
 export default async function AnnuairePage() {
   const session = await auth();
@@ -42,93 +20,44 @@ export default async function AnnuairePage() {
     where: {
       role: { in: ["member_uz", "member", "officer", "director", "ceo", "admin"] },
     },
+    select: {
+      id:        true,
+      name:      true,
+      image:     true,
+      role:      true,
+      specialty: true,
+      bio:       true,
+      createdAt: true,
+    },
     orderBy: [{ role: "asc" }, { name: "asc" }],
   });
 
-  const counts = {
-    total:     members.length,
-    officer:   members.filter((m) => ["officer", "director", "ceo", "admin"].includes(m.role)).length,
-    member:    members.filter((m) => m.role === "member").length,
-    member_uz: members.filter((m) => m.role === "member_uz").length,
-  };
+  const total     = members.length;
+  const officers  = members.filter((m) => ["officer", "director", "ceo", "admin"].includes(m.role)).length;
+  const uzCount   = members.filter((m) => m.role === "member_uz").length;
 
   return (
     <div className="py-10 sm:py-14">
       <Container>
+        {/* ── Header ── */}
         <div className="mb-8">
           <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-2">
             Espace membre
           </p>
-          <h1 className="font-display font-bold text-3xl text-text-primary">
-            Annuaire
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-text-primary">
+            Annuaire des Pilotes
           </h1>
-          <p className="text-text-muted text-sm mt-1">
-            {counts.total} membre{counts.total > 1 ? "s" : ""} actif{counts.total > 1 ? "s" : ""}
-            {counts.member_uz > 0 && ` · ${counts.member_uz} Urban Zone`}
-            {counts.officer > 0 && ` · ${counts.officer} officier${counts.officer > 1 ? "s" : ""}`}
+          <p className="text-text-muted text-sm mt-2">
+            <span className="text-text-secondary font-semibold">{total}</span> pilote{total > 1 ? "s" : ""} actif{total > 1 ? "s" : ""}
+            {uzCount   > 0 && <> · <span className="text-text-secondary">{uzCount}</span> Urban Zone</>}
+            {officers  > 0 && <> · <span className="text-gold/70">{officers}</span> officier{officers > 1 ? "s" : ""}</>}
           </p>
         </div>
 
         <Separator gold className="mb-8" />
 
-        {members.length === 0 ? (
-          <Card>
-            <CardBody className="py-12 text-center">
-              <Users size={32} className="text-text-muted mx-auto mb-3" />
-              <p className="text-text-muted text-sm">Aucun membre pour le moment.</p>
-            </CardBody>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {members.map((member) => (
-              <Card key={member.id}>
-                <CardBody className="flex flex-col items-center text-center gap-3 py-6 px-3">
-                  {member.image ? (
-                    <Image
-                      src={member.image}
-                      alt={member.name ?? "Pilote"}
-                      width={64}
-                      height={64}
-                      className="rounded-full border border-gold/20"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center">
-                      <span className="text-text-muted text-xl font-display font-bold">
-                        {(member.name ?? "?")[0]}
-                      </span>
-                    </div>
-                  )}
-                  <div className="space-y-1.5">
-                    <p className="text-text-primary text-sm font-display font-semibold leading-tight">
-                      {member.name ?? "Pilote inconnu"}
-                    </p>
-                    <Badge
-                      variant={ROLE_BADGE[member.role] ?? "muted"}
-                      {...(member.role === "member_uz" ? { className: "border-blue-400/50 text-blue-300" } : {})}
-                    >
-                      {ROLE_LABELS[member.role] ?? member.role}
-                    </Badge>
-                    <div className="flex justify-center pt-0.5">
-                      <Image
-                        src={
-                          member.role === "member_uz"
-                            ? CORPORATIONS.urbanZone.logoUrl(32)
-                            : CORPORATIONS.tabou.logoUrl(32)
-                        }
-                        alt={member.role === "member_uz" ? "Urban Zone" : "Tabou"}
-                        width={20}
-                        height={20}
-                        className="rounded-sm opacity-60"
-                        unoptimized
-                      />
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        )}
+        {/* ── Grille animée ── */}
+        <PilotGrid members={members} />
       </Container>
     </div>
   );

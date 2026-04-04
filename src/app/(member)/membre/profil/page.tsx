@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { CORPORATIONS } from "@/lib/constants/corporations";
 import { prisma } from "@/lib/db";
+import { BioEditor } from "./BioEditor";
 import type { UserRole } from "@/types/roles";
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -23,7 +24,6 @@ export default async function ProfilePage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  // Récupération des données complètes depuis la DB
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     include: { accounts: true },
@@ -73,10 +73,7 @@ export default async function ProfilePage() {
                 <h2 className="font-display font-bold text-xl text-text-primary">
                   {user.name ?? "Pilote inconnu"}
                 </h2>
-                <Badge
-                  variant="gold"
-                  className="mt-2"
-                >
+                <Badge variant="gold" className="mt-2">
                   {ROLE_LABELS[role]}
                 </Badge>
               </div>
@@ -129,8 +126,25 @@ export default async function ProfilePage() {
               </CardHeader>
               <CardBody className="space-y-4">
                 <InfoRow label="Rôle" value={ROLE_LABELS[role]} />
-                <InfoRow label="Statut" value={role === "candidate" ? "En période d'essai" : "Membre actif"} />
-                {/* V6 : données ESI (sp, killboard, etc.) */}
+                <InfoRow
+                  label="Statut"
+                  value={role === "candidate" ? "En période d'essai" : "Membre actif"}
+                />
+              </CardBody>
+            </Card>
+
+            {/* Bio éditable */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display font-semibold text-base text-text-primary">
+                    Présentation
+                  </h3>
+                  <span className="text-text-muted text-xs">Visible dans l&apos;annuaire</span>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <BioEditor initialBio={user.bio ?? ""} />
               </CardBody>
             </Card>
 
@@ -157,9 +171,7 @@ function InfoRow({
   return (
     <div className="flex items-start justify-between gap-4">
       <span className="text-text-muted text-sm flex-shrink-0">{label}</span>
-      <span
-        className={`text-text-secondary text-sm text-right ${mono ? "font-mono text-xs" : ""}`}
-      >
+      <span className={`text-text-secondary text-sm text-right ${mono ? "font-mono text-xs" : ""}`}>
         {value}
       </span>
     </div>
