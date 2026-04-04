@@ -25,7 +25,7 @@ export default function middleware(req: NextRequest) {
   // ── Routes membres (/membre) ───────────────────────────────────────────────
   if (pathname.startsWith("/membre")) {
     if (!isLoggedIn) {
-      const loginUrl = new URL("/auth/login", req.nextUrl);
+      const loginUrl = new URL("/login", req.nextUrl);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
@@ -34,7 +34,7 @@ export default function middleware(req: NextRequest) {
   // ── Routes staff (/staff) ──────────────────────────────────────────────────
   if (pathname.startsWith("/staff")) {
     if (!isLoggedIn) {
-      const loginUrl = new URL("/auth/login", req.nextUrl);
+      const loginUrl = new URL("/login", req.nextUrl);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
