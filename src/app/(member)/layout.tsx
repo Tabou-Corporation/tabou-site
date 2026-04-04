@@ -1,17 +1,17 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
+import { hasMinRole, canManageRecruitment } from "@/types/roles";
 import { MainNav } from "@/components/navigation/MainNav";
 import { Footer } from "@/components/layout/Footer";
 import { MemberSidebar, MemberMobileNav } from "@/components/navigation/MemberSidebar";
+import type { UserRole } from "@/types/roles";
 
 /**
- * Layout zone membre — V3
+ * Layout zone membre — V4
  *
- * Double protection :
- * 1. Middleware (Edge) : redirection rapide avant le rendu
- * 2. Ce layout (Server) : vérification côté serveur en rendu SSR
- *
- * Navigation : sidebar fixe desktop + strip mobile horizontal.
+ * Sidebar universelle : affiche les sections staff si officer+,
+ * avec badge candidatures PENDING.
  */
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -19,14 +19,20 @@ export default async function MemberLayout({ children }: { children: React.React
   if (!session) redirect("/login");
   if (session.user.role === "suspended") redirect("/login?error=suspended");
 
+  const role      = (session.user.role ?? "candidate") as UserRole;
+  const specialty = session.user.specialty ?? null;
+  const hasRecruitment = canManageRecruitment(role, specialty);
+
+  const pendingCount = hasMinRole(role, "officer") && hasRecruitment
+    ? await prisma.application.count({ where: { status: "PENDING" } })
+    : 0;
+
   return (
     <>
       <MainNav />
-      {/* Sidebar desktop fixe — lg+ seulement */}
-      <MemberSidebar />
+      <MemberSidebar pendingCount={pendingCount} />
       <main className="flex-1 flex flex-col pt-16 lg:pl-64">
-        {/* Strip navigation mobile — sticky sous la MainNav */}
-        <MemberMobileNav />
+        <MemberMobileNav pendingCount={pendingCount} />
         {children}
       </main>
       <div className="lg:pl-64">
