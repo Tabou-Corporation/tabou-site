@@ -18,6 +18,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   director:   "Directeur",
   ceo:        "CEO",
   admin:      "Administrateur",
+  suspended:  "Suspendu",
 };
 
 export default async function ProfilePage() {

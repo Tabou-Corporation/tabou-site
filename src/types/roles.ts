@@ -1,6 +1,6 @@
 /**
  * Rôles Tabou — V6
- * Hiérarchie : candidate < member_uz < member < officer < director < ceo < admin
+ * Hiérarchie : suspended < candidate < member_uz < member < officer < director < ceo < admin
  */
 export type UserRole =
   | "admin"
@@ -9,7 +9,8 @@ export type UserRole =
   | "officer"
   | "member"
   | "member_uz"
-  | "candidate";
+  | "candidate"
+  | "suspended";
 
 export type OfficerSpecialty =
   | "pvp"
@@ -27,6 +28,7 @@ export const ROLE_LEVEL: Record<UserRole, number> = {
   member:    3,
   member_uz: 2,
   candidate: 1,
+  suspended: 0,
 };
 
 export function hasMinRole(role: UserRole, required: UserRole): boolean {

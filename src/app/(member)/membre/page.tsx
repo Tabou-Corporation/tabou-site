@@ -19,11 +19,13 @@ import type { UserRole } from "@/types/roles";
 const ROLE_LABELS: Record<UserRole, string> = {
   candidate: "Candidat", member_uz: "Urban Zone", member: "Membre",
   officer: "Officier", director: "Directeur", ceo: "CEO", admin: "Administrateur",
+  suspended: "Suspendu",
 };
 
 const ROLE_BADGE_VARIANT: Record<UserRole, "muted" | "gold" | "default"> = {
   candidate: "muted", member_uz: "default", member: "gold",
   officer: "gold", director: "gold", ceo: "gold", admin: "gold",
+  suspended: "muted",
 };
 
 const APPLICATION_STATUS_LABELS: Record<string, string> = {

@@ -19,6 +19,10 @@ export default async function MemberLayout({ children }: { children: React.React
     redirect("/login");
   }
 
+  if (session.user.role === "suspended") {
+    redirect("/login?error=suspended");
+  }
+
   return (
     <>
       <MainNav />

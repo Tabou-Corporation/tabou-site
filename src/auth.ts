@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import type { OAuthConfig } from "next-auth/providers";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
+import { CORPORATIONS } from "@/lib/constants/corporations";
 import type { UserRole } from "@/types/roles";
 
 /**
@@ -109,6 +110,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } catch { /* ESI indisponible — on ignore */ }
       }
 
+      // Détermine le rôle automatique selon la corporation ESI
+      let autoRole: UserRole | undefined;
+      if (corporationId) {
+        const currentUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true },
+        }).catch(() => null);
+        const currentRole = (currentUser?.role ?? "candidate") as UserRole;
+
+        const inTabou = corporationId === CORPORATIONS.tabou.id;
+        const inUZ    = corporationId === CORPORATIONS.urbanZone.id;
+        const inCorp  = inTabou || inUZ;
+
+        if (inCorp && currentRole === "candidate") {
+          // Premier login corpo → promouvoir
+          autoRole = inUZ ? "member_uz" : "member";
+        } else if (!inCorp && ["member_uz", "member", "officer"].includes(currentRole)) {
+          // Éjecté de la corpo → suspendre
+          autoRole = "suspended";
+        }
+      }
+
       if (name) {
         try {
           await prisma.user.update({
@@ -117,6 +140,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name,
               ...(image ? { image } : {}),
               ...(corporationId ? { corporationId } : {}),
+              ...(autoRole ? { role: autoRole } : {}),
             },
           });
         } catch {

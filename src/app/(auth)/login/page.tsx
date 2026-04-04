@@ -50,7 +50,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {error && (
           <div className="bg-red/10 border border-red/30 rounded px-4 py-3">
             <p className="text-red-light text-sm">
-              {error === "OAuthCallbackError"
+              {error === "suspended"
+                ? "Votre accès a été suspendu suite à un départ de la corporation. Contactez un directeur si c'est une erreur."
+                : error === "OAuthCallbackError"
                 ? "Erreur de connexion EVE SSO. Réessayez."
                 : "Une erreur est survenue. Réessayez."}
             </p>
