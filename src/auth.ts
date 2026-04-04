@@ -28,7 +28,6 @@ function createEVEProvider(): OAuthConfig<EVECharacterProfile> {
     id: "eveonline",
     name: "EVE Online",
     type: "oauth",
-    issuer: "https://login.eveonline.com",
     clientId: process.env.EVE_CLIENT_ID ?? "",
     clientSecret: process.env.EVE_CLIENT_SECRET ?? "",
     authorization: {
@@ -37,6 +36,7 @@ function createEVEProvider(): OAuthConfig<EVECharacterProfile> {
     },
     token: "https://login.eveonline.com/v2/oauth/token",
     userinfo: {
+      url: "https://esi.evetech.net/verify/",
       async request({ tokens }: { tokens: { access_token?: string } }) {
         const res = await fetch("https://esi.evetech.net/verify/", {
           headers: {
