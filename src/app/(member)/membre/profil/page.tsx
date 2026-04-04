@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
+import { CORPORATIONS } from "@/lib/constants/corporations";
 import { prisma } from "@/lib/db";
 import type { UserRole } from "@/types/roles";
 
@@ -108,9 +109,23 @@ export default async function ProfilePage() {
 
             <Card>
               <CardHeader>
-                <h3 className="font-display font-semibold text-base text-text-primary">
-                  Corporation Tabou
-                </h3>
+                <div className="flex items-center gap-3">
+                  <Image
+                    src={
+                      role === "member_uz"
+                        ? CORPORATIONS.urbanZone.logoUrl(64)
+                        : CORPORATIONS.tabou.logoUrl(64)
+                    }
+                    alt={role === "member_uz" ? "Urban Zone" : "Tabou"}
+                    width={32}
+                    height={32}
+                    className="rounded-sm"
+                    unoptimized
+                  />
+                  <h3 className="font-display font-semibold text-base text-text-primary">
+                    {role === "member_uz" ? "Corporation Urban Zone" : "Corporation Tabou"}
+                  </h3>
+                </div>
               </CardHeader>
               <CardBody className="space-y-4">
                 <InfoRow label="Rôle" value={ROLE_LABELS[role]} />

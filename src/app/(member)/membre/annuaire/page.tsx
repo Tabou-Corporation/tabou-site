@@ -7,6 +7,7 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
+import { CORPORATIONS } from "@/lib/constants/corporations";
 import { Users } from "lucide-react";
 import type { UserRole } from "@/types/roles";
 
@@ -108,6 +109,20 @@ export default async function AnnuairePage() {
                     >
                       {ROLE_LABELS[member.role] ?? member.role}
                     </Badge>
+                    <div className="flex justify-center pt-0.5">
+                      <Image
+                        src={
+                          member.role === "member_uz"
+                            ? CORPORATIONS.urbanZone.logoUrl(32)
+                            : CORPORATIONS.tabou.logoUrl(32)
+                        }
+                        alt={member.role === "member_uz" ? "Urban Zone" : "Tabou"}
+                        width={20}
+                        height={20}
+                        className="rounded-sm opacity-60"
+                        unoptimized
+                      />
+                    </div>
                   </div>
                 </CardBody>
               </Card>
