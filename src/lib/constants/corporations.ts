@@ -16,12 +16,12 @@ export const CORPORATIONS = {
       `https://images.evetech.net/corporations/98809880/logo?size=${size}`,
   },
   urbanZone: {
-    id: 98809880, // ⚠️  À remplacer par le vrai corp ID d'Urban Zone
+    id: 98215397,
     name: "Urban Zone",
     ticker: "UZ",
-    logo: "https://images.evetech.net/corporations/98809880/logo",
+    logo: "https://images.evetech.net/corporations/98215397/logo",
     logoUrl: (size: 32 | 64 | 128 | 256 | 512 = 64) =>
-      `https://images.evetech.net/corporations/98809880/logo?size=${size}`,
+      `https://images.evetech.net/corporations/98215397/logo?size=${size}`,
   },
 } as const;
 
