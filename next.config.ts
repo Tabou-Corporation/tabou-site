@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "img-src 'self' https://images.evetech.net https://content.eveonline.com https://i.imgur.com https://imgur.com https://*.githubusercontent.com https://*.discord.com https://cdn.discordapp.com data:",
+              "img-src 'self' https: data:",
               "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self'",
