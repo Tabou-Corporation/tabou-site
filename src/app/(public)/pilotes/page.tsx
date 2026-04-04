@@ -5,6 +5,8 @@ import { Separator } from "@/components/ui/Separator";
 import { PilotGrid } from "@/components/blocks/PilotGrid";
 import { SITE_CONFIG } from "@/config/site";
 
+export const revalidate = 300; // 5 min — liste pilotes change peu
+
 export const metadata: Metadata = {
   title: `Pilotes — ${SITE_CONFIG.fullName}`,
   description: "Découvrez les pilotes actifs des corporations Tabou et Urban Zone.",

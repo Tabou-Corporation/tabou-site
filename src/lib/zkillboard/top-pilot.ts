@@ -18,7 +18,7 @@ export async function fetchTopPilot(): Promise<TopPilot | null> {
   try {
     const res = await fetch(
       `${ZKILL_CONFIG.apiUrl}/stats/corporationID/${ZKILL_CONFIG.corpId}/`,
-      { next: { revalidate: 3600 } } // recalcul zkill toutes les heures max
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(5_000) }
     );
     if (!res.ok) return null;
 

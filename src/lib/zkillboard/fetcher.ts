@@ -33,7 +33,7 @@ export async function fetchCorpKills(): Promise<KillDisplayEntry[]> {
     // ── 1. Kills de la corpo (pas les pertes) ──────────────────────────
     const zkillRes = await fetch(
       `${ZKILL_CONFIG.apiUrl}/kills/corporationID/${ZKILL_CONFIG.corpId}/`,
-      { next: { revalidate: 60 } }
+      { next: { revalidate: 60 }, signal: AbortSignal.timeout(5_000) }
     );
     if (!zkillRes.ok) throw new Error(`zkill ${zkillRes.status}`);
     const zkillData: ZkillApiEntry[] = await zkillRes.json();
@@ -44,7 +44,7 @@ export async function fetchCorpKills(): Promise<KillDisplayEntry[]> {
       entries.map(async (entry) => {
         const r = await fetch(
           `${ESI}/killmails/${entry.killmail_id}/${entry.zkb.hash}/`,
-          { next: { revalidate: 86400 * 30 } } // immuables
+          { next: { revalidate: 86400 * 30 }, signal: AbortSignal.timeout(5_000) }
         );
         if (!r.ok) return null;
         return { zkb: entry.zkb, km: await r.json(), id: entry.killmail_id };
@@ -64,6 +64,7 @@ export async function fetchCorpKills(): Promise<KillDisplayEntry[]> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(allIds),
       next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(5_000),
     });
     const namesArr: { id: number; name: string }[] = namesRes.ok
       ? await namesRes.json()

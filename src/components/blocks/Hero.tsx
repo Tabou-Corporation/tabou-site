@@ -1,12 +1,11 @@
+import { Suspense } from "react";
 import { Container } from "@/components/layout/Container";
-import { KillFeed } from "@/components/blocks/KillFeed";
-import { TopPilotCard } from "@/components/blocks/TopPilotCard";
+import { KillFeedServer } from "@/components/blocks/KillFeedServer";
+import { TopPilotServer } from "@/components/blocks/TopPilotServer";
 import { HeroBackground } from "@/components/blocks/HeroBackground";
 import { HeroAnimatedContent } from "@/components/blocks/HeroAnimatedContent";
 import { cn } from "@/lib/utils/cn";
 import type { CTAConfig } from "@/types/content";
-import type { KillDisplayEntry } from "@/lib/zkillboard/types";
-import type { TopPilot } from "@/lib/zkillboard/top-pilot";
 
 interface HeroStat {
   label: string;
@@ -23,12 +22,10 @@ interface HeroProps {
   backgroundImage?: string;
   /** Stats affichées en barre en bas du hero */
   stats?: HeroStat[];
-  /** Kills récents pour le widget zkillboard */
-  kills?: KillDisplayEntry[];
-  /** Meilleur pilote all-time affiché au-dessus du kill feed */
-  topPilot?: TopPilot | null;
   /** URL du logo corporation pour le mode emblème */
   logoUrl?: string;
+  /** Affiche le kill feed + top pilote en streaming (Suspense) */
+  showKillFeed?: boolean;
   className?: string;
 }
 
@@ -40,9 +37,8 @@ export function Hero({
   secondaryCTA,
   backgroundImage,
   stats,
-  kills,
-  topPilot,
   logoUrl,
+  showKillFeed = false,
   className,
 }: HeroProps) {
   return (
@@ -101,11 +97,17 @@ export function Hero({
         className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
 
-      {/* ── Kill Feed + Top Pilote — overlay gauche, centré verticalement ── */}
-      {(kills && kills.length > 0) && (
+      {/* ── Kill Feed + Top Pilote — streaming Suspense ─────────────── */}
+      {/* Les fetches zkillboard sont isolés : le hero s'affiche immédiatement,  */}
+      {/* les widgets apparaissent dès que l'API répond (ou timeout 5 s).        */}
+      {showKillFeed && (
         <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2">
-          {topPilot && <TopPilotCard pilot={topPilot} />}
-          <KillFeed initialKills={kills} />
+          <Suspense fallback={null}>
+            <TopPilotServer />
+          </Suspense>
+          <Suspense fallback={null}>
+            <KillFeedServer />
+          </Suspense>
         </div>
       )}
 
@@ -113,7 +115,7 @@ export function Hero({
       {/* Sur desktop, on compense les 210 px du kill feed à gauche      */}
       {/* pour que le contenu reste visuellement centré sur l'espace libre */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
-        <div className={cn(kills && kills.length > 0 ? "lg:pl-[210px]" : "")}>
+        <div className={cn(showKillFeed ? "lg:pl-[210px]" : "")}>
           <HeroAnimatedContent
             {...(eyebrow     ? { eyebrow }     : {})}
             {...(headline    ? { headline }    : {})}

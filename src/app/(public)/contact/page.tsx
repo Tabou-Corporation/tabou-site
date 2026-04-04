@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ExternalLink, Clock } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // 1 h — contenu CMS rarement modifié
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Section } from "@/components/blocks/Section";

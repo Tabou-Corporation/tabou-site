@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // 1 min — stats homepage (kills, membres)
 import { ArrowRight } from "lucide-react";
 
 import { Hero } from "@/components/blocks/Hero";
@@ -13,8 +13,6 @@ import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
 
 import { getHomeContent, getActivitiesContent } from "@/lib/site-content/loader";
-import { fetchCorpKills } from "@/lib/zkillboard/fetcher";
-import { fetchTopPilot } from "@/lib/zkillboard/top-pilot";
 import { CORPORATIONS } from "@/lib/constants/corporations";
 import { SITE_CONFIG } from "@/config/site";
 
@@ -24,11 +22,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [home, activities, kills, topPilot] = await Promise.all([
+  // Les fetches zkillboard (kills, topPilot) sont déplacés dans des Server Components
+  // wrappés par <Suspense> dans Hero — la page s'affiche sans les attendre.
+  const [home, activities] = await Promise.all([
     getHomeContent(),
     getActivitiesContent(),
-    fetchCorpKills(),
-    fetchTopPilot(),
   ]);
 
   const previewActivities = activities.slice(0, 4);
@@ -42,8 +40,7 @@ export default async function HomePage() {
         secondaryCTA={{ label: "En savoir plus", href: "/corporation", variant: "ghost" }}
         backgroundImage={home.hero.backgroundImage ?? "/images/hero-bg.jpg"}
         stats={home.stats}
-        kills={kills}
-        topPilot={topPilot}
+        showKillFeed
       />
 
       {/* ── Présentation ─────────────────────────────────────────────── */}
