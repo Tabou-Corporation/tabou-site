@@ -29,76 +29,6 @@ export default async function RecruitmentPage() {
         description={recruitment.intro.body}
       />
 
-      {/* ── Profils recherchés ─────────────────────────────────────────── */}
-      <Section bg="surface" spacing="lg">
-        <SectionHeader
-          headline="Profils recherchés"
-          description="Trois types de pilotes qui s'intègrent naturellement chez Tabou."
-        />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {recruitment.wantedProfiles.map((profile) => (
-            <Card key={profile.title} accent>
-              <CardBody className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-gold/70 flex-shrink-0" />
-                  <h3 className="font-display font-semibold text-lg text-text-primary">
-                    {profile.title}
-                  </h3>
-                </div>
-                <p className="text-text-secondary text-sm leading-relaxed">
-                  {profile.description}
-                </p>
-                <ul className="space-y-1.5 pt-1">
-                  {profile.traits.map((trait) => (
-                    <li key={trait} className="flex items-start gap-2">
-                      <span className="text-gold/40 text-xs mt-1 flex-shrink-0">—</span>
-                      <span className="text-text-muted text-xs leading-relaxed">{trait}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      </Section>
-
-      <Separator gold />
-
-      {/* ── Profils non adaptés ────────────────────────────────────────── */}
-      <Section bg="default" spacing="lg">
-        <SectionHeader
-          headline="Profils non adaptés"
-          description="Autant être directs. Ce n'est pas pour vous si :"
-        />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {recruitment.notAdaptedProfiles.map((profile) => (
-            <Card key={profile.title} className="border-red/20">
-              <CardBody className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <XCircle size={16} className="text-red-light/60 flex-shrink-0" />
-                  <h3 className="font-display font-semibold text-lg text-text-primary">
-                    {profile.title}
-                  </h3>
-                </div>
-                <p className="text-text-secondary text-sm leading-relaxed">
-                  {profile.description}
-                </p>
-                <ul className="space-y-1.5 pt-1">
-                  {profile.traits.map((trait) => (
-                    <li key={trait} className="flex items-start gap-2">
-                      <span className="text-red/40 text-xs mt-1 flex-shrink-0">—</span>
-                      <span className="text-text-muted text-xs leading-relaxed">{trait}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      </Section>
-
-      <Separator gold />
-
       {/* ── Étapes du recrutement ─────────────────────────────────────── */}
       <Section bg="surface" spacing="lg">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
@@ -177,6 +107,76 @@ export default async function RecruitmentPage() {
               </div>
             </div>
           </div>
+        </div>
+      </Section>
+
+      <Separator gold />
+
+      {/* ── Profils recherchés ─────────────────────────────────────────── */}
+      <Section bg="default" spacing="lg">
+        <SectionHeader
+          headline="Profils recherchés"
+          description="Trois types de pilotes qui s'intègrent naturellement chez Tabou."
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {recruitment.wantedProfiles.map((profile) => (
+            <Card key={profile.title} accent>
+              <CardBody className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-gold/70 flex-shrink-0" />
+                  <h3 className="font-display font-semibold text-lg text-text-primary">
+                    {profile.title}
+                  </h3>
+                </div>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  {profile.description}
+                </p>
+                <ul className="space-y-1.5 pt-1">
+                  {profile.traits.map((trait) => (
+                    <li key={trait} className="flex items-start gap-2">
+                      <span className="text-gold/40 text-xs mt-1 flex-shrink-0">—</span>
+                      <span className="text-text-muted text-xs leading-relaxed">{trait}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      </Section>
+
+      <Separator gold />
+
+      {/* ── Profils non adaptés ────────────────────────────────────────── */}
+      <Section bg="surface" spacing="lg">
+        <SectionHeader
+          headline="Profils non adaptés"
+          description="Autant être directs. Ce n'est pas pour vous si :"
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {recruitment.notAdaptedProfiles.map((profile) => (
+            <Card key={profile.title} className="border-red/20">
+              <CardBody className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <XCircle size={16} className="text-red-light/60 flex-shrink-0" />
+                  <h3 className="font-display font-semibold text-lg text-text-primary">
+                    {profile.title}
+                  </h3>
+                </div>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  {profile.description}
+                </p>
+                <ul className="space-y-1.5 pt-1">
+                  {profile.traits.map((trait) => (
+                    <li key={trait} className="flex items-start gap-2">
+                      <span className="text-red/40 text-xs mt-1 flex-shrink-0">—</span>
+                      <span className="text-text-muted text-xs leading-relaxed">{trait}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardBody>
+            </Card>
+          ))}
         </div>
       </Section>
     </>
