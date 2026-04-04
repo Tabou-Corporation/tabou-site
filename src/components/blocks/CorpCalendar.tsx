@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import { fr } from "date-fns/locale";
+import { Calendar, momentLocalizer, Views } from "react-big-calendar";
+import moment from "moment";
+import "moment/locale/fr";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, User, Check, HelpCircle, XCircle, Send } from "lucide-react";
 import { rsvpEvent, cancelRsvp, notifyDiscordEvent } from "@/lib/actions/rsvp";
 import { cn } from "@/lib/utils/cn";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../app/(member)/membre/calendrier/calendar.css";
 
 // ── Localizer ──────────────────────────────────────────────────────────────
 
-const locales = { fr };
-const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
+moment.locale("fr");
+const localizer = momentLocalizer(moment);
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
