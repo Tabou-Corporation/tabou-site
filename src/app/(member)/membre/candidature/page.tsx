@@ -97,7 +97,7 @@ export default async function CandidaturePage() {
                   <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
                     Motivation
                   </p>
-                  <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
+                  <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap break-words">
                     {application.motivation}
                   </p>
                 </div>

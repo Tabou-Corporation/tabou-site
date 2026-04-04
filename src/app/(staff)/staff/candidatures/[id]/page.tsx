@@ -158,7 +158,7 @@ export default async function CandidatureDetailPage({
                   <p className="text-text-muted text-xs uppercase tracking-wide font-semibold mb-2">
                     Motivation
                   </p>
-                  <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
+                  <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap break-words">
                     {application.motivation ?? <em className="text-text-muted">Aucune motivation renseignée.</em>}
                   </p>
                 </div>
