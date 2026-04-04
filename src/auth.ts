@@ -30,23 +30,13 @@ function createEVEProvider(): OAuthConfig<EVECharacterProfile> {
     type: "oauth",
     clientId: process.env.EVE_CLIENT_ID ?? "",
     clientSecret: process.env.EVE_CLIENT_SECRET ?? "",
+    checks: ["state"],
     authorization: {
       url: "https://login.eveonline.com/v2/oauth/authorize",
       params: { scope: "publicData" },
     },
     token: "https://login.eveonline.com/v2/oauth/token",
-    userinfo: {
-      url: "https://esi.evetech.net/verify/",
-      async request({ tokens }: { tokens: { access_token?: string } }) {
-        const res = await fetch("https://esi.evetech.net/verify/", {
-          headers: {
-            Authorization: `Bearer ${tokens.access_token ?? ""}`,
-          },
-        });
-        if (!res.ok) throw new Error("EVE SSO verify failed");
-        return res.json() as Promise<EVECharacterProfile>;
-      },
-    },
+    userinfo: "https://esi.evetech.net/verify/",
     profile(profile) {
       return {
         id: String(profile.CharacterID),
