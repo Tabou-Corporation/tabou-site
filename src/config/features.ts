@@ -30,9 +30,9 @@ export const FEATURES = {
   announcements: true,
 
   // ── V5 : Backoffice officier/admin ────────────────────────────────────
-  adminPanel: false,
-  officerTools: false,
-  permissionsManager: false,
+  adminPanel: true,
+  officerTools: true,
+  permissionsManager: true,
 
   // ── V6 : Intégrations EVE ─────────────────────────────────────────────
   eveKillboard: false,

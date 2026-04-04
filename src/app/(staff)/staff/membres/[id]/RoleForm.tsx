@@ -1,0 +1,63 @@
+"use client";
+
+import { useActionState } from "react";
+import { changeUserRoleAction } from "@/lib/actions/members";
+import { Button } from "@/components/ui/Button";
+
+const ROLES = [
+  { value: "candidate", label: "Candidat" },
+  { value: "member",    label: "Membre" },
+  { value: "recruiter", label: "Recruteur" },
+  { value: "officer",   label: "Officier" },
+  { value: "admin",     label: "Administrateur" },
+];
+
+interface Props {
+  userId: string;
+  currentRole: string;
+  actorRole: string;
+}
+
+export function RoleForm({ userId, currentRole, actorRole }: Props) {
+  const [state, formAction, pending] = useActionState(changeUserRoleAction, {});
+
+  const allowedRoles = actorRole === "admin"
+    ? ROLES
+    : ROLES.filter((r) => ["candidate", "member", "recruiter", "officer"].includes(r.value));
+
+  return (
+    <form action={formAction} className="space-y-3">
+      <input type="hidden" name="userId" value={userId} />
+
+      <div className="space-y-1.5">
+        <label className="block text-text-muted text-xs uppercase tracking-wide font-semibold">
+          Rôle actuel → nouveau rôle
+        </label>
+        <div className="flex items-center gap-3 flex-wrap">
+          <select
+            name="role"
+            defaultValue={currentRole}
+            className={[
+              "flex-1 min-w-[160px] bg-bg-elevated border rounded px-3 py-2",
+              "text-text-primary text-sm border-border",
+              "focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40",
+            ].join(" ")}
+          >
+            {allowedRoles.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+          <Button type="submit" variant="secondary" size="sm" disabled={pending}>
+            {pending ? "…" : "Appliquer"}
+          </Button>
+        </div>
+      </div>
+
+      {state.error && (
+        <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded px-3 py-2">
+          {state.error}
+        </p>
+      )}
+    </form>
+  );
+}
