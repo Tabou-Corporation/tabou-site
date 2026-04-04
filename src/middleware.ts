@@ -1,25 +1,26 @@
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ROLE_LEVEL } from "@/types/roles";
-import type { UserRole } from "@/types/roles";
 
 /**
- * Middleware de protection des routes — s'exécute côté serveur (Edge).
+ * Middleware de protection des routes — Edge Runtime compatible.
  *
- * C'est ici que réside la vraie sécurité des routes privées.
- * Les guards côté client ne sont que du confort UX — pas de sécurité.
+ * Vérifie la présence du cookie de session next-auth sans importer Prisma.
+ * La vérification de rôle fine est assurée par les layouts serveur (auth()).
  *
  * Règles :
- *   /membre/* → authentifié + role >= "candidate"
- *   /staff/*  → authentifié + role >= "recruiter"
+ *   /membre/* → session requise
+ *   /staff/*  → session requise (rôle vérifié dans le layout)
  *   /auth/*   → toujours accessible
  */
-export default auth((req: NextRequest & { auth: { user?: { role?: string } } | null }) => {
+export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = req.auth;
-  const isLoggedIn = !!session?.user;
-  const userRole = (session?.user?.role ?? "public") as UserRole;
+
+  // Cookie de session next-auth (HTTP en dev, HTTPS en prod)
+  const sessionToken =
+    req.cookies.get("authjs.session-token") ??
+    req.cookies.get("__Secure-authjs.session-token");
+
+  const isLoggedIn = !!sessionToken;
 
   // ── Routes membres (/membre) ───────────────────────────────────────────────
   if (pathname.startsWith("/membre")) {
@@ -27,10 +28,6 @@ export default auth((req: NextRequest & { auth: { user?: { role?: string } } | n
       const loginUrl = new URL("/auth/login", req.nextUrl);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
-    }
-    // Doit être au moins candidat
-    if (ROLE_LEVEL[userRole] < ROLE_LEVEL["candidate"]) {
-      return NextResponse.redirect(new URL("/", req.nextUrl));
     }
   }
 
@@ -41,14 +38,10 @@ export default auth((req: NextRequest & { auth: { user?: { role?: string } } | n
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
-    // Doit être au moins recruteur
-    if (ROLE_LEVEL[userRole] < ROLE_LEVEL["recruiter"]) {
-      return NextResponse.redirect(new URL("/membre", req.nextUrl));
-    }
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/membre/:path*", "/staff/:path*"],
