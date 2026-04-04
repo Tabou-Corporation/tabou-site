@@ -309,7 +309,7 @@ function ParticipantList({
 
   if (participations.length === 0) {
     return (
-      <p className="text-xs text-text-muted italic">Aucune réponse pour l'instant.</p>
+      <p className="text-xs text-text-muted italic">Aucune réponse pour l&apos;instant.</p>
     );
   }
 
