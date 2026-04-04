@@ -11,7 +11,21 @@
       "Bash(powershell -Command \"Get-Process node | Select-Object Id,CPU,WorkingSet | Format-Table\")",
       "Bash(powershell -Command \"Stop-Process -Id 195352 -Force; Start-Sleep -Seconds 1; Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\")",
       "Bash(npm run:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(curl -s -I http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://esi.evetech.net/latest/corporations/98809880/members/\")",
+      "Bash(taskkill /PID 142040 /F)",
+      "Bash(cmd /c \"taskkill /PID 142040 /F\")",
+      "Bash(cmd /c \"netstat -ano | findstr :3000 | findstr LISTENING\")",
+      "Bash(cmd /c \"netstat -ano | findstr :3001 | findstr LISTENING\")",
+      "Bash(cmd /c \"netstat -ano | findstr LISTENING | findstr :300\")",
+      "Bash(cmd /c \"netstat -ano | findstr :3000\")",
+      "Bash(cmd /c \"netstat -ano\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue | Select-Object LocalPort,State,OwningProcess\")",
+      "Bash(powershell -Command \"Stop-Process -Id 142040 -Force -ErrorAction SilentlyContinue; Stop-Process -Id 222776 -Force -ErrorAction SilentlyContinue; Write-Host ''Done''\")"
     ]
   }
 }
