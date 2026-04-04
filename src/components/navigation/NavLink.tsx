@@ -26,7 +26,7 @@ export function NavLink({ href, label, exact = false, external = false, classNam
         target="_blank"
         rel="noopener noreferrer"
         className={cn(
-          "text-sm font-medium tracking-wide transition-colors duration-[180ms]",
+          "text-sm sm:text-base font-medium tracking-wide transition-colors duration-[180ms]",
           "text-text-secondary hover:text-text-primary",
           className
         )}
@@ -42,7 +42,7 @@ export function NavLink({ href, label, exact = false, external = false, classNam
       href={href}
       {...(onClick ? { onClick } : {})}
       className={cn(
-        "relative text-sm font-medium tracking-wide transition-colors duration-[180ms]",
+        "relative text-sm sm:text-base font-medium tracking-wide transition-colors duration-[180ms]",
         "after:absolute after:bottom-[-2px] after:left-0 after:h-px after:w-full",
         "after:transition-transform after:duration-[180ms] after:origin-left",
         active

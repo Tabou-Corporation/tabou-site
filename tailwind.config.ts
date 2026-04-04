@@ -96,11 +96,16 @@ const config: Config = {
           "0%, 100%": { opacity: "0.6" },
           "50%": { opacity: "1" },
         },
+        "bounce-slow": {
+          "0%, 100%": { transform: "translateY(0)", opacity: "0.6" },
+          "50%": { transform: "translateY(6px)", opacity: "1" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.4s ease-out forwards",
         "fade-in-fast": "fade-in-fast 0.2s ease-out forwards",
         shimmer: "shimmer 2.5s ease-in-out infinite",
+        "bounce-slow": "bounce-slow 2.5s ease-in-out infinite",
       },
 
       // ─── Espacements supplémentaires ──────────────────────────────────────

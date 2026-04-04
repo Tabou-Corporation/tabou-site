@@ -6,7 +6,6 @@ import { Hero } from "@/components/blocks/Hero";
 import { Section, SectionHeader } from "@/components/blocks/Section";
 import { CTAPanel } from "@/components/blocks/CTAPanel";
 import { InfoPanel } from "@/components/blocks/InfoPanel";
-import { StatBlock } from "@/components/blocks/StatBlock";
 import { ActivityCard } from "@/components/blocks/ActivityCard";
 import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
@@ -29,19 +28,21 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* ── Hero cinématique ─────────────────────────────────────────── */}
       <Hero
         eyebrow={home.hero.eyebrow}
         headline={home.hero.headline}
         subheadline={home.hero.subheadline}
         primaryCTA={{ label: "Postuler", href: "/recrutement", variant: "primary" }}
         secondaryCTA={{ label: "En savoir plus", href: "/corporation", variant: "ghost" }}
+        backgroundImage="/images/hero-bg.jpg"
+        stats={home.stats}
       />
 
-      {/* ── Présentation ─────────────────────────────────────────────────── */}
+      {/* ── Présentation ─────────────────────────────────────────────── */}
       <Section bg="surface" spacing="lg">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-center">
-          <div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-14 lg:gap-20 items-start">
+          <div className="lg:col-span-3">
             <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-4">
               {home.intro.eyebrow}
             </p>
@@ -50,7 +51,7 @@ export default async function HomePage() {
             </h2>
             <div className="space-y-4">
               {home.intro.body.map((paragraph, i) => (
-                <p key={i} className="text-text-secondary leading-relaxed">
+                <p key={i} className="text-text-secondary leading-relaxed text-base sm:text-lg">
                   {paragraph}
                 </p>
               ))}
@@ -64,13 +65,31 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <StatBlock stats={home.stats} />
+          {/* Bloc "Pourquoi nous" en résumé compact */}
+          <div className="lg:col-span-2 space-y-4">
+            {home.why.items.slice(0, 3).map((item, i) => (
+              <div
+                key={item.title}
+                className="pl-4 border-l-2 border-l-gold/40 space-y-1.5"
+              >
+                <span className="text-gold/50 text-xs font-mono font-semibold tracking-widest">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3 className="font-display font-semibold text-base text-text-primary">
+                  {item.title}
+                </h3>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </Section>
 
       <Separator gold />
 
-      {/* ── Activités preview ─────────────────────────────────────────────── */}
+      {/* ── Activités preview ─────────────────────────────────────────── */}
       <Section bg="default" spacing="lg">
         <SectionHeader
           eyebrow="Ce que nous faisons"
@@ -92,7 +111,7 @@ export default async function HomePage() {
 
       <Separator gold />
 
-      {/* ── Pourquoi Tabou ─────────────────────────────────────────────────── */}
+      {/* ── Pourquoi Tabou (version complète) ─────────────────────────── */}
       <Section bg="surface" spacing="lg">
         <SectionHeader
           headline={home.why.headline}
@@ -102,10 +121,11 @@ export default async function HomePage() {
           items={home.why.items}
           columns={2}
           accent
+          numbered
         />
       </Section>
 
-      {/* ── CTA Recrutement ───────────────────────────────────────────────── */}
+      {/* ── CTA Recrutement ───────────────────────────────────────────── */}
       <CTAPanel
         eyebrow={home.recruitmentTeaser.eyebrow}
         headline={home.recruitmentTeaser.headline}

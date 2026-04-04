@@ -5,92 +5,138 @@ import { cn } from "@/lib/utils/cn";
 import { CORPORATIONS } from "@/lib/constants/corporations";
 import type { CTAConfig } from "@/types/content";
 
+interface HeroStat {
+  label: string;
+  value: string;
+}
+
 interface HeroProps {
   eyebrow?: string;
   headline: string;
   subheadline?: string;
   primaryCTA?: CTAConfig;
   secondaryCTA?: CTAConfig;
+  /** Image de fond (chemin relatif depuis /public, ex: "/images/hero-bg.jpg") */
+  backgroundImage?: string;
+  /** Stats affichées en barre en bas du hero */
+  stats?: HeroStat[];
   className?: string;
 }
 
-export function Hero({ eyebrow, headline, subheadline, primaryCTA, secondaryCTA, className }: HeroProps) {
+export function Hero({
+  eyebrow,
+  headline,
+  subheadline,
+  primaryCTA,
+  secondaryCTA,
+  backgroundImage,
+  stats,
+  className,
+}: HeroProps) {
   return (
     <section
       className={cn(
-        "relative min-h-[92vh] flex items-center overflow-hidden",
+        "relative min-h-screen flex flex-col justify-center overflow-hidden",
         "bg-bg-deep",
         className
       )}
     >
-      {/* Fond : grille tactique subtile */}
+      {/* ── Background image ─────────────────────────────────────────── */}
+      {backgroundImage ? (
+        <>
+          <Image
+            src={backgroundImage}
+            alt=""
+            fill
+            priority
+            className="object-cover object-center"
+            quality={85}
+            sizes="100vw"
+          />
+          {/* Gradient overlay : sombre à gauche pour le texte, semi-transparent à droite pour l'image */}
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-r from-bg-deep via-bg-deep/85 to-bg-deep/30"
+          />
+          {/* Gradient vertical : assombrir le haut (nav) et le bas (stats) */}
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-b from-bg-deep/70 via-transparent to-bg-deep/90"
+          />
+        </>
+      ) : (
+        <>
+          {/* Fallback : grille tactique subtile (quand pas d'image) */}
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(240,176,48,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(240,176,48,0.8) 1px, transparent 1px)",
+              backgroundSize: "80px 80px",
+            }}
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-b from-bg-deep/60 via-transparent to-bg-deep"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-r from-bg-deep/90 via-transparent to-bg-deep/30"
+          />
+        </>
+      )}
+
+      {/* ── Gold accent lines ────────────────────────────────────────── */}
       <div
         aria-hidden
-        className="absolute inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(240,176,48,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(240,176,48,0.8) 1px, transparent 1px)",
-          backgroundSize: "80px 80px",
-        }}
+        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
 
-      {/* Vignette */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-b from-bg-deep/60 via-transparent to-bg-deep"
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-r from-bg-deep/90 via-transparent to-bg-deep/30"
-      />
-
-      {/* Accent lumineux doré centré-bas */}
-      <div
-        aria-hidden
-        className="absolute bottom-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent"
-      />
-      <div
-        aria-hidden
-        className="absolute bottom-0 left-1/4 w-1/2 h-32 bg-gradient-to-t from-gold/5 to-transparent"
-      />
-
-      <Container className="relative z-10 py-24 sm:py-32">
+      {/* ── Contenu principal ────────────────────────────────────────── */}
+      <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
         <div className="max-w-3xl animate-fade-in">
           {/* Logo corporation */}
-          <div className="flex items-center gap-5 mb-8">
+          <div className="flex items-center gap-4 mb-10">
             <Image
               src={CORPORATIONS.tabou.logoUrl(128)}
               alt="Tabou Corporation"
-              width={88}
-              height={88}
-              className="rounded-md border border-gold/20 shadow-lg shadow-gold/10"
+              width={80}
+              height={80}
+              className="rounded-md border border-gold/30 shadow-lg shadow-gold/10 sm:w-[96px] sm:h-[96px]"
               unoptimized
             />
             <div>
-              <p className="font-display font-bold text-3xl sm:text-4xl text-text-primary tracking-widest">
+              <p className="font-display font-bold text-2xl sm:text-3xl text-text-primary tracking-[0.25em]">
                 TABOU
               </p>
-              <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mt-1">
+              <p className="text-gold/80 text-xs font-semibold tracking-extra-wide uppercase mt-1">
                 [{CORPORATIONS.tabou.ticker}] · EVE Online
               </p>
             </div>
           </div>
 
           {eyebrow && (
-            <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-6">
+            <p className="text-gold text-xs sm:text-sm font-semibold tracking-extra-wide uppercase mb-4">
               {eyebrow}
             </p>
           )}
 
           <h1
-            className="font-display font-bold text-5xl sm:text-6xl lg:text-7xl text-text-primary leading-[1.05] tracking-tight mb-6"
-            style={{ whiteSpace: "pre-line" }}
+            className="font-display font-bold text-5xl sm:text-6xl lg:text-7xl xl:text-8xl text-text-primary leading-[1.02] tracking-tight mb-6"
+            style={{
+              whiteSpace: "pre-line",
+              textShadow: "0 2px 40px rgba(0,0,0,0.8), 0 0 80px rgba(0,0,0,0.5)",
+            }}
           >
             {headline}
           </h1>
 
           {subheadline && (
-            <p className="text-text-secondary text-lg sm:text-xl leading-relaxed max-w-xl mb-10">
+            <p
+              className="text-text-secondary text-lg sm:text-xl leading-relaxed max-w-xl mb-10"
+              style={{ textShadow: "0 1px 20px rgba(0,0,0,0.6)" }}
+            >
               {subheadline}
             </p>
           )}
@@ -103,6 +149,7 @@ export function Hero({ eyebrow, headline, subheadline, primaryCTA, secondaryCTA,
                   href={primaryCTA.href}
                   variant={primaryCTA.variant ?? "primary"}
                   size="lg"
+                  className="shadow-glow-gold hover:shadow-glow-gold-md transition-shadow"
                   {...(primaryCTA.external
                     ? { target: "_blank", rel: "noopener noreferrer" }
                     : {})}
@@ -127,6 +174,58 @@ export function Hero({ eyebrow, headline, subheadline, primaryCTA, secondaryCTA,
           )}
         </div>
       </Container>
+
+      {/* ── Stats bar en bas du hero ─────────────────────────────────── */}
+      {stats && stats.length > 0 && (
+        <div className="relative z-10 border-t border-gold/20 bg-bg-deep/60 backdrop-blur-md">
+          <Container>
+            <div
+              className={cn(
+                "grid divide-x divide-gold/15",
+                stats.length === 3 && "grid-cols-3",
+                stats.length === 4 && "grid-cols-2 sm:grid-cols-4",
+                stats.length >= 5 && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
+              )}
+            >
+              {stats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex flex-col items-center text-center py-5 sm:py-6 px-2"
+                >
+                  <span className="font-display font-bold text-2xl sm:text-3xl text-gold">
+                    {stat.value}
+                  </span>
+                  <span className="text-text-muted text-2xs sm:text-xs font-medium tracking-widest uppercase mt-0.5">
+                    {stat.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Container>
+        </div>
+      )}
+
+      {/* ── Scroll indicator ─────────────────────────────────────────── */}
+      <div className="relative z-10 flex justify-center pb-6">
+        <div className="animate-bounce-slow flex flex-col items-center gap-1">
+          <span className="text-text-muted text-2xs tracking-widest uppercase">Découvrir</span>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            className="text-gold/60"
+          >
+            <path
+              d="M10 4v10m0 0l-4-4m4 4l4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
     </section>
   );
 }
