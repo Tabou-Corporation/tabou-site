@@ -178,7 +178,7 @@ export function Hero({
 
       {/* ── Stats bar en bas du hero ─────────────────────────────────── */}
       {stats && stats.length > 0 && (
-        <div className="relative z-10 border-t border-gold/20 bg-bg-deep/60 backdrop-blur-md">
+        <div className="relative z-10 border-t border-gold/20 bg-bg-deep/60 backdrop-blur-md mb-10">
           <Container>
             <div
               className={cn(
