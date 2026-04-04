@@ -1,17 +1,21 @@
 // ─── CMS Site Content — Loader ──────────────────────────────────────────────
 // Lit la table site_content depuis Neon/Postgres.
 // Si la ligne n'existe pas, retourne les defaults statiques.
-// Utilise unstable_cache pour la mise en cache ISR avec revalidation par tag.
+//
+// Stratégie de cache :
+//   - cache() de React : déduplication intra-request
+//   - revalidatePath() après save : ISR via Next.js
+//   Les pages publiques deviennent dynamiques (acceptable pour un site corp).
 
-import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 import { DEFAULTS } from "./defaults";
 import type { ContentByPage, PageKey } from "./types";
 
-/** Tag commun pour tout le contenu éditorial */
+/** Tag commun pour les revalidations (utilisé dans l'action save) */
 export const SITE_CONTENT_TAG = "site-content";
 
-/** Deep merge simple : override écrase les feuilles, les tableaux sont remplacés */
+/** Deep merge : les tableaux sont remplacés, les objets sont mergés en profondeur */
 function deepMerge<T>(base: T, override: unknown): T {
   if (override === null || override === undefined) return base;
   if (Array.isArray(base)) {
@@ -30,7 +34,10 @@ function deepMerge<T>(base: T, override: unknown): T {
   return (override ?? base) as T;
 }
 
-async function fetchPageContent<K extends PageKey>(page: K): Promise<ContentByPage[K]> {
+/** Lecture brute (sans cache React) — pour la page admin */
+export async function getRawPageContent<K extends PageKey>(
+  page: K
+): Promise<ContentByPage[K]> {
   try {
     const row = await prisma.siteContent.findUnique({ where: { page } });
     if (!row) return DEFAULTS[page];
@@ -41,46 +48,12 @@ async function fetchPageContent<K extends PageKey>(page: K): Promise<ContentByPa
   }
 }
 
-// Wrappers mis en cache par page avec tag pour invalidation fine
-export const getHomeContent = unstable_cache(
-  () => fetchPageContent("home"),
-  ["site-content-home"],
-  { tags: [SITE_CONTENT_TAG, "site-content-home"] }
-);
+/** Lecture avec déduplication intra-request (cache React) */
+const fetchContent = cache(getRawPageContent);
 
-export const getCorporationContent = unstable_cache(
-  () => fetchPageContent("corporation"),
-  ["site-content-corporation"],
-  { tags: [SITE_CONTENT_TAG, "site-content-corporation"] }
-);
-
-export const getRecruitmentContent = unstable_cache(
-  () => fetchPageContent("recruitment"),
-  ["site-content-recruitment"],
-  { tags: [SITE_CONTENT_TAG, "site-content-recruitment"] }
-);
-
-export const getFaqContent = unstable_cache(
-  () => fetchPageContent("faq"),
-  ["site-content-faq"],
-  { tags: [SITE_CONTENT_TAG, "site-content-faq"] }
-);
-
-export const getActivitiesContent = unstable_cache(
-  () => fetchPageContent("activities"),
-  ["site-content-activities"],
-  { tags: [SITE_CONTENT_TAG, "site-content-activities"] }
-);
-
-export const getContactContent = unstable_cache(
-  () => fetchPageContent("contact"),
-  ["site-content-contact"],
-  { tags: [SITE_CONTENT_TAG, "site-content-contact"] }
-);
-
-/** Pour la page admin : lecture directe sans cache */
-export async function getRawPageContent<K extends PageKey>(
-  page: K
-): Promise<ContentByPage[K]> {
-  return fetchPageContent(page);
-}
+export const getHomeContent       = () => fetchContent("home");
+export const getCorporationContent = () => fetchContent("corporation");
+export const getRecruitmentContent = () => fetchContent("recruitment");
+export const getFaqContent         = () => fetchContent("faq");
+export const getActivitiesContent  = () => fetchContent("activities");
+export const getContactContent     = () => fetchContent("contact");
