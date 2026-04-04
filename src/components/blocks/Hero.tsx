@@ -207,7 +207,7 @@ export function Hero({
       )}
 
       {/* ── Scroll indicator ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center pb-6">
+      <div className="relative z-10 flex justify-center py-8">
         <div className="animate-bounce-slow flex flex-col items-center gap-2">
           <span className="text-gold animate-pulse text-sm font-semibold tracking-extra-wide uppercase">Découvrir</span>
           <svg
