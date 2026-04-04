@@ -48,7 +48,7 @@ export const NAVIGATION: NavigationConfig = {
       external: true,
       visibility: "public",
     },
-    { label: "Connexion", href: "/auth/login", visibility: "public" }, // V2
+    { label: "Connexion", href: "/login", visibility: "public" }, // V2
   ],
 
   footer: [
