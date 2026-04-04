@@ -8,39 +8,69 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import {
-  User, MessageSquare, Shield, Calendar,
-  BookOpen, Users, FileText, CheckCircle,
-  Clock, XCircle, Pin,
+  MessageSquare, Shield, Calendar,
+  CheckCircle, Clock, XCircle, Pin,
+  HelpCircle, ArrowRight, RefreshCw,
 } from "lucide-react";
 import { SITE_CONFIG } from "@/config/site";
 import { hasMinRole } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 
+// ── Labels ────────────────────────────────────────────────────────────────
+
 const ROLE_LABELS: Record<UserRole, string> = {
-  candidate: "Candidat", member_uz: "Urban Zone", member: "Membre",
-  officer: "Officier", director: "Directeur", ceo: "CEO", admin: "Administrateur",
+  candidate: "Candidat",
+  member_uz: "Urban Zone",
+  member:    "Membre",
+  officer:   "Officier",
+  director:  "Directeur",
+  ceo:       "CEO",
+  admin:     "Administrateur",
   suspended: "Suspendu",
 };
 
 const ROLE_BADGE_VARIANT: Record<UserRole, "muted" | "gold" | "default"> = {
-  candidate: "muted", member_uz: "default", member: "gold",
-  officer: "gold", director: "gold", ceo: "gold", admin: "gold",
+  candidate: "muted",
+  member_uz: "default",
+  member:    "gold",
+  officer:   "gold",
+  director:  "gold",
+  ceo:       "gold",
+  admin:     "gold",
   suspended: "muted",
 };
 
-const APPLICATION_STATUS_LABELS: Record<string, string> = {
-  PENDING: "En attente de traitement",
+const APP_STATUS_LABEL: Record<string, string> = {
+  PENDING:   "En attente de traitement",
   INTERVIEW: "Entretien en cours",
-  ACCEPTED: "Candidature acceptée",
-  REJECTED: "Candidature refusée",
+  ACCEPTED:  "Candidature acceptée",
+  REJECTED:  "Candidature refusée",
 };
 
-const APPLICATION_STATUS_ICON: Record<string, React.ReactNode> = {
-  PENDING:   <Clock size={14} className="text-text-muted" />,
+const APP_STATUS_ICON: Record<string, React.ReactNode> = {
+  PENDING:   <Clock         size={14} className="text-text-muted" />,
   INTERVIEW: <MessageSquare size={14} className="text-gold/80" />,
-  ACCEPTED:  <CheckCircle size={14} className="text-gold/80" />,
-  REJECTED:  <XCircle size={14} className="text-red-400" />,
+  ACCEPTED:  <CheckCircle   size={14} className="text-gold/80" />,
+  REJECTED:  <XCircle       size={14} className="text-red-400" />,
 };
+
+const RSVP_BADGE: Record<string, { label: string; cls: string }> = {
+  GOING:     { label: "Je participe", cls: "text-green-400  border-green-400/30  bg-green-400/5"  },
+  MAYBE:     { label: "Peut-être",    cls: "text-yellow-400 border-yellow-400/30 bg-yellow-400/5" },
+  NOT_GOING: { label: "Absent",       cls: "text-red-400    border-red-400/30    bg-red-400/5"    },
+};
+
+const EVENT_TYPE_LABEL: Record<string, string> = {
+  op: "Op", training: "Formation", social: "Social", other: "Autre",
+};
+
+const RECURRENCE_LABEL: Record<string, string> = {
+  weekly:   "Chaque semaine",
+  biweekly: "Toutes les 2 semaines",
+  monthly:  "Chaque mois",
+};
+
+// ── Page ──────────────────────────────────────────────────────────────────
 
 export default async function MemberDashboardPage() {
   const session = await auth();
@@ -52,21 +82,47 @@ export default async function MemberDashboardPage() {
     role:  (session.user.role ?? "candidate") as UserRole,
   };
 
-  const isMember    = hasMinRole(role, "member");
-  const isStaff     = hasMinRole(role, "officer");
+  const isMember  = hasMinRole(role, "member_uz");
+  const isOfficer = hasMinRole(role, "officer");
 
-  const [application, pinnedAnnouncements] = await Promise.all([
+  const now      = new Date();
+  const in14Days = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
+  const [application, recentAnnouncements, upcomingEvents] = await Promise.all([
+    // Candidature — candidats seulement
     role === "candidate"
       ? prisma.application.findFirst({
           where: { userId: session.user.id },
           orderBy: { createdAt: "desc" },
         })
       : Promise.resolve(null),
+
+    // Dernières annonces — membres+
     isMember
       ? prisma.announcement.findMany({
-          where: { pinned: true },
           orderBy: { createdAt: "desc" },
-          take: 3,
+          take: 4,
+          select: { id: true, title: true, content: true, pinned: true, createdAt: true },
+        })
+      : Promise.resolve([]),
+
+    // Prochains événements — membres+
+    isMember
+      ? prisma.calendarEvent.findMany({
+          where: {
+            OR: [
+              { startAt: { gte: now, lte: in14Days } },
+              { recurrence: { not: "none" }, recurrenceEndAt: { gte: now } },
+            ],
+          },
+          orderBy: { startAt: "asc" },
+          take: 4,
+          include: {
+            participations: {
+              where:  { userId: session.user.id },
+              select: { status: true },
+            },
+          },
         })
       : Promise.resolve([]),
   ]);
@@ -77,15 +133,16 @@ export default async function MemberDashboardPage() {
   return (
     <div className="py-10 sm:py-14">
       <Container>
-        {/* En-tête */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-10">
+
+        {/* ── En-tête ── */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-8">
           {image && (
             <Image
               src={image}
               alt={name}
-              width={80}
-              height={80}
-              className="rounded-full border-2 border-gold/20"
+              width={64}
+              height={64}
+              className="rounded-full border-2 border-gold/20 flex-shrink-0"
               unoptimized
             />
           )}
@@ -102,200 +159,231 @@ export default async function MemberDashboardPage() {
           </div>
         </div>
 
-        <Separator gold className="mb-10" />
+        <Separator gold className="mb-8" />
 
-        {/* Annonces épinglées */}
-        {pinnedAnnouncements.length > 0 && (
-          <div className="mb-8 space-y-3">
-            {pinnedAnnouncements.map((a) => (
-              <Card key={a.id} accent>
-                <CardBody className="py-3">
-                  <div className="flex items-start gap-2">
-                    <Pin size={12} className="text-gold/70 mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="text-text-primary text-sm font-display font-semibold">
-                        {a.title}
-                      </p>
-                      <p className="text-text-secondary text-xs leading-relaxed mt-0.5 line-clamp-2">
-                        {a.content}
-                      </p>
-                    </div>
-                    <Link
-                      href="/membre/annonces"
-                      className="text-gold text-xs hover:text-gold-light transition-colors ml-auto flex-shrink-0"
-                    >
-                      Lire →
-                    </Link>
+        {/* ─────────────────────────────────────────────────────── CANDIDAT ── */}
+        {!isMember && (
+          <div className="max-w-xl space-y-6">
+            <Card className="border-gold/20">
+              <CardBody className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Shield size={16} className="text-gold/70" />
+                  <h2 className="font-display font-semibold text-base text-text-primary">
+                    Candidature en cours
+                  </h2>
+                </div>
+
+                {application && (
+                  <div className="flex items-center gap-2 py-2 px-3 bg-bg-elevated rounded border border-border">
+                    {APP_STATUS_ICON[application.status]}
+                    <span className="text-text-secondary text-sm">
+                      {APP_STATUS_LABEL[application.status] ?? application.status}
+                    </span>
                   </div>
-                </CardBody>
-              </Card>
-            ))}
+                )}
+
+                {!hasApplication && (
+                  <p className="text-text-secondary text-sm leading-relaxed">
+                    Vous n&apos;avez pas encore soumis de candidature.
+                  </p>
+                )}
+
+                {application?.status === "ACCEPTED" && (
+                  <p className="text-gold text-sm font-semibold">
+                    Candidature acceptée — rechargez la page pour accéder à l&apos;espace membre.
+                  </p>
+                )}
+
+                <div className="flex flex-col gap-2 pt-1">
+                  {(!hasApplication || !applicationActive) && (
+                    <Link
+                      href="/membre/candidature"
+                      className="inline-flex items-center gap-1.5 text-gold text-xs hover:text-gold-light transition-colors"
+                    >
+                      {hasApplication
+                        ? "Soumettre une nouvelle candidature"
+                        : "Soumettre ma candidature"}
+                      <ArrowRight size={12} />
+                    </Link>
+                  )}
+                  {hasApplication && applicationActive && application.status !== "ACCEPTED" && (
+                    <Link
+                      href="/membre/candidature"
+                      className="inline-flex items-center gap-1.5 text-text-muted text-xs hover:text-text-secondary transition-colors"
+                    >
+                      Voir le détail de ma candidature <ArrowRight size={12} />
+                    </Link>
+                  )}
+                  <a
+                    href={SITE_CONFIG.links.discord}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-text-muted text-xs hover:text-text-secondary transition-colors"
+                  >
+                    <MessageSquare size={13} />
+                    Rejoindre le Discord
+                  </a>
+                </div>
+              </CardBody>
+            </Card>
           </div>
         )}
 
-        {/* Candidat — statut candidature */}
-        {!isMember && (
-          <Card className="mb-8 border-gold/20">
-            <CardBody className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Shield size={16} className="text-gold/70" />
-                <h2 className="font-display font-semibold text-base text-text-primary">
-                  Candidature en cours
-                </h2>
-              </div>
-
-              {hasApplication && application && (
-                <div className="flex items-center gap-2 py-2 px-3 bg-bg-elevated rounded border border-border">
-                  {APPLICATION_STATUS_ICON[application.status]}
-                  <span className="text-text-secondary text-sm">
-                    {APPLICATION_STATUS_LABELS[application.status] ?? application.status}
-                  </span>
-                </div>
-              )}
-
-              {!hasApplication && (
-                <p className="text-text-secondary text-sm leading-relaxed">
-                  Vous n&apos;avez pas encore soumis de candidature.
-                </p>
-              )}
-
-              {application?.status === "ACCEPTED" && (
-                <p className="text-gold text-sm font-semibold">
-                  Candidature acceptée ! Rechargez la page.
-                </p>
-              )}
-
-              {(!hasApplication || !applicationActive) && (
-                <Link href="/membre/candidature" className="inline-flex items-center gap-1.5 text-gold text-xs hover:text-gold-light transition-colors">
-                  <FileText size={13} />
-                  {hasApplication ? "Soumettre une nouvelle candidature" : "Soumettre ma candidature"}
-                </Link>
-              )}
-              {hasApplication && applicationActive && application.status !== "ACCEPTED" && (
-                <Link href="/membre/candidature" className="inline-flex items-center gap-1.5 text-text-muted text-xs hover:text-text-secondary transition-colors">
-                  <FileText size={13} />
-                  Voir le détail de ma candidature
-                </Link>
-              )}
-              {application?.status !== "INTERVIEW" && application?.status !== "ACCEPTED" && (
-                <Link href={SITE_CONFIG.links.discord} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-text-muted text-xs hover:text-text-secondary transition-colors">
-                  <MessageSquare size={13} />
-                  Rejoindre le Discord
-                </Link>
-              )}
-            </CardBody>
-          </Card>
-        )}
-
-        {/* Raccourci staff */}
-        {isStaff && (
-          <Card className="mb-8 border-gold/20" accent>
-            <CardBody className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Users size={16} className="text-gold/70" />
-                <span className="text-text-primary text-sm font-display font-semibold">Zone staff</span>
-              </div>
-              <Link href="/staff/candidatures" className="text-gold text-xs hover:text-gold-light transition-colors">
-                Gérer les candidatures →
-              </Link>
-            </CardBody>
-          </Card>
-        )}
-
-        {/* Raccourcis */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-          <Link href="/membre/profil">
-            <Card interactive className="h-full">
-              <CardBody className="flex items-start gap-4">
-                <User size={20} className="text-gold/70 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-display font-semibold text-base text-text-primary mb-1">Mon profil</h3>
-                  <p className="text-text-muted text-xs leading-relaxed">Informations de votre personnage EVE</p>
-                </div>
-              </CardBody>
-            </Card>
-          </Link>
-
-          {role === "candidate" && (
-            <Link href="/membre/candidature">
-              <Card interactive className="h-full">
-                <CardBody className="flex items-start gap-4">
-                  <FileText size={20} className="text-gold/70 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-display font-semibold text-base text-text-primary mb-1">Ma candidature</h3>
-                    <p className="text-text-muted text-xs leading-relaxed">
-                      {hasApplication ? "Suivre le statut de ma candidature" : "Soumettre une candidature"}
-                    </p>
+        {/* ──────────────────────────────────────────────────────── MEMBRE+ ── */}
+        {isMember && (
+          <>
+            {/* Raccourci staff */}
+            {isOfficer && (
+              <Card className="mb-8 border-gold/20" accent>
+                <CardBody className="flex items-center justify-between gap-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Shield size={15} className="text-gold/70" />
+                    <span className="text-text-primary text-sm font-display font-semibold">
+                      Zone Staff
+                    </span>
                   </div>
+                  <Link
+                    href="/staff/candidatures"
+                    className="inline-flex items-center gap-1 text-gold text-xs hover:text-gold-light transition-colors"
+                  >
+                    Gérer les candidatures <ArrowRight size={12} />
+                  </Link>
                 </CardBody>
               </Card>
-            </Link>
-          )}
+            )}
 
-          <a href={SITE_CONFIG.links.discord} target="_blank" rel="noopener noreferrer">
-            <Card interactive className="h-full">
-              <CardBody className="flex items-start gap-4">
-                <MessageSquare size={20} className="text-gold/70 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-display font-semibold text-base text-text-primary mb-1">Discord</h3>
-                  <p className="text-text-muted text-xs leading-relaxed">Communication principale de la corporation</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+
+              {/* ── Annonces récentes ── */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display font-semibold text-lg text-text-primary">
+                    Dernières annonces
+                  </h2>
+                  <Link
+                    href="/membre/annonces"
+                    className="text-xs text-text-muted hover:text-gold transition-colors inline-flex items-center gap-1"
+                  >
+                    Tout voir <ArrowRight size={11} />
+                  </Link>
                 </div>
-              </CardBody>
-            </Card>
-          </a>
 
-          {isMember && (
-            <>
-              <Link href="/membre/annonces">
-                <Card interactive className="h-full">
-                  <CardBody className="flex items-start gap-4">
-                    <Pin size={20} className="text-gold/70 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-display font-semibold text-base text-text-primary mb-1">Annonces</h3>
-                      <p className="text-text-muted text-xs leading-relaxed">Communications de la direction</p>
-                    </div>
-                  </CardBody>
-                </Card>
-              </Link>
+                {recentAnnouncements.length === 0 ? (
+                  <p className="text-text-muted text-sm italic">Aucune annonce pour le moment.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {recentAnnouncements.map((a) => (
+                      <Card key={a.id} className={a.pinned ? "border-gold/20" : ""}>
+                        <CardBody className="py-3 px-4">
+                          <div className="flex items-start gap-2">
+                            {a.pinned && (
+                              <Pin size={11} className="text-gold/60 mt-0.5 flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-text-primary text-sm font-display font-semibold truncate">
+                                {a.title}
+                              </p>
+                              <p className="text-text-muted text-xs leading-relaxed mt-0.5 line-clamp-2">
+                                {a.content}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-text-muted mt-2">
+                            {new Date(a.createdAt).toLocaleDateString("fr-FR", {
+                              day: "numeric", month: "long",
+                            })}
+                          </p>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </section>
 
-              <Link href="/membre/calendrier">
-                <Card interactive className="h-full">
-                  <CardBody className="flex items-start gap-4">
-                    <Calendar size={20} className="text-gold/70 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-display font-semibold text-base text-text-primary mb-1">Calendrier</h3>
-                      <p className="text-text-muted text-xs leading-relaxed">Opérations et événements à venir</p>
-                    </div>
-                  </CardBody>
-                </Card>
-              </Link>
+              {/* ── Prochains événements ── */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display font-semibold text-lg text-text-primary">
+                    Prochains événements
+                  </h2>
+                  <Link
+                    href="/membre/calendrier"
+                    className="text-xs text-text-muted hover:text-gold transition-colors inline-flex items-center gap-1"
+                  >
+                    Calendrier <ArrowRight size={11} />
+                  </Link>
+                </div>
 
-              <Link href="/membre/guides">
-                <Card interactive className="h-full">
-                  <CardBody className="flex items-start gap-4">
-                    <BookOpen size={20} className="text-gold/70 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-display font-semibold text-base text-text-primary mb-1">Guides</h3>
-                      <p className="text-text-muted text-xs leading-relaxed">Documentation interne de la corp</p>
-                    </div>
-                  </CardBody>
-                </Card>
-              </Link>
+                {upcomingEvents.length === 0 ? (
+                  <p className="text-text-muted text-sm italic">
+                    Aucun événement prévu dans les 14 prochains jours.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingEvents.map((ev) => {
+                      const rsvp     = ev.participations[0]?.status ?? null;
+                      const rsvpInfo = rsvp ? RSVP_BADGE[rsvp] : null;
+                      const isRecurring = ev.recurrence !== "none";
 
-              <Link href="/membre/annuaire">
-                <Card interactive className="h-full">
-                  <CardBody className="flex items-start gap-4">
-                    <Users size={20} className="text-gold/70 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-display font-semibold text-base text-text-primary mb-1">Annuaire</h3>
-                      <p className="text-text-muted text-xs leading-relaxed">Membres de la corporation</p>
-                    </div>
-                  </CardBody>
-                </Card>
-              </Link>
-            </>
-          )}
-        </div>
+                      return (
+                        <Card key={ev.id}>
+                          <CardBody className="py-3 px-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-[10px] font-semibold tracking-widest uppercase text-gold/70">
+                                    {EVENT_TYPE_LABEL[ev.type] ?? ev.type}
+                                  </span>
+                                  {isRecurring && (
+                                    <RefreshCw size={10} className="text-text-muted" />
+                                  )}
+                                </div>
+                                <p className="text-text-primary text-sm font-display font-semibold truncate">
+                                  {ev.title}
+                                </p>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <Calendar size={11} className="text-text-muted flex-shrink-0" />
+                                  <p className="text-text-muted text-[11px]">
+                                    {isRecurring
+                                      ? (RECURRENCE_LABEL[ev.recurrence] ?? "Récurrent")
+                                      : `${new Date(ev.startAt).toLocaleDateString("fr-FR", {
+                                          weekday: "short", day: "numeric", month: "short",
+                                        })} — ${new Date(ev.startAt).toLocaleTimeString("fr-FR", {
+                                          hour: "2-digit", minute: "2-digit",
+                                        })} EVE`
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+
+                              {rsvpInfo ? (
+                                <span
+                                  className={`text-[10px] font-semibold px-2 py-0.5 rounded border flex-shrink-0 ${rsvpInfo.cls}`}
+                                >
+                                  {rsvpInfo.label}
+                                </span>
+                              ) : (
+                                <Link
+                                  href="/membre/calendrier"
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded border border-border text-text-muted hover:border-gold/40 hover:text-gold transition-colors flex-shrink-0 flex items-center gap-1"
+                                >
+                                  <HelpCircle size={10} />
+                                  Répondre
+                                </Link>
+                              )}
+                            </div>
+                          </CardBody>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+
+            </div>
+          </>
+        )}
+
       </Container>
     </div>
   );

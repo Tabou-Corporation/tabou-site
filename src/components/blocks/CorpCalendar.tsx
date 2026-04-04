@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, User, Check, HelpCircle, XCircle, Send, RefreshCw, Trash2 } from "lucide-react";
 import { rsvpEvent, cancelRsvp, notifyDiscordEvent } from "@/lib/actions/rsvp";
 import { deleteCalendarEvent } from "@/lib/actions/content";
+import { useToast } from "@/contexts/ToastContext";
 import { cn } from "@/lib/utils/cn";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../app/(member)/membre/calendrier/calendar.css";
@@ -79,10 +80,13 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
     className: `event-${rbcEvent.resource.type}`,
   }), []);
 
+  const { addToast } = useToast();
+
   const handleDiscord = async () => {
     if (!selectedEvent) return;
     await notifyDiscordEvent(selectedEvent.id);
     setDiscordSent(true);
+    addToast("Notification envoyée sur Discord", "success");
   };
 
   return (
@@ -250,10 +254,15 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                       <Send size={14} />
                       {discordSent ? "Envoyé sur Discord ✓" : "Notifier sur Discord"}
                     </button>
-                    <form action={deleteCalendarEvent.bind(null, selectedEvent.eventId)}>
+                    <form
+                      action={async () => {
+                        await deleteCalendarEvent(selectedEvent.eventId);
+                        setSelectedEvent(null);
+                        addToast("Événement supprimé", "info");
+                      }}
+                    >
                       <button
                         type="submit"
-                        onClick={() => setSelectedEvent(null)}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-red-400/20 text-red-400/60 rounded hover:border-red-400/50 hover:text-red-400 hover:bg-red-400/5 transition-colors"
                       >
                         <Trash2 size={14} />
@@ -283,15 +292,24 @@ function RsvpButtons({
   onUpdate: (status: "GOING" | "MAYBE" | "NOT_GOING" | null) => void;
 }) {
   const [pending, setPending] = useState(false);
+  const { addToast } = useToast();
+
+  const RSVP_TOAST: Record<"GOING" | "MAYBE" | "NOT_GOING", string> = {
+    GOING:     "Participation enregistrée ✓",
+    MAYBE:     "Réponse « Peut-être » enregistrée",
+    NOT_GOING: "Absence enregistrée",
+  };
 
   const handle = async (status: "GOING" | "MAYBE" | "NOT_GOING") => {
     setPending(true);
     if (currentStatus === status) {
       await cancelRsvp(eventId);
       onUpdate(null);
+      addToast("Participation annulée", "info");
     } else {
       await rsvpEvent(eventId, status);
       onUpdate(status);
+      addToast(RSVP_TOAST[status], "success");
     }
     setPending(false);
   };
