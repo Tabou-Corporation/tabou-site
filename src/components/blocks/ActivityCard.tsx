@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils/cn";
 import { Badge } from "@/components/ui/Badge";
-import type { Activity } from "@/types/content";
 import {
   Crosshair, Eye, Navigation, Shield,
   Zap, Target, Compass, Globe,
@@ -13,16 +12,23 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Factory, TrendingUp, Users, Radio,
 };
 
-const CATEGORY_COLORS = {
+const CATEGORY_COLORS: Record<string, string> = {
   pvp: "text-red-light",
   pve: "text-gold",
   exploration: "text-blue-400",
   industry: "text-emerald-400",
   collective: "text-text-secondary",
-} as const;
+};
 
 interface ActivityCardProps {
-  activity: Activity;
+  activity: {
+    id: string;
+    name: string;
+    category: string;
+    description: string;
+    icon: string;
+    tags?: string[];
+  };
   className?: string;
 }
 

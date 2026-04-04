@@ -79,7 +79,7 @@ export default async function HomePage() {
         />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {previewActivities.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity as any} />
+            <ActivityCard key={activity.id} activity={activity} />
           ))}
         </div>
         <div className="flex justify-start">
