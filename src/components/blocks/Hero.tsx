@@ -1,8 +1,10 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/layout/Container";
+import { KillFeed } from "@/components/blocks/KillFeed";
 import { cn } from "@/lib/utils/cn";
 import type { CTAConfig } from "@/types/content";
+import type { KillDisplayEntry } from "@/lib/zkillboard/types";
 
 interface HeroStat {
   label: string;
@@ -19,6 +21,8 @@ interface HeroProps {
   backgroundImage?: string;
   /** Stats affichées en barre en bas du hero */
   stats?: HeroStat[];
+  /** Kills récents pour le widget zkillboard */
+  kills?: KillDisplayEntry[];
   className?: string;
 }
 
@@ -30,12 +34,13 @@ export function Hero({
   secondaryCTA,
   backgroundImage,
   stats,
+  kills,
   className,
 }: HeroProps) {
   return (
     <section
       className={cn(
-        "relative min-h-screen flex flex-col justify-center overflow-hidden",
+        "relative min-h-screen flex overflow-hidden",
         "bg-bg-deep",
         className
       )}
@@ -104,6 +109,13 @@ export function Hero({
         aria-hidden
         className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
+
+      {/* ── Kill Feed — gauche, centré verticalement ─────────────────── */}
+      {kills && kills.length > 0 && (
+        <div className="relative z-10 hidden lg:flex items-center self-stretch">
+          <KillFeed initialKills={kills} />
+        </div>
+      )}
 
       {/* ── Contenu principal — centré ───────────────────────────────── */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">

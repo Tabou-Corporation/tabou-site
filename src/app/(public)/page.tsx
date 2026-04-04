@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
 
 import { getHomeContent, getActivitiesContent } from "@/lib/site-content/loader";
+import { fetchCorpKills } from "@/lib/zkillboard/fetcher";
 import { SITE_CONFIG } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -19,9 +20,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [home, activities] = await Promise.all([
+  const [home, activities, kills] = await Promise.all([
     getHomeContent(),
     getActivitiesContent(),
+    fetchCorpKills(),
   ]);
 
   const previewActivities = activities.slice(0, 4);
@@ -37,6 +39,7 @@ export default async function HomePage() {
         secondaryCTA={{ label: "En savoir plus", href: "/corporation", variant: "ghost" }}
         backgroundImage={home.hero.backgroundImage ?? "/images/hero-bg.jpg"}
         stats={home.stats}
+        kills={kills}
       />
 
       {/* ── Présentation ─────────────────────────────────────────────── */}
