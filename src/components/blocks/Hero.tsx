@@ -96,9 +96,10 @@ export function Hero({
         className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
 
-      {/* ── Contenu principal — ancré à gauche, ~35% écran ────────────── */}
+      {/* ── Contenu principal — grille 2 colonnes, texte collé à gauche ── */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
-        <div className="max-w-xl lg:max-w-lg animate-fade-in">
+        <div className="grid grid-cols-2 lg:grid-cols-3">
+        <div className="col-span-1 animate-fade-in">
           {/* Logo corporation */}
           <div className="flex items-center gap-4 mb-10">
             <Image
@@ -175,6 +176,8 @@ export function Hero({
               )}
             </div>
           )}
+        </div>
+        {/* colonne droite vide — laisse respirer l'image */}
         </div>
       </Container>
 
