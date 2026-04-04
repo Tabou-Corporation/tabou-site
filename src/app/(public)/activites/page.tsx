@@ -60,7 +60,6 @@ export default async function ActivitiesPage() {
             {index > 0 && <Separator gold />}
             <Section bg={index % 2 === 0 ? "surface" : "default"} spacing="lg">
               <SectionHeader
-                eyebrow={CATEGORY_LABELS[category]}
                 headline={CATEGORY_LABELS[category]}
                 description={CATEGORY_DESCRIPTIONS[category]}
               />
