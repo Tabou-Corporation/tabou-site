@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.url),
   title: {
     template: `%s — ${SITE_CONFIG.name}`,
-    default: `${SITE_CONFIG.fullName} — ${SITE_CONFIG.tagline}`,
+    default: SITE_CONFIG.fullName,
   },
   description: SITE_CONFIG.description,
   keywords: [
@@ -42,11 +42,20 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_FR",
     siteName: SITE_CONFIG.fullName,
-    title: `${SITE_CONFIG.fullName} — ${SITE_CONFIG.tagline}`,
+    title: SITE_CONFIG.fullName,
     description: SITE_CONFIG.description,
+    images: [
+      {
+        url: "https://images.evetech.net/corporations/98809880/logo?size=256",
+        width: 256,
+        height: 256,
+        alt: "Logo Corporation Tabou",
+      },
+    ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
+    images: ["https://images.evetech.net/corporations/98809880/logo?size=256"],
   },
 };
 
