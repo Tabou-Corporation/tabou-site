@@ -8,7 +8,7 @@
  * Usage dans un Server Component :
  *   const session = await auth()
  *   const role = getSessionRole(session)
- *   if (!hasMinRole(role, "member")) redirect("/auth/login")
+ *   if (!hasMinRole(role, "member")) redirect("/login")
  */
 
 import type { Session } from "next-auth";
@@ -45,7 +45,7 @@ export function canAccess(session: Session | null, requiredRole: UserRole): bool
 export function routeGuard(
   session: Session | null,
   requiredRole: UserRole,
-  redirectTo = "/auth/login"
+  redirectTo = "/login"
 ): string | null {
   if (!canAccess(session, requiredRole)) return redirectTo;
   return null;

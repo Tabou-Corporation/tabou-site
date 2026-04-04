@@ -16,7 +16,7 @@ export default async function MemberLayout({ children }: { children: React.React
   const session = await auth();
 
   if (!session) {
-    redirect("/auth/login");
+    redirect("/login");
   }
 
   return (

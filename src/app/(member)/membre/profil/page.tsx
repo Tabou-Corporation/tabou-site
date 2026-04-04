@@ -19,7 +19,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 export default async function ProfilePage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/auth/login");
+  if (!session?.user?.id) redirect("/login");
 
   // Récupération des données complètes depuis la DB
   const user = await prisma.user.findUnique({
@@ -27,7 +27,7 @@ export default async function ProfilePage() {
     include: { accounts: true },
   });
 
-  if (!user) redirect("/auth/login");
+  if (!user) redirect("/login");
 
   const eveAccount = user.accounts.find((a) => a.provider === "eveonline");
   const characterId = eveAccount?.providerAccountId;

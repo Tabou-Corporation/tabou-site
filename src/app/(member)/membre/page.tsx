@@ -31,7 +31,7 @@ const ROLE_BADGE_VARIANT: Record<UserRole, "muted" | "gold" | "default"> = {
 
 export default async function MemberDashboardPage() {
   const session = await auth();
-  if (!session?.user) redirect("/auth/login");
+  if (!session?.user) redirect("/login");
 
   const { name, image, role } = {
     name: session.user.name ?? "Pilote",

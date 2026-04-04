@@ -105,7 +105,7 @@ export function MainNav() {
                   <Button as="a" href="/recrutement" variant="primary" size="sm">
                     Postuler
                   </Button>
-                  <Button as="a" href="/auth/login" variant="ghost" size="sm">
+                  <Button as="a" href="/login" variant="ghost" size="sm">
                     Connexion
                   </Button>
                 </>
