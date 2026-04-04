@@ -18,6 +18,8 @@ export interface HomeContent {
     eyebrow: string;
     headline: string;
     subheadline: string;
+    /** URL de l'image de fond du hero (chemin /images/... ou URL externe) */
+    backgroundImage?: string;
   };
   intro: {
     eyebrow: string;

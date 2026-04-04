@@ -18,6 +18,7 @@ export const DEFAULT_HOME: HomeContent = {
     headline: "L'excellence\nsans compromis.",
     subheadline:
       "Tabou opère en nul-sec depuis des années. Nous ne cherchons pas des corps — nous cherchons des pilotes qui savent pourquoi ils volent.",
+    backgroundImage: "/images/hero-bg.jpg",
   },
   intro: {
     eyebrow: "Qui sommes-nous",

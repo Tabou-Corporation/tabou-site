@@ -35,7 +35,7 @@ export default async function HomePage() {
         subheadline={home.hero.subheadline}
         primaryCTA={{ label: "Postuler", href: "/recrutement", variant: "primary" }}
         secondaryCTA={{ label: "En savoir plus", href: "/corporation", variant: "ghost" }}
-        backgroundImage="/images/hero-bg.jpg"
+        backgroundImage={home.hero.backgroundImage ?? "/images/hero-bg.jpg"}
         stats={home.stats}
       />
 

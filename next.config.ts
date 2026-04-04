@@ -4,9 +4,14 @@ const nextConfig: NextConfig = {
   // Images: préparer pour EVE CDN et assets externes (V6)
   images: {
     remotePatterns: [
-      // EVE Online image server — portraits de personnages (V2+)
+      // EVE Online image server — logos, portraits
       { protocol: "https", hostname: "images.evetech.net" },
-      // { protocol: "https", hostname: "imageserver.eveonline.com" }, // V6
+      // Hébergements d'images courants pour le hero CMS
+      { protocol: "https", hostname: "i.imgur.com" },
+      { protocol: "https", hostname: "imgur.com" },
+      { protocol: "https", hostname: "**.githubusercontent.com" },
+      { protocol: "https", hostname: "**.discord.com" },
+      { protocol: "https", hostname: "cdn.discordapp.com" },
     ],
   },
 

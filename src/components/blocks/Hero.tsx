@@ -44,15 +44,25 @@ export function Hero({
       {/* ── Background image ─────────────────────────────────────────── */}
       {backgroundImage ? (
         <>
-          <Image
-            src={backgroundImage}
-            alt=""
-            fill
-            priority
-            className="object-cover object-[70%_center] lg:object-[65%_center]"
-            quality={85}
-            sizes="100vw"
-          />
+          {/* URL externe : balise img native pour éviter les restrictions Next/Image */}
+          {backgroundImage.startsWith("http") ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={backgroundImage}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-[70%_center] lg:object-[65%_center]"
+            />
+          ) : (
+            <Image
+              src={backgroundImage}
+              alt=""
+              fill
+              priority
+              className="object-cover object-[70%_center] lg:object-[65%_center]"
+              quality={85}
+              sizes="100vw"
+            />
+          )}
           {/* Gradient overlay : sombre gauche (texte), dégagé droite (image visible) */}
           <div
             aria-hidden

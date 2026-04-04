@@ -43,6 +43,16 @@ export function HomeEditor({ initialContent }: { initialContent: HomeContent }) 
           onChange={(v) => set("hero", { ...content.hero, subheadline: v })}
           rows={3}
         />
+        <Field
+          label="Image de fond (URL)"
+          hint="URL externe (https://...) ou chemin local (/images/hero-bg.jpg)"
+          value={content.hero.backgroundImage ?? ""}
+          onChange={(v) => {
+            const hero = { ...content.hero };
+            if (v) hero.backgroundImage = v; else delete hero.backgroundImage;
+            set("hero", hero);
+          }}
+        />
       </EditorSection>
 
       {/* Intro */}
