@@ -34,7 +34,7 @@ export default async function ContenuPage({
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "admin")) redirect("/membre");
+  if (!hasMinRole(role, "director")) redirect("/membre");
 
   const { tab } = await searchParams;
   const activeTab: TabKey =

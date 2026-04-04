@@ -1,32 +1,36 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { hasMinRole } from "@/types/roles";
+import { hasMinRole, canManageRecruitment } from "@/types/roles";
 import { MainNav } from "@/components/navigation/MainNav";
 import { Footer } from "@/components/layout/Footer";
 import type { UserRole } from "@/types/roles";
 
 /**
- * Zone STAFF — V3+
+ * Zone STAFF — V6
  *
  * Protection double :
  * 1. Middleware (Edge) : cookie de session présent
- * 2. Ce layout (Server) : rôle >= recruiter vérifié côté serveur
+ * 2. Ce layout (Server) : rôle >= officer vérifié côté serveur
  *
  * Navigation contextuelle :
- *   recruiter+ : Candidatures
- *   officer+   : + Membres, Annonces, Guides, Calendrier
- *   admin      : + Administration
+ *   officer (recruitment) / director+ : Candidatures
+ *   officer+ : + Annonce, + Guide, + Événement
+ *   director+ : Membres, Admin, Contenu
  */
 export default async function StaffLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "recruiter")) redirect("/membre");
+  const specialty = session.user.specialty ?? null;
 
-  const isOfficer = hasMinRole(role, "officer");
-  const isAdmin   = role === "admin";
+  // Accès zone staff : officer ou director+
+  if (!hasMinRole(role, "officer")) redirect("/membre");
+
+  const isOfficer = role === "officer";
+  const isDirectorPlus = hasMinRole(role, "director");
+  const hasRecruitment = canManageRecruitment(role, specialty);
 
   return (
     <>
@@ -37,15 +41,14 @@ export default async function StaffLayout({ children }: { children: React.ReactN
             Staff
           </span>
           <nav className="flex items-center gap-4 flex-shrink-0">
-            <Link href="/staff/candidatures" className="text-text-secondary text-xs hover:text-gold transition-colors whitespace-nowrap">
-              Candidatures
-            </Link>
-            {isOfficer && (
+            {hasRecruitment && (
+              <Link href="/staff/candidatures" className="text-text-secondary text-xs hover:text-gold transition-colors whitespace-nowrap">
+                Candidatures
+              </Link>
+            )}
+            {(isOfficer || isDirectorPlus) && (
               <>
                 <span className="text-border">·</span>
-                <Link href="/staff/membres" className="text-text-secondary text-xs hover:text-gold transition-colors whitespace-nowrap">
-                  Membres
-                </Link>
                 <Link href="/staff/annonces/new" className="text-text-secondary text-xs hover:text-gold transition-colors whitespace-nowrap">
                   + Annonce
                 </Link>
@@ -57,9 +60,12 @@ export default async function StaffLayout({ children }: { children: React.ReactN
                 </Link>
               </>
             )}
-            {isAdmin && (
+            {isDirectorPlus && (
               <>
                 <span className="text-border">·</span>
+                <Link href="/staff/membres" className="text-text-secondary text-xs hover:text-gold transition-colors whitespace-nowrap">
+                  Membres
+                </Link>
                 <Link href="/staff/admin" className="text-gold text-xs hover:text-gold-light transition-colors whitespace-nowrap font-semibold">
                   Admin
                 </Link>

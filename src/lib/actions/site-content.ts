@@ -31,7 +31,7 @@ export async function saveSiteContentAction(
   if (!session?.user?.id) return { error: "Non authentifié." };
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "admin")) return { error: "Accès réservé aux administrateurs." };
+  if (!hasMinRole(role, "director")) return { error: "Accès réservé aux directeurs et supérieurs." };
 
   const page = formData.get("page") as string;
   if (!VALID_PAGES.includes(page as PageKey)) {

@@ -17,10 +17,10 @@ import { hasMinRole } from "@/types/roles";
 
 /**
  * Extrait le rôle depuis la session Auth.js.
- * Retourne "public" si pas de session.
+ * Retourne "candidate" si pas de session.
  */
 export function getSessionRole(session: Session | null): UserRole {
-  return (session?.user?.role ?? "public") as UserRole;
+  return (session?.user?.role ?? "candidate") as UserRole;
 }
 
 /**
@@ -52,5 +52,5 @@ export function routeGuard(
 }
 
 // Conservé pour rétrocompatibilité et usage futur (V5 permissions granulaires)
-export { hasMinRole } from "@/types/roles";
-export type { UserRole } from "@/types/roles";
+export { hasMinRole, canManageRecruitment, canCreateGuideCategory, canCreateContent, canView } from "@/types/roles";
+export type { UserRole, OfficerSpecialty, ContentVisibility } from "@/types/roles";

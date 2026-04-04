@@ -17,13 +17,13 @@ import { hasMinRole } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  public: "Public", candidate: "Candidat", member: "Membre",
-  recruiter: "Recruteur", officer: "Officier", admin: "Administrateur",
+  candidate: "Candidat", member_uz: "Urban Zone", member: "Membre",
+  officer: "Officier", director: "Directeur", ceo: "CEO", admin: "Administrateur",
 };
 
 const ROLE_BADGE_VARIANT: Record<UserRole, "muted" | "gold" | "default"> = {
-  public: "muted", candidate: "muted", member: "gold",
-  recruiter: "gold", officer: "gold", admin: "gold",
+  candidate: "muted", member_uz: "default", member: "gold",
+  officer: "gold", director: "gold", ceo: "gold", admin: "gold",
 };
 
 const APPLICATION_STATUS_LABELS: Record<string, string> = {
@@ -51,7 +51,7 @@ export default async function MemberDashboardPage() {
   };
 
   const isMember    = hasMinRole(role, "member");
-  const isRecruiter = hasMinRole(role, "recruiter");
+  const isStaff     = hasMinRole(role, "officer");
 
   const [application, pinnedAnnouncements] = await Promise.all([
     role === "candidate"
@@ -185,8 +185,8 @@ export default async function MemberDashboardPage() {
           </Card>
         )}
 
-        {/* Raccourci recruteur */}
-        {isRecruiter && (
+        {/* Raccourci staff */}
+        {isStaff && (
           <Card className="mb-8 border-gold/20" accent>
             <CardBody className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">

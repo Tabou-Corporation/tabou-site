@@ -9,12 +9,13 @@ import { prisma } from "@/lib/db";
 import type { UserRole } from "@/types/roles";
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  public: "Public",
-  candidate: "Candidat",
-  member: "Membre",
-  recruiter: "Recruteur",
-  officer: "Officier",
-  admin: "Administrateur",
+  candidate:  "Candidat",
+  member_uz:  "Urban Zone",
+  member:     "Membre",
+  officer:    "Officier",
+  director:   "Directeur",
+  ceo:        "CEO",
+  admin:      "Administrateur",
 };
 
 export default async function ProfilePage() {

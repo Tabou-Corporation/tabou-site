@@ -5,11 +5,13 @@ import { changeUserRoleAction } from "@/lib/actions/members";
 import { Button } from "@/components/ui/Button";
 
 const ROLES = [
-  { value: "candidate", label: "Candidat" },
-  { value: "member",    label: "Membre" },
-  { value: "recruiter", label: "Recruteur" },
-  { value: "officer",   label: "Officier" },
-  { value: "admin",     label: "Administrateur" },
+  { value: "candidate",  label: "Candidat" },
+  { value: "member_uz",  label: "Membre Urban Zone" },
+  { value: "member",     label: "Membre Tabou" },
+  { value: "officer",    label: "Officier" },
+  { value: "director",   label: "Directeur" },
+  { value: "ceo",        label: "CEO" },
+  { value: "admin",      label: "Administrateur" },
 ];
 
 interface Props {
@@ -21,9 +23,12 @@ interface Props {
 export function RoleForm({ userId, currentRole, actorRole }: Props) {
   const [state, formAction, pending] = useActionState(changeUserRoleAction, {});
 
+  // Rôles disponibles selon l'acteur
   const allowedRoles = actorRole === "admin"
     ? ROLES
-    : ROLES.filter((r) => ["candidate", "member", "recruiter", "officer"].includes(r.value));
+    : actorRole === "ceo"
+    ? ROLES.filter((r) => ["candidate", "member_uz", "member", "officer", "director"].includes(r.value))
+    : ROLES.filter((r) => ["candidate", "member_uz", "member", "officer"].includes(r.value));
 
   return (
     <form action={formAction} className="space-y-3">

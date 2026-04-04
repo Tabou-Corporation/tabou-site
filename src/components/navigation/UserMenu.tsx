@@ -95,8 +95,8 @@ export function UserMenu() {
             </Link>
           </div>
 
-          {/* Liens staff — visibles recruiter+ */}
-          {["recruiter", "officer", "admin"].includes(session.user?.role ?? "") && (
+          {/* Liens staff — visibles officer+ */}
+          {["officer", "director", "ceo", "admin"].includes(session.user?.role ?? "") && (
             <div className="border-t border-border py-1">
               <Link
                 href="/staff/candidatures"
@@ -106,7 +106,7 @@ export function UserMenu() {
                 <Shield size={14} />
                 Zone Staff
               </Link>
-              {session.user?.role === "admin" && (
+              {["director", "ceo", "admin"].includes(session.user?.role ?? "") && (
                 <Link
                   href="/staff/admin"
                   onClick={() => setIsOpen(false)}

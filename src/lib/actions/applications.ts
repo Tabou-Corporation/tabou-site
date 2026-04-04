@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { hasMinRole } from "@/types/roles";
+import { canManageRecruitment } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -67,7 +67,7 @@ export async function updateApplicationStatus(
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "recruiter")) redirect("/membre");
+  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
   // Récupérer l'application avant modification pour avoir le userId
   const application = await prisma.application.findUnique({ where: { id } });
@@ -105,7 +105,7 @@ export async function saveApplicationNotes(
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "recruiter")) redirect("/membre");
+  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
   await prisma.application.update({
     where: { id },

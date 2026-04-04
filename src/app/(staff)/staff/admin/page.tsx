@@ -14,7 +14,7 @@ export default async function AdminPage() {
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "admin")) redirect("/membre");
+  if (!hasMinRole(role, "director")) redirect("/membre");
 
   const [userCounts, appCounts, guidesCount, eventsCount, announcementsCount] = await Promise.all([
     prisma.user.groupBy({ by: ["role"], _count: true }),
@@ -27,8 +27,9 @@ export default async function AdminPage() {
   const userMap = Object.fromEntries(userCounts.map((c) => [c.role, c._count]));
   const appMap  = Object.fromEntries(appCounts.map((c) => [c.status, c._count]));
 
-  const totalMembers = (userMap["member"] ?? 0) + (userMap["recruiter"] ?? 0)
-    + (userMap["officer"] ?? 0) + (userMap["admin"] ?? 0);
+  const totalMembers = (userMap["member_uz"] ?? 0) + (userMap["member"] ?? 0)
+    + (userMap["officer"] ?? 0) + (userMap["director"] ?? 0)
+    + (userMap["ceo"] ?? 0) + (userMap["admin"] ?? 0);
 
   const stats = [
     {
@@ -63,17 +64,19 @@ export default async function AdminPage() {
     },
     {
       icon: <Shield size={18} className="text-gold/70" />,
-      label: "Officiers & Admins",
-      value: (userMap["officer"] ?? 0) + (userMap["admin"] ?? 0),
-      sub: `${userMap["recruiter"] ?? 0} recruteur(s)`,
+      label: "Officiers & Direction",
+      value: (userMap["officer"] ?? 0) + (userMap["director"] ?? 0) + (userMap["ceo"] ?? 0) + (userMap["admin"] ?? 0),
+      sub: `${userMap["member_uz"] ?? 0} membre(s) Urban Zone`,
     },
   ];
 
   const roleBreakdown = [
     { label: "Administrateurs", value: userMap["admin"] ?? 0 },
+    { label: "CEO",             value: userMap["ceo"] ?? 0 },
+    { label: "Directeurs",      value: userMap["director"] ?? 0 },
     { label: "Officiers",       value: userMap["officer"] ?? 0 },
-    { label: "Recruteurs",      value: userMap["recruiter"] ?? 0 },
     { label: "Membres",         value: userMap["member"] ?? 0 },
+    { label: "Urban Zone",      value: userMap["member_uz"] ?? 0 },
     { label: "Candidats",       value: userMap["candidate"] ?? 0 },
   ];
 

@@ -2,18 +2,29 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { hasMinRole } from "@/types/roles";
+import { hasMinRole, canCreateGuideCategory } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function requireRole(minRole: UserRole) {
+/** Vérifie que l'utilisateur est officer+ (pour annonces/events) */
+async function requireContentCreator() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, minRole)) redirect("/membre");
+  if (!hasMinRole(role, "officer")) redirect("/membre");
+  return session.user;
+}
+
+/** Vérifie que l'utilisateur peut créer un guide dans cette catégorie */
+async function requireGuideAccess(category: string) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  const role = (session.user.role ?? "candidate") as UserRole;
+  const specialty = session.user.specialty ?? null;
+  if (!canCreateGuideCategory(role, specialty, category)) redirect("/membre");
   return session.user;
 }
 
@@ -25,7 +36,7 @@ export async function createAnnouncement(
   _prev: ContentFormState,
   formData: FormData
 ): Promise<ContentFormState> {
-  const user = await requireRole("officer");
+  const user = await requireContentCreator();
   const title = (formData.get("title") as string | null)?.trim() ?? "";
   const content = (formData.get("content") as string | null)?.trim() ?? "";
   const pinned = formData.get("pinned") === "on";
@@ -43,7 +54,7 @@ export async function createAnnouncement(
 }
 
 export async function deleteAnnouncement(id: string): Promise<void> {
-  await requireRole("officer");
+  await requireContentCreator();
   await prisma.announcement.delete({ where: { id } });
   revalidatePath("/membre");
   revalidatePath("/membre/annonces");
@@ -55,9 +66,9 @@ export async function createGuide(
   _prev: ContentFormState,
   formData: FormData
 ): Promise<ContentFormState> {
-  const user = await requireRole("officer");
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
   const category = (formData.get("category") as string | null) ?? "general";
+  const user = await requireGuideAccess(category);
+  const title = (formData.get("title") as string | null)?.trim() ?? "";
   const content = (formData.get("content") as string | null)?.trim() ?? "";
 
   if (!title) return { error: "Le titre est requis." };
@@ -76,9 +87,9 @@ export async function updateGuide(
   _prev: ContentFormState,
   formData: FormData
 ): Promise<ContentFormState> {
-  await requireRole("officer");
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
   const category = (formData.get("category") as string | null) ?? "general";
+  await requireGuideAccess(category);
+  const title = (formData.get("title") as string | null)?.trim() ?? "";
   const content = (formData.get("content") as string | null)?.trim() ?? "";
 
   if (!title) return { error: "Le titre est requis." };
@@ -95,7 +106,10 @@ export async function updateGuide(
 }
 
 export async function deleteGuide(id: string): Promise<void> {
-  await requireRole("officer");
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  const role = (session.user.role ?? "candidate") as UserRole;
+  if (!hasMinRole(role, "officer")) redirect("/membre");
   await prisma.guide.delete({ where: { id } });
   revalidatePath("/membre/guides");
   redirect("/membre/guides");
@@ -107,7 +121,7 @@ export async function createCalendarEvent(
   _prev: ContentFormState,
   formData: FormData
 ): Promise<ContentFormState> {
-  const user = await requireRole("officer");
+  const user = await requireContentCreator();
   const title = (formData.get("title") as string | null)?.trim() ?? "";
   const description = (formData.get("description") as string | null)?.trim() || null;
   const type = (formData.get("type") as string | null) ?? "op";
@@ -138,7 +152,7 @@ export async function createCalendarEvent(
 }
 
 export async function deleteCalendarEvent(id: string): Promise<void> {
-  await requireRole("officer");
+  await requireContentCreator();
   await prisma.calendarEvent.delete({ where: { id } });
   revalidatePath("/membre/calendrier");
 }

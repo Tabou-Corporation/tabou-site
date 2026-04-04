@@ -13,12 +13,22 @@ import { RoleForm } from "./RoleForm";
 import type { UserRole } from "@/types/roles";
 
 const ROLE_LABELS: Record<string, string> = {
-  candidate: "Candidat", member: "Membre", recruiter: "Recruteur",
-  officer: "Officier", admin: "Administrateur",
+  candidate:  "Candidat",
+  member_uz:  "Urban Zone",
+  member:     "Membre",
+  officer:    "Officier",
+  director:   "Directeur",
+  ceo:        "CEO",
+  admin:      "Administrateur",
 };
 const ROLE_BADGE: Record<string, "muted" | "gold"> = {
-  candidate: "muted", member: "muted", recruiter: "gold",
-  officer: "gold", admin: "gold",
+  candidate:  "muted",
+  member_uz:  "muted",
+  member:     "muted",
+  officer:    "gold",
+  director:   "gold",
+  ceo:        "gold",
+  admin:      "gold",
 };
 const APP_STATUS_LABELS: Record<string, string> = {
   PENDING: "En attente", INTERVIEW: "Entretien", ACCEPTED: "Acceptée", REJECTED: "Refusée",
@@ -38,7 +48,7 @@ export default async function MembreDetailPage({
   if (!session?.user?.id) redirect("/login");
 
   const actorRole = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(actorRole, "officer")) redirect("/membre");
+  if (!hasMinRole(actorRole, "director")) redirect("/membre");
 
   const user = await prisma.user.findUnique({
     where: { id },
@@ -54,7 +64,7 @@ export default async function MembreDetailPage({
 
   const characterId = user.accounts.find((a) => a.provider === "eveonline")?.providerAccountId;
   const isSelf = user.id === session.user.id;
-  const canEdit = !isSelf && hasMinRole(actorRole, "officer");
+  const canEdit = !isSelf && hasMinRole(actorRole, "director");
 
   return (
     <div className="py-10 sm:py-14">

@@ -12,15 +12,25 @@ import { Users } from "lucide-react";
 import type { UserRole } from "@/types/roles";
 
 const ROLE_LABELS: Record<string, string> = {
-  candidate: "Candidat", member: "Membre", recruiter: "Recruteur",
-  officer: "Officier", admin: "Administrateur",
+  candidate:  "Candidat",
+  member_uz:  "Urban Zone",
+  member:     "Membre",
+  officer:    "Officier",
+  director:   "Directeur",
+  ceo:        "CEO",
+  admin:      "Administrateur",
 };
 const ROLE_BADGE: Record<string, "muted" | "gold" | "red"> = {
-  candidate: "muted", member: "muted", recruiter: "gold",
-  officer: "gold", admin: "gold",
+  candidate:  "muted",
+  member_uz:  "muted",
+  member:     "muted",
+  officer:    "gold",
+  director:   "gold",
+  ceo:        "gold",
+  admin:      "gold",
 };
 const ROLE_ORDER: Record<string, number> = {
-  admin: 0, officer: 1, recruiter: 2, member: 3, candidate: 4,
+  admin: 0, ceo: 1, director: 2, officer: 3, member: 4, member_uz: 5, candidate: 6,
 };
 
 export default async function MembresPage({
@@ -34,7 +44,7 @@ export default async function MembresPage({
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "officer")) redirect("/membre");
+  if (!hasMinRole(role, "director")) redirect("/membre");
 
   const whereRole = filter && filter !== "all"
     ? { role: filter }
@@ -52,16 +62,16 @@ export default async function MembresPage({
   const counts = await prisma.user.groupBy({
     by: ["role"],
     _count: true,
-    where: { role: { not: "public" } },
   });
   const countMap = Object.fromEntries(counts.map((c) => [c.role, c._count]));
 
   const tabs = [
-    { key: "all",       label: "Tous",        count: users.length },
-    { key: "candidate", label: "Candidats",   count: countMap["candidate"] ?? 0 },
-    { key: "member",    label: "Membres",     count: countMap["member"] ?? 0 },
-    { key: "recruiter", label: "Recruteurs",  count: countMap["recruiter"] ?? 0 },
-    { key: "officer",   label: "Officiers",   count: (countMap["officer"] ?? 0) + (countMap["admin"] ?? 0) },
+    { key: "all",        label: "Tous",         count: users.length },
+    { key: "candidate",  label: "Candidats",    count: countMap["candidate"] ?? 0 },
+    { key: "member_uz",  label: "Urban Zone",   count: countMap["member_uz"] ?? 0 },
+    { key: "member",     label: "Membres",      count: countMap["member"] ?? 0 },
+    { key: "officer",    label: "Officiers",    count: countMap["officer"] ?? 0 },
+    { key: "director",   label: "Directeurs",   count: (countMap["director"] ?? 0) + (countMap["ceo"] ?? 0) + (countMap["admin"] ?? 0) },
   ];
 
   return (

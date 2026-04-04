@@ -11,17 +11,23 @@ import { Users } from "lucide-react";
 import type { UserRole } from "@/types/roles";
 
 const ROLE_LABELS: Record<string, string> = {
-  member:    "Membre",
-  recruiter: "Recruteur",
-  officer:   "Officier",
-  admin:     "Administrateur",
+  candidate:  "Candidat",
+  member_uz:  "Urban Zone",
+  member:     "Membre",
+  officer:    "Officier",
+  director:   "Directeur",
+  ceo:        "CEO",
+  admin:      "Administrateur",
 };
 
-const ROLE_BADGE: Record<string, "muted" | "gold"> = {
-  member:    "muted",
-  recruiter: "gold",
-  officer:   "gold",
-  admin:     "gold",
+const ROLE_BADGE: Record<string, "muted" | "gold" | "default"> = {
+  candidate:  "muted",
+  member_uz:  "default",
+  member:     "muted",
+  officer:    "gold",
+  director:   "gold",
+  ceo:        "gold",
+  admin:      "gold",
 };
 
 export default async function AnnuairePage() {
@@ -29,20 +35,20 @@ export default async function AnnuairePage() {
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member")) redirect("/membre");
+  if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
   const members = await prisma.user.findMany({
     where: {
-      role: { in: ["member", "recruiter", "officer", "admin"] },
+      role: { in: ["member_uz", "member", "officer", "director", "ceo", "admin"] },
     },
-    orderBy: [{ role: "desc" }, { name: "asc" }],
+    orderBy: [{ role: "asc" }, { name: "asc" }],
   });
 
   const counts = {
-    total:    members.length,
-    officer:  members.filter((m) => m.role === "officer" || m.role === "admin").length,
-    recruiter: members.filter((m) => m.role === "recruiter").length,
-    member:   members.filter((m) => m.role === "member").length,
+    total:     members.length,
+    officer:   members.filter((m) => ["officer", "director", "ceo", "admin"].includes(m.role)).length,
+    member:    members.filter((m) => m.role === "member").length,
+    member_uz: members.filter((m) => m.role === "member_uz").length,
   };
 
   return (
@@ -57,6 +63,8 @@ export default async function AnnuairePage() {
           </h1>
           <p className="text-text-muted text-sm mt-1">
             {counts.total} membre{counts.total > 1 ? "s" : ""} actif{counts.total > 1 ? "s" : ""}
+            {counts.member_uz > 0 && ` · ${counts.member_uz} Urban Zone`}
+            {counts.officer > 0 && ` · ${counts.officer} officier${counts.officer > 1 ? "s" : ""}`}
           </p>
         </div>
 
@@ -94,7 +102,10 @@ export default async function AnnuairePage() {
                     <p className="text-text-primary text-sm font-display font-semibold leading-tight">
                       {member.name ?? "Pilote inconnu"}
                     </p>
-                    <Badge variant={ROLE_BADGE[member.role] ?? "muted"}>
+                    <Badge
+                      variant={ROLE_BADGE[member.role] ?? "muted"}
+                      {...(member.role === "member_uz" ? { className: "border-blue-400/50 text-blue-300" } : {})}
+                    >
                       {ROLE_LABELS[member.role] ?? member.role}
                     </Badge>
                   </div>

@@ -105,16 +105,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     /**
-     * Injecte id et role depuis la DB dans l'objet session.
+     * Injecte id, role et specialty depuis la DB dans l'objet session.
      */
     session({ session, user }) {
-      const dbUser = user as { id: string; role?: string | null };
+      const dbUser = user as { id: string; role?: string | null; specialty?: string | null };
       return {
         ...session,
         user: {
           ...session.user,
           id: dbUser.id,
           role: (dbUser.role ?? "candidate") as UserRole,
+          specialty: dbUser.specialty ?? null,
         },
       };
     },

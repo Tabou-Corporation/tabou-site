@@ -7,7 +7,7 @@ import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-const ALLOWED_ROLES: UserRole[] = ["candidate", "member", "recruiter", "officer", "admin"];
+const ALLOWED_ROLES: UserRole[] = ["candidate", "member_uz", "member", "officer", "director", "ceo", "admin"];
 
 /** Utilisée avec useActionState depuis le client */
 export async function changeUserRoleAction(
@@ -27,7 +27,7 @@ export async function changeUserRole(
   if (!session?.user?.id) redirect("/login");
 
   const actorRole = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(actorRole, "officer")) return { error: "Accès refusé." };
+  if (!hasMinRole(actorRole, "director")) return { error: "Accès refusé." };
   if (!ALLOWED_ROLES.includes(newRole as UserRole)) return { error: "Rôle invalide." };
   if (targetUserId === session.user.id) return { error: "Vous ne pouvez pas modifier votre propre rôle." };
 
@@ -36,14 +36,17 @@ export async function changeUserRole(
   if (!target) return { error: "Utilisateur introuvable." };
 
   const targetRole = (target.role ?? "candidate") as UserRole;
+  const targetLevel = ROLE_LEVEL[targetRole] ?? 0;
+  const actorLevel = ROLE_LEVEL[actorRole] ?? 0;
   const newRoleLevel = ROLE_LEVEL[newRole as UserRole] ?? 0;
 
-  // Officer ne peut pas gérer quelqu'un de rang >= lui-même
-  if (actorRole !== "admin" && ROLE_LEVEL[targetRole] >= ROLE_LEVEL[actorRole]) {
+  // On ne peut modifier que quelqu'un de rang STRICTEMENT inférieur
+  if (targetLevel >= actorLevel) {
     return { error: "Vous ne pouvez pas modifier le rôle d'un pair ou supérieur." };
   }
-  // Officer ne peut pas attribuer un rôle >= le sien (seul admin peut donner admin)
-  if (actorRole !== "admin" && newRoleLevel >= ROLE_LEVEL[actorRole]) {
+
+  // Le nouveau rôle doit être STRICTEMENT inférieur au niveau de l'acteur
+  if (newRoleLevel >= actorLevel) {
     return { error: "Vous ne pouvez pas attribuer un rôle supérieur ou égal au vôtre." };
   }
 
