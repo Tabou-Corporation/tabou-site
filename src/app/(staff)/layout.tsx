@@ -1,35 +1,56 @@
-/**
- * Zone STAFF — Placeholder V3/V5
- *
- * Cette zone sera activée progressivement :
- *   V3 : pipeline recrutement (recruteurs)
- *   V5 : backoffice complet (officiers/admins)
- *
- * Routes prévues :
- *   /staff/candidatures       → Gestion des candidatures (V3)
- *   /staff/candidatures/[id]  → Détail candidature (V3)
- *   /staff/membres            → Gestion des membres (V5)
- *   /staff/permissions        → Gestion des rôles (V5)
- *   /staff/admin              → Configuration globale (V5)
- *
- * Sécurité :
- *   - /staff/candidatures : role >= "recruiter"
- *   - /staff/membres : role >= "officer"
- *   - /staff/admin : role = "admin" uniquement
- *   - Protection par middleware Next.js côté serveur
- *
- * Feature flags : FEATURES.recruitmentPipeline, FEATURES.adminPanel, FEATURES.officerTools
- */
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { auth } from "@/auth";
+import { hasMinRole } from "@/types/roles";
+import { MainNav } from "@/components/navigation/MainNav";
+import { Footer } from "@/components/layout/Footer";
+import type { UserRole } from "@/types/roles";
 
-export default function StaffLayout({
+/**
+ * Zone STAFF — V3+
+ *
+ * Protection double :
+ * 1. Middleware (Edge) : cookie de session présent
+ * 2. Ce layout (Server) : rôle >= recruiter vérifié côté serveur
+ *
+ * Routes actives en V3 :
+ *   /staff/candidatures       → Gestion des candidatures (recruteur+)
+ *   /staff/candidatures/[id]  → Détail candidature (recruteur+)
+ */
+export default async function StaffLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // V5+ : sidebar staff avec navigation contextuelle selon le rôle
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const role = (session.user.role ?? "candidate") as UserRole;
+  if (!hasMinRole(role, "recruiter")) redirect("/membre");
+
   return (
-    <div className="min-h-screen bg-bg-deep">
-      <main>{children}</main>
-    </div>
+    <>
+      <MainNav />
+      {/* Bandeau zone staff */}
+      <div className="border-b border-gold/20 bg-gold/5 pt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-6">
+          <span className="text-gold text-xs font-semibold tracking-extra-wide uppercase">
+            Zone recrutement
+          </span>
+          <nav className="flex items-center gap-4">
+            <Link
+              href="/staff/candidatures"
+              className="text-text-secondary text-xs hover:text-gold transition-colors"
+            >
+              Candidatures
+            </Link>
+          </nav>
+        </div>
+      </div>
+      <main className="flex-1 flex flex-col">
+        {children}
+      </main>
+      <Footer />
+    </>
   );
 }

@@ -19,9 +19,9 @@ export const FEATURES = {
   eveSSO: true,
 
   // ── V3 : Pipeline de recrutement ──────────────────────────────────────
-  recruitmentPipeline: false,
-  applicationForm: false,     // formulaire de candidature réel
-  recruiterDashboard: false,
+  recruitmentPipeline: true,
+  applicationForm: true,      // formulaire de candidature réel
+  recruiterDashboard: true,
 
   // ── V4 : Hub membre ───────────────────────────────────────────────────
   memberGuides: false,

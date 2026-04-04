@@ -1,0 +1,116 @@
+"use server";
+
+import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
+import { hasMinRole } from "@/types/roles";
+import type { UserRole } from "@/types/roles";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+export type ApplicationFormState = {
+  error?: string;
+  success?: boolean;
+};
+
+// ─── Candidat : soumettre une candidature ─────────────────────────────────────
+
+export async function submitApplication(
+  _prevState: ApplicationFormState,
+  formData: FormData
+): Promise<ApplicationFormState> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Non authentifié." };
+
+  const motivation = (formData.get("motivation") as string | null)?.trim() ?? "";
+  const spCountRaw = formData.get("spCount") as string | null;
+
+  if (!motivation) return { error: "La motivation est requise." };
+  if (motivation.length < 100) {
+    return { error: `La motivation doit faire au moins 100 caractères (${motivation.length}/100).` };
+  }
+
+  const spCount = spCountRaw ? parseInt(spCountRaw, 10) : null;
+  if (spCountRaw && (isNaN(spCount!) || spCount! < 0)) {
+    return { error: "Skillpoints invalides." };
+  }
+
+  // Vérifier si candidature active déjà en cours
+  const existing = await prisma.application.findFirst({
+    where: { userId: session.user.id, status: { not: "REJECTED" } },
+  });
+
+  if (existing) {
+    return { error: "Vous avez déjà une candidature en cours." };
+  }
+
+  await prisma.application.create({
+    data: {
+      userId: session.user.id,
+      motivation,
+      spCount,
+    },
+  });
+
+  revalidatePath("/membre");
+  revalidatePath("/membre/candidature");
+
+  return { success: true };
+}
+
+// ─── Recruteur : mettre à jour le statut ──────────────────────────────────────
+
+export async function updateApplicationStatus(
+  id: string,
+  status: "PENDING" | "INTERVIEW" | "ACCEPTED" | "REJECTED"
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const role = (session.user.role ?? "candidate") as UserRole;
+  if (!hasMinRole(role, "recruiter")) redirect("/membre");
+
+  // Récupérer l'application avant modification pour avoir le userId
+  const application = await prisma.application.findUnique({ where: { id } });
+  if (!application) return;
+
+  await prisma.application.update({
+    where: { id },
+    data: {
+      status,
+      reviewedAt: new Date(),
+      reviewedBy: session.user.name ?? session.user.id,
+    },
+  });
+
+  // Si accepté → promouvoir le candidat en membre
+  if (status === "ACCEPTED") {
+    await prisma.user.update({
+      where: { id: application.userId },
+      data: { role: "member" },
+    });
+  }
+
+  revalidatePath("/staff/candidatures");
+  revalidatePath(`/staff/candidatures/${id}`);
+  revalidatePath("/membre");
+}
+
+// ─── Recruteur : sauvegarder les notes internes ───────────────────────────────
+
+export async function saveApplicationNotes(
+  id: string,
+  notes: string
+): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const role = (session.user.role ?? "candidate") as UserRole;
+  if (!hasMinRole(role, "recruiter")) redirect("/membre");
+
+  await prisma.application.update({
+    where: { id },
+    data: { notes: notes.trim() || null },
+  });
+
+  revalidatePath(`/staff/candidatures/${id}`);
+}
