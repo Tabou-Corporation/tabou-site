@@ -1,6 +1,8 @@
+import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/layout/Container";
 import { cn } from "@/lib/utils/cn";
+import { CORPORATIONS } from "@/lib/constants/corporations";
 import type { CTAConfig } from "@/types/content";
 
 interface HeroProps {
@@ -54,6 +56,26 @@ export function Hero({ eyebrow, headline, subheadline, primaryCTA, secondaryCTA,
 
       <Container className="relative z-10 py-24 sm:py-32">
         <div className="max-w-3xl animate-fade-in">
+          {/* Logo corporation */}
+          <div className="flex items-center gap-5 mb-8">
+            <Image
+              src={CORPORATIONS.tabou.logoUrl(128)}
+              alt="Tabou Corporation"
+              width={88}
+              height={88}
+              className="rounded-md border border-gold/20 shadow-lg shadow-gold/10"
+              unoptimized
+            />
+            <div>
+              <p className="font-display font-bold text-3xl sm:text-4xl text-text-primary tracking-widest">
+                TABOU
+              </p>
+              <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mt-1">
+                [{CORPORATIONS.tabou.ticker}] · EVE Online
+              </p>
+            </div>
+          </div>
+
           {eyebrow && (
             <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-6">
               {eyebrow}

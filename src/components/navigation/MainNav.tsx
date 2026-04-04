@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils/cn";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { UserMenu } from "./UserMenu";
 import { NAVIGATION } from "@/config/navigation";
 import { SITE_CONFIG } from "@/config/site";
+import { CORPORATIONS } from "@/lib/constants/corporations";
 
 export function MainNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,19 +56,29 @@ export function MainNav() {
         )}
       >
         <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2 group"
+              className="flex items-center gap-3 group"
               aria-label="Tabou — Accueil"
             >
-              <span className="font-display font-bold text-lg text-text-primary tracking-widest group-hover:text-gold transition-colors duration-[180ms]">
-                TABOU
-              </span>
-              <span className="text-xs text-text-muted font-mono tracking-widest hidden sm:block">
-                [{SITE_CONFIG.branding.ticker}]
-              </span>
+              <Image
+                src={CORPORATIONS.tabou.logoUrl(64)}
+                alt="Logo Tabou"
+                width={40}
+                height={40}
+                className="rounded-sm opacity-90 group-hover:opacity-100 transition-opacity duration-[180ms]"
+                unoptimized
+              />
+              <div className="flex flex-col leading-none">
+                <span className="font-display font-bold text-lg text-text-primary tracking-widest group-hover:text-gold transition-colors duration-[180ms]">
+                  TABOU
+                </span>
+                <span className="text-xs text-text-muted font-mono tracking-widest hidden sm:block mt-0.5">
+                  [{SITE_CONFIG.branding.ticker}]
+                </span>
+              </div>
             </Link>
 
             {/* Navigation desktop */}
@@ -136,7 +148,7 @@ export function MainNav() {
       )}
       <div
         className={cn(
-          "fixed top-16 left-0 right-0 z-40 md:hidden",
+          "fixed top-20 left-0 right-0 z-40 md:hidden",
           "bg-bg-deep border-b border-border shadow-panel-lg",
           "transition-all duration-[350ms]",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
