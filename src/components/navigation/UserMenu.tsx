@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, User, ChevronDown } from "lucide-react";
+import { LogOut, User, ChevronDown, Shield, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 export function UserMenu() {
@@ -94,6 +94,30 @@ export function UserMenu() {
               Mon profil
             </Link>
           </div>
+
+          {/* Liens staff — visibles recruiter+ */}
+          {["recruiter", "officer", "admin"].includes(session.user?.role ?? "") && (
+            <div className="border-t border-border py-1">
+              <Link
+                href="/staff/candidatures"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm text-gold/80 hover:text-gold hover:bg-bg-overlay transition-colors"
+              >
+                <Shield size={14} />
+                Zone Staff
+              </Link>
+              {session.user?.role === "admin" && (
+                <Link
+                  href="/staff/admin"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-gold hover:text-gold-light hover:bg-bg-overlay transition-colors font-semibold"
+                >
+                  <Settings size={14} />
+                  Administration
+                </Link>
+              )}
+            </div>
+          )}
           <div className="border-t border-border py-1">
             <button
               type="button"
