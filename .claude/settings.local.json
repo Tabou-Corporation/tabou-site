@@ -1,5 +1,11 @@
 {
   "permissions": {
+    "deny": [
+      "Bash(*--force-reset*)",
+      "Bash(*prisma migrate reset*)",
+      "Bash(*DROP TABLE*)",
+      "Bash(*DROP DATABASE*)"
+    ],
     "allow": [
       "WebSearch",
       "Bash(npm install:*)",
