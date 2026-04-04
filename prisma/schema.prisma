@@ -72,7 +72,7 @@ model User {
   /// Rôle dans la corporation — valeurs : candidate | member_uz | member | officer | director | ceo | admin
   role          String    @default("candidate")
   /// Spécialité officer — pvp | pve | industry | exploration | communication | recruitment
-  specialty     String?   @default(null)
+  specialty     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
