@@ -24,7 +24,7 @@ export function TopPilotCard({ pilot }: TopPilotCardProps) {
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-gold/15">
         <span className="text-gold text-2xs font-bold tracking-extra-wide uppercase">
-          Top Pilote
+          Focus
         </span>
         <span className="text-gold text-xs">👑</span>
       </div>
