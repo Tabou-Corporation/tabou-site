@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 
 import { getRecruitmentContent } from "@/lib/site-content/loader";
 import { RECRUITMENT_META } from "@/content/recruitment";
+import { SITE_CONFIG } from "@/config/site";
 
 export const metadata: Metadata = {
   title: RECRUITMENT_META.title,
@@ -83,28 +84,15 @@ export default async function RecruitmentPage() {
               <p className="text-text-secondary text-sm leading-relaxed">
                 Toutes les candidatures passent par Discord. Rejoignez le serveur, ouvrez un ticket de recrutement et présentez-vous.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  as="a"
-                  href="https://discord.gg/tabou"
-                  variant="primary"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
-                >
-                  Postuler sur Discord
-                </Button>
-                <Button
-                  as="a"
-                  href="https://discord.gg/tabou"
-                  variant="secondary"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
-                >
-                  Rejoindre le Discord
-                </Button>
-              </div>
+              <Button
+                as="a"
+                href={SITE_CONFIG.links.discord}
+                variant="primary"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Postuler sur Discord
+              </Button>
             </div>
           </div>
         </div>
