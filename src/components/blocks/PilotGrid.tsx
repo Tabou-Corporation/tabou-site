@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils/cn";
 import type { PilotData } from "./PilotCard";
 
 const ROLE_ORDER: Record<string, number> = {
-  admin: 0, ceo: 1, director: 2, officer: 3, member: 4, member_uz: 5, candidate: 6,
+  ceo: 0, director: 1, officer: 2, admin: 3, member: 4, member_uz: 5, candidate: 6,
 };
 
 interface PilotGridProps {
