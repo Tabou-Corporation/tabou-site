@@ -7,7 +7,7 @@ export const SITE_CONFIG = {
   fullName: "Corporation Tabou",
   tagline: "Compétence, discrétion, efficacité.",
   description:
-    "Tabou est une corporation EVE Online orientée contenu de fin de jeu — PvP nul-sec, opérations structurées, culture adulte et exigeante.",
+    "Corporation francophone EVE Online en null-sec, Tabou propose un cadre de jeu collectif, actif et accessible.",
   url: "https://tabou-corp.fr", // à actualiser en production
 
   /** Liens externes officiels */
