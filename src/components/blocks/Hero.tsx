@@ -178,7 +178,7 @@ export function Hero({
 
       {/* ── Stats bar en bas du hero ─────────────────────────────────── */}
       {stats && stats.length > 0 && (
-        <div className="relative z-10 border-t border-gold/20 bg-bg-deep/60 backdrop-blur-md mb-10">
+        <div className="relative z-10 border-t border-gold/20 bg-bg-deep/60 backdrop-blur-md">
           <Container>
             <div
               className={cn(
@@ -206,8 +206,8 @@ export function Hero({
         </div>
       )}
 
-      {/* ── Scroll indicator — positionné absolument en bas ─────────── */}
-      <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center">
+      {/* ── Scroll indicator — après la stats bar dans le flux ──────── */}
+      <div className="relative z-10 flex justify-center py-6">
         <div className="animate-bounce-slow flex flex-col items-center gap-2">
           <span className="text-gold animate-pulse text-sm font-semibold tracking-extra-wide uppercase">Découvrir</span>
           <svg
