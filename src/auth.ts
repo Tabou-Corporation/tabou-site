@@ -4,26 +4,29 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import type { UserRole } from "@/types/roles";
 
-interface EVECharacterProfile {
-  CharacterID: number;
-  CharacterName: string;
-  ExpiresOn: string;
-  Scopes: string;
-  TokenType: string;
-  CharacterOwnerHash: string;
+/**
+ * Payload du JWT access_token EVE SSO v2.
+ *
+ * Le endpoint /verify/ d'ESI est déprécié et renvoie du HTML.
+ * On décode le JWT directement pour extraire les infos du personnage.
+ */
+interface EVEJwtPayload {
+  sub: string;   // "CHARACTER:EVE:2116159723"
+  name: string;  // Nom du personnage
+  owner: string; // Character owner hash
+  exp: number;
+  iss: string;   // "login.eveonline.com"
+  [key: string]: unknown;
 }
 
 /**
- * Provider EVE Online SSO (OAuth2 v2).
- *
- * Documentation : https://docs.esi.evetech.net/docs/sso/
- * Enregistrement : https://developers.eveonline.com/
+ * Provider EVE Online SSO (OAuth2 v2 — JWT tokens).
  *
  * Callback URL à déclarer dans le portail CCP :
  *   Dev  : http://localhost:3000/api/auth/callback/eveonline
- *   Prod : https://votre-domaine.fr/api/auth/callback/eveonline
+ *   Prod : https://tabou-eve.fr/api/auth/callback/eveonline
  */
-function createEVEProvider(): OAuthConfig<EVECharacterProfile> {
+function createEVEProvider(): OAuthConfig<EVEJwtPayload> {
   return {
     id: "eveonline",
     name: "EVE Online",
@@ -36,13 +39,29 @@ function createEVEProvider(): OAuthConfig<EVECharacterProfile> {
       params: { scope: "publicData" },
     },
     token: "https://login.eveonline.com/v2/oauth/token",
-    userinfo: "https://esi.evetech.net/verify/",
+
+    // Décode le JWT access_token au lieu d'appeler le verify endpoint (déprécié)
+    userinfo: {
+      url: "https://login.eveonline.com/oauth/verify",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async request({ tokens }: { tokens: any }) {
+        const jwt = String(tokens.access_token);
+        const parts = jwt.split(".");
+        const payload = JSON.parse(
+          Buffer.from(parts[1] ?? "", "base64").toString()
+        ) as EVEJwtPayload;
+        return payload;
+      },
+    },
+
     profile(profile) {
+      // profile.sub = "CHARACTER:EVE:2116159723"
+      const characterId = profile.sub.split(":")[2] ?? "0";
       return {
-        id: String(profile.CharacterID),
-        name: profile.CharacterName,
+        id: characterId,
+        name: profile.name,
         email: null,
-        image: `https://images.evetech.net/characters/${profile.CharacterID}/portrait?size=256`,
+        image: `https://images.evetech.net/characters/${characterId}/portrait?size=256`,
       };
     },
   };
@@ -57,38 +76,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     /**
-     * Callback signIn — synchronise le nom EVE à chaque connexion.
-     *
-     * PrismaAdapter ne propage pas toujours le champ `name` depuis
-     * le profil OAuth quand `email` est null (cas EVE SSO).
-     * On force la mise à jour ici, après que l'adapter ait créé le user.
+     * Synchronise nom + image EVE à chaque connexion.
+     * Filet de sécurité si le PrismaAdapter ne propage pas le nom.
      */
     async signIn({ user, profile, account }) {
       if (account?.provider !== "eveonline" || !user.id) return true;
 
-      // profile peut être le profil brut (CharacterName) ou transformé (name)
       const raw = profile as Record<string, unknown> | undefined;
-      const name =
-        (raw?.CharacterName as string) ??
-        (raw?.name as string) ??
-        null;
-
-      const charId = raw?.CharacterID as number | undefined;
-      const image = charId
-        ? `https://images.evetech.net/characters/${charId}/portrait?size=256`
-        : (user.image ?? undefined);
+      const name = (raw?.name as string) ?? null;
+      const sub = (raw?.sub as string) ?? "";
+      const characterId = sub.split(":")[2];
+      const image = characterId
+        ? `https://images.evetech.net/characters/${characterId}/portrait?size=256`
+        : undefined;
 
       if (name) {
         try {
           await prisma.user.update({
             where: { id: user.id },
-            data: {
-              name,
-              ...(image ? { image } : {}),
-            },
+            data: { name, ...(image ? { image } : {}) },
           });
         } catch {
-          // Silently ignore if user doesn't exist yet (edge case)
+          // Ignore si user pas encore créé (edge case)
         }
       }
 
@@ -97,7 +106,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     /**
      * Injecte id et role depuis la DB dans l'objet session.
-     * Accessible via useSession() côté client et auth() côté serveur.
      */
     session({ session, user }) {
       const dbUser = user as { id: string; role?: string | null };
@@ -106,7 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         user: {
           ...session.user,
           id: dbUser.id,
-          role: ((dbUser.role ?? "candidate") as UserRole),
+          role: (dbUser.role ?? "candidate") as UserRole,
         },
       };
     },
