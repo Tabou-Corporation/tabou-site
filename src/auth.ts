@@ -57,6 +57,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     /**
+     * Callback signIn — synchronise le nom EVE à chaque connexion.
+     *
+     * PrismaAdapter ne propage pas toujours le champ `name` depuis
+     * le profil OAuth quand `email` est null (cas EVE SSO).
+     * On force la mise à jour ici, après que l'adapter ait créé le user.
+     */
+    async signIn({ user, profile, account }) {
+      if (account?.provider !== "eveonline" || !user.id) return true;
+
+      // profile peut être le profil brut (CharacterName) ou transformé (name)
+      const raw = profile as Record<string, unknown> | undefined;
+      const name =
+        (raw?.CharacterName as string) ??
+        (raw?.name as string) ??
+        null;
+
+      const charId = raw?.CharacterID as number | undefined;
+      const image = charId
+        ? `https://images.evetech.net/characters/${charId}/portrait?size=256`
+        : (user.image ?? undefined);
+
+      if (name) {
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              name,
+              ...(image ? { image } : {}),
+            },
+          });
+        } catch {
+          // Silently ignore if user doesn't exist yet (edge case)
+        }
+      }
+
+      return true;
+    },
+
+    /**
      * Injecte id et role depuis la DB dans l'objet session.
      * Accessible via useSession() côté client et auth() côté serveur.
      */
@@ -70,23 +109,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: ((dbUser.role ?? "candidate") as UserRole),
         },
       };
-    },
-  },
-
-  events: {
-    /**
-     * À chaque connexion, on synchronise le nom et l'image EVE depuis le profil SSO.
-     * Corrige les cas où le nom est NULL à cause d'une première connexion ratée.
-     */
-    async signIn({ user, profile }) {
-      if (!profile || !user.id) return;
-      const name = (profile as { CharacterName?: string }).CharacterName;
-      const image = user.image;
-      if (!name) return;
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { name, ...(image ? { image } : {}) },
-      });
     },
   },
 
