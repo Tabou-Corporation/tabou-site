@@ -73,6 +73,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 
+  events: {
+    /**
+     * À chaque connexion, on synchronise le nom et l'image EVE depuis le profil SSO.
+     * Corrige les cas où le nom est NULL à cause d'une première connexion ratée.
+     */
+    async signIn({ user, profile }) {
+      if (!profile || !user.id) return;
+      const name = (profile as { CharacterName?: string }).CharacterName;
+      const image = user.image;
+      if (!name) return;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { name, ...(image ? { image } : {}) },
+      });
+    },
+  },
+
   pages: {
     signIn: "/login",
     error: "/login",
