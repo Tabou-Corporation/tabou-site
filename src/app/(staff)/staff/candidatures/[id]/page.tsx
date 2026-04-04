@@ -135,32 +135,18 @@ export default async function CandidatureDetailPage({
                 </h2>
               </CardHeader>
               <CardBody className="space-y-4">
-                {/* Discord — mis en avant, lien direct si ID disponible */}
+                {/* Discord — pseudo pour contact manuel */}
                 {application.discordHandle ? (
                   <div className="flex items-center gap-3 p-3 bg-[#5865F2]/10 border border-[#5865F2]/30 rounded">
                     <MessageSquare size={16} className="text-[#5865F2] flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0">
                       <p className="text-text-muted text-[10px] uppercase tracking-wide font-semibold mb-0.5">
-                        Discord
+                        Discord — contacter via
                       </p>
-                      <p className="text-text-primary text-sm font-mono font-semibold">
+                      <p className="text-text-primary text-sm font-mono font-semibold select-all">
                         {application.discordHandle}
                       </p>
                     </div>
-                    {application.discordId ? (
-                      <a
-                        href={`https://discord.com/users/${application.discordId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded bg-[#5865F2] text-white hover:bg-[#4752c4] transition-colors"
-                      >
-                        Ouvrir DM →
-                      </a>
-                    ) : (
-                      <span className="flex-shrink-0 text-[10px] text-text-muted italic">
-                        ID non renseigné
-                      </span>
-                    )}
                   </div>
                 ) : (
                   <p className="text-text-muted text-xs italic">
