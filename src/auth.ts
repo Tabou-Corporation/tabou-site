@@ -45,12 +45,16 @@ function createEVEProvider(): OAuthConfig<EVEJwtPayload> {
       url: "https://login.eveonline.com/oauth/verify",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async request({ tokens }: { tokens: any }) {
-        const jwt = String(tokens.access_token);
-        const parts = jwt.split(".");
-        const payload = JSON.parse(
-          Buffer.from(parts[1] ?? "", "base64").toString()
-        ) as EVEJwtPayload;
-        return payload;
+        try {
+          const jwt = String(tokens.access_token);
+          const parts = jwt.split(".");
+          const payload = JSON.parse(
+            Buffer.from(parts[1] ?? "", "base64").toString()
+          ) as EVEJwtPayload;
+          return payload;
+        } catch {
+          return null;
+        }
       },
     },
 
@@ -90,11 +94,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ? `https://images.evetech.net/characters/${characterId}/portrait?size=256`
         : undefined;
 
+      // Récupère la corporation EVE actuelle via ESI public
+      let corporationId: number | undefined;
+      if (characterId) {
+        try {
+          const esiRes = await fetch(
+            `https://esi.evetech.net/latest/characters/${characterId}/`,
+            { next: { revalidate: 3600 } }
+          );
+          if (esiRes.ok) {
+            const esiData = await esiRes.json() as { corporation_id?: number };
+            if (esiData.corporation_id) corporationId = esiData.corporation_id;
+          }
+        } catch { /* ESI indisponible — on ignore */ }
+      }
+
       if (name) {
         try {
           await prisma.user.update({
             where: { id: user.id },
-            data: { name, ...(image ? { image } : {}) },
+            data: {
+              name,
+              ...(image ? { image } : {}),
+              ...(corporationId ? { corporationId } : {}),
+            },
           });
         } catch {
           // Ignore si user pas encore créé (edge case)

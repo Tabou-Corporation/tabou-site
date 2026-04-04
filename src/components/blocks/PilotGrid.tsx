@@ -22,11 +22,17 @@ export function PilotGrid({ members }: PilotGridProps) {
   const [activeTab, setActiveTab] = useState<Tab>("tabou");
 
   const tabouMembers = members
-    .filter((m) => m.role !== "member_uz")
+    .filter((m) =>
+      m.corporationId === CORPORATIONS.tabou.id ||
+      (!m.corporationId && m.role !== "member_uz")
+    )
     .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9));
 
   const uzMembers = members
-    .filter((m) => m.role === "member_uz")
+    .filter((m) =>
+      m.corporationId === CORPORATIONS.urbanZone.id ||
+      (!m.corporationId && m.role === "member_uz")
+    )
     .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
 
   const displayed = activeTab === "tabou" ? tabouMembers : uzMembers;

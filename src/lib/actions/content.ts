@@ -125,6 +125,7 @@ export async function createCalendarEvent(
   const title = (formData.get("title") as string | null)?.trim() ?? "";
   const description = (formData.get("description") as string | null)?.trim() || null;
   const type = (formData.get("type") as string | null) ?? "op";
+  if (!["op", "training", "social", "other"].includes(type)) return { error: "Type d'événement invalide." };
   const startAtRaw = formData.get("startAt") as string | null;
   const endAtRaw = formData.get("endAt") as string | null;
 

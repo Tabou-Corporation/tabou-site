@@ -31,6 +31,7 @@ export interface PilotData {
   role: string;
   specialty: string | null;
   bio: string | null;
+  corporationId: number | null;
   createdAt: Date;
 }
 
@@ -38,7 +39,9 @@ const isHighRank = (role: string) =>
   ["officer", "director", "ceo", "admin"].includes(role);
 
 export function PilotCard({ pilot, index }: { pilot: PilotData; index: number }) {
-  const corp = pilot.role === "member_uz" ? CORPORATIONS.urbanZone : CORPORATIONS.tabou;
+  const corp = pilot.corporationId === CORPORATIONS.urbanZone.id
+    ? CORPORATIONS.urbanZone
+    : CORPORATIONS.tabou;
   const highRank = isHighRank(pilot.role);
 
   return (
