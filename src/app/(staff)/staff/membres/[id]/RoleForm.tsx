@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { changeUserRoleAction } from "@/lib/actions/members";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
@@ -16,14 +16,24 @@ const ROLES = [
   { value: "admin",      label: "Administrateur" },
 ];
 
+const SPECIALTIES = [
+  { value: "",            label: "— Aucune spécialité —" },
+  { value: "recruitment", label: "Recrutement" },
+  { value: "logistics",   label: "Logistique" },
+  { value: "diplomacy",   label: "Diplomatie" },
+  { value: "military",    label: "Militaire" },
+];
+
 interface Props {
-  userId: string;
-  currentRole: string;
-  actorRole: string;
+  userId:          string;
+  currentRole:     string;
+  currentSpecialty?: string | null;
+  actorRole:       string;
 }
 
-export function RoleForm({ userId, currentRole, actorRole }: Props) {
+export function RoleForm({ userId, currentRole, currentSpecialty, actorRole }: Props) {
   const [state, formAction, pending] = useActionState(changeUserRoleAction, {});
+  const [selectedRole, setSelectedRole] = useState(currentRole);
 
   // Rôles disponibles selon l'acteur
   const allowedRoles = actorRole === "admin"
@@ -31,6 +41,8 @@ export function RoleForm({ userId, currentRole, actorRole }: Props) {
     : actorRole === "ceo"
     ? ROLES.filter((r) => ["candidate", "member_uz", "member", "officer", "director"].includes(r.value))
     : ROLES.filter((r) => ["candidate", "member_uz", "member", "officer"].includes(r.value));
+
+  const showSpecialty = selectedRole === "officer";
 
   return (
     <form action={formAction} className="space-y-3">
@@ -43,7 +55,8 @@ export function RoleForm({ userId, currentRole, actorRole }: Props) {
         <div className="flex items-center gap-3 flex-wrap">
           <select
             name="role"
-            defaultValue={currentRole}
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
             className={cn(
               "flex-1 min-w-[160px] bg-bg-elevated border rounded px-3 py-2",
               "text-text-primary text-sm border-border",
@@ -59,6 +72,28 @@ export function RoleForm({ userId, currentRole, actorRole }: Props) {
           </Button>
         </div>
       </div>
+
+      {/* Spécialité — visible uniquement pour le rôle Officier */}
+      {showSpecialty && (
+        <div className="space-y-1.5">
+          <label className="block text-text-muted text-xs uppercase tracking-wide font-semibold">
+            Spécialité officier
+          </label>
+          <select
+            name="specialty"
+            defaultValue={currentSpecialty ?? ""}
+            className={cn(
+              "w-full bg-bg-elevated border rounded px-3 py-2",
+              "text-text-primary text-sm border-border",
+              "focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40"
+            )}
+          >
+            {SPECIALTIES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {state.error && (
         <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded px-3 py-2">

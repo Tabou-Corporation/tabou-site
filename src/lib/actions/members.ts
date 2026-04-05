@@ -10,19 +10,24 @@ import { writeAuditLog } from "@/lib/audit";
 
 const ALLOWED_ROLES: UserRole[] = ["candidate", "member_uz", "member", "officer", "director", "ceo", "admin"];
 
+const VALID_SPECIALTIES = ["", "recruitment", "logistics", "diplomacy", "military"];
+
 /** Utilisée avec useActionState depuis le client */
 export async function changeUserRoleAction(
   _prev: { error?: string },
   formData: FormData
 ): Promise<{ error?: string }> {
   const targetUserId = formData.get("userId") as string;
-  const newRole = formData.get("role") as string;
-  return changeUserRole(targetUserId, newRole);
+  const newRole      = formData.get("role")   as string;
+  const specialty    = (formData.get("specialty") as string | null) ?? "";
+  if (!VALID_SPECIALTIES.includes(specialty)) return { error: "Spécialité invalide." };
+  return changeUserRole(targetUserId, newRole, specialty || null);
 }
 
 export async function changeUserRole(
   targetUserId: string,
-  newRole: string
+  newRole: string,
+  specialty: string | null = null,
 ): Promise<{ error?: string }> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -53,7 +58,13 @@ export async function changeUserRole(
 
   await prisma.user.update({
     where: { id: targetUserId },
-    data: { role: newRole },
+    data: {
+      role: newRole,
+      // Spécialité : on la réinitialise si le nouveau rôle n'est pas officier
+      ...(newRole === "officer"
+        ? { specialty: specialty }
+        : { specialty: null }),
+    },
   });
 
   writeAuditLog({

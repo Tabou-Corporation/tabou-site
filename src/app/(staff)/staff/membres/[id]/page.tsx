@@ -267,6 +267,7 @@ export default async function MembreDetailPage({
                   <RoleForm
                     userId={user.id}
                     currentRole={user.role}
+                    currentSpecialty={user.specialty}
                     actorRole={actorRole}
                   />
                 </CardBody>
