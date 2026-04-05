@@ -4,6 +4,7 @@ import { KillFeedServer } from "@/components/blocks/KillFeedServer";
 import { TopPilotServer } from "@/components/blocks/TopPilotServer";
 import { HeroBackground } from "@/components/blocks/HeroBackground";
 import { HeroAnimatedContent } from "@/components/blocks/HeroAnimatedContent";
+import { AmbientAudio } from "@/components/blocks/AmbientAudio";
 import { cn } from "@/lib/utils/cn";
 import type { CTAConfig } from "@/types/content";
 
@@ -24,6 +25,8 @@ interface HeroProps {
   stats?: HeroStat[];
   /** URL du logo corporation pour le mode emblème */
   logoUrl?: string;
+  /** Chemin vers un fichier audio d'ambiance (relatif à /public) */
+  ambientAudio?: string;
   /** Affiche le kill feed + top pilote en streaming (Suspense) */
   showKillFeed?: boolean;
   className?: string;
@@ -39,6 +42,7 @@ export function Hero({
   stats,
   logoUrl,
   showKillFeed = false,
+  ambientAudio,
   className,
 }: HeroProps) {
   return (
@@ -90,6 +94,9 @@ export function Hero({
           />
         </>
       )}
+
+      {/* ── Musique d'ambiance ─────────────────────────────────────── */}
+      {ambientAudio && <AmbientAudio src={ambientAudio} />}
 
       {/* ── Gold accent lines ────────────────────────────────────────── */}
       <div

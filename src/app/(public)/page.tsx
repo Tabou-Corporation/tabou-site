@@ -47,6 +47,7 @@ export default async function HomePage() {
         primaryCTA={{ label: "Postuler", href: "/recrutement", variant: "primary" }}
         secondaryCTA={{ label: "En savoir plus", href: "/corporation", variant: "ghost" }}
         backgroundImage={home.hero.backgroundImage ?? "/images/hero-bg.jpg"}
+        ambientAudio="/audio/ambient.mp3"
         stats={home.stats}
         showKillFeed
       />
