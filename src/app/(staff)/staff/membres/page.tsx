@@ -63,6 +63,7 @@ export default async function MembresPage({
     image: u.image,
     role: u.role,
     createdAt: u.createdAt.toISOString(),
+    corporationId: u.corporationId,
   }));
 
   return (

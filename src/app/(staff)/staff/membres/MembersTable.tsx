@@ -14,6 +14,17 @@ interface SerializedUser {
   image: string | null;
   role: string;
   createdAt: string; // ISO string
+  corporationId: number | null;
+}
+
+const CORP_IDS = [98809880, 98215397]; // Tabou + Urban Zone
+
+function getSuspendReason(u: SerializedUser): string | null {
+  if (u.role !== "suspended") return null;
+  if (u.corporationId && !CORP_IDS.includes(u.corporationId)) {
+    return "Hors corporation";
+  }
+  return "Suspendu manuellement";
 }
 
 type SortKey = "name" | "role" | "date";
@@ -146,17 +157,23 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                         {u.name ?? "Pilote inconnu"}
                       </span>
                       <span className="sm:hidden block mt-0.5">
-                        <Badge variant={ROLE_BADGE[u.role] ?? "muted"} className="text-2xs">
+                        <Badge variant={u.role === "suspended" ? "red" : (ROLE_BADGE[u.role] ?? "muted")} className="text-2xs">
                           {ROLE_LABELS[u.role] ?? u.role}
                         </Badge>
+                        {getSuspendReason(u) && (
+                          <span className="text-red-400/70 text-2xs ml-1">{getSuspendReason(u)}</span>
+                        )}
                       </span>
                     </Link>
                   </td>
                   <td className="px-4 py-2.5 hidden sm:table-cell">
                     <Link href={`/staff/membres/${u.id}`} className="block">
-                      <Badge variant={ROLE_BADGE[u.role] ?? "muted"}>
+                      <Badge variant={u.role === "suspended" ? "red" : (ROLE_BADGE[u.role] ?? "muted")}>
                         {ROLE_LABELS[u.role] ?? u.role}
                       </Badge>
+                      {getSuspendReason(u) && (
+                        <span className="text-red-400/70 text-xs ml-2">{getSuspendReason(u)}</span>
+                      )}
                     </Link>
                   </td>
                   <td className="px-4 py-2.5 text-text-muted text-xs hidden md:table-cell">
