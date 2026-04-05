@@ -155,17 +155,17 @@ export function EveTimeTerminal() {
               isLive ? "bg-gold animate-pulse" : "bg-text-muted",
             )}
           />
-          <span className="text-gold/50 text-2xs font-bold tracking-extra-wide uppercase">
+          <span className="text-gold/50 text-xs font-bold tracking-extra-wide uppercase">
             Eve Time
           </span>
         </div>
       </div>
 
       {/* Horloge */}
-      <div className="px-3 pb-1">
+      <div className="px-3 pb-1.5">
         <div
           className={cn(
-            "font-mono text-lg font-bold tracking-[0.12em] tabular-nums transition-colors duration-300",
+            "font-mono text-3xl font-bold tracking-[0.1em] tabular-nums transition-colors duration-300",
             stage === "glitch" ? "text-gold-light" : isLive ? "text-gold" : "text-gold/50",
           )}
         >
@@ -174,15 +174,15 @@ export function EveTimeTerminal() {
       </div>
 
       {/* Message d'ambiance */}
-      <div className="px-3 pb-3 min-h-[34px]">
-        <p className="font-mono text-2xs text-gold/55 leading-tight tracking-wide uppercase">
+      <div className="px-3 pb-4 min-h-[40px]">
+        <p className="font-mono text-xs text-gold/55 leading-tight tracking-wide uppercase">
           {statusTyped}
           {statusTyped.length < `> ${phase.label}`.length && isLive && (
             <span className="animate-terminal-cursor">▌</span>
           )}
         </p>
         {subTyped && (
-          <p className="font-mono text-2xs text-text-muted/60 leading-tight tracking-wide mt-0.5">
+          <p className="font-mono text-xs text-text-muted/60 leading-tight tracking-wide mt-1">
             {subTyped}
           </p>
         )}
