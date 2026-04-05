@@ -178,16 +178,41 @@ export function MainNav() {
                 Discord
               </Button>
             )}
-            <Button
-              as="a"
-              href="/recrutement"
-              variant="primary"
-              size="md"
-              className="w-full"
-              onClick={() => setIsOpen(false)}
-            >
-              Postuler
-            </Button>
+            {session ? (
+              <Button
+                as="a"
+                href="/membre"
+                variant="primary"
+                size="md"
+                className="w-full"
+                onClick={() => setIsOpen(false)}
+              >
+                Espace membre
+              </Button>
+            ) : (
+              <>
+                <Button
+                  as="a"
+                  href="/recrutement"
+                  variant="primary"
+                  size="md"
+                  className="w-full"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Postuler
+                </Button>
+                <Button
+                  as="a"
+                  href="/login"
+                  variant="ghost"
+                  size="md"
+                  className="w-full"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Connexion
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
