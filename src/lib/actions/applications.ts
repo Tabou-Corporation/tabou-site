@@ -8,6 +8,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionResult } from "@/types/actions";
 import { writeAuditLog } from "@/lib/audit";
+import {
+  notifyNewApplication,
+  notifyInterviewScheduled,
+  notifyApplicationAccepted,
+  notifyApplicationRejected,
+} from "@/lib/discord-recruitment";
 
 // ─── Limites de longueur ──────────────────────────────────────────────────────
 const LIMITS = {
@@ -56,7 +62,7 @@ export async function submitApplication(
   });
   if (existing) return { error: "Vous avez déjà une candidature en cours." };
 
-  await prisma.application.create({
+  const application = await prisma.application.create({
     data: {
       userId: session.user.id,
       discordHandle,
@@ -64,6 +70,15 @@ export async function submitApplication(
       motivation,
       spCount,
     },
+  });
+
+  notifyNewApplication({
+    applicationId: application.id,
+    candidateName: session.user.name ?? null,
+    discordHandle,
+    spCount,
+    availability,
+    motivation,
   });
 
   revalidatePath("/membre");
@@ -91,7 +106,10 @@ export async function updateApplicationStatus(
   }
 
   try {
-    const application = await prisma.application.findUnique({ where: { id } });
+    const application = await prisma.application.findUnique({
+      where: { id },
+      include: { user: { select: { name: true } } },
+    });
     if (!application) return { success: false, error: "Candidature introuvable." };
 
     await prisma.application.update({
@@ -108,6 +126,17 @@ export async function updateApplicationStatus(
       await prisma.user.update({
         where: { id: application.userId },
         data:  { role: "member" },
+      });
+      notifyApplicationAccepted({
+        applicationId: id,
+        candidateName: application.user.name ?? null,
+        recruiterName: session.user.name ?? null,
+      });
+    } else if (status === "REJECTED") {
+      notifyApplicationRejected({
+        applicationId: id,
+        candidateName: application.user.name ?? null,
+        recruiterName: session.user.name ?? null,
       });
     }
 
@@ -152,6 +181,11 @@ export async function takeChargeApplication(
   }
 
   try {
+    const application = await prisma.application.findUnique({
+      where: { id },
+      include: { user: { select: { name: true } } },
+    });
+
     await prisma.application.update({
       where: { id },
       data: {
@@ -160,6 +194,13 @@ export async function takeChargeApplication(
         reviewedAt:  new Date(),
         reviewedBy:  session.user.name ?? session.user.id,
       },
+    });
+
+    notifyInterviewScheduled({
+      applicationId: id,
+      candidateName: application?.user.name ?? null,
+      recruiterName: session.user.name ?? null,
+      interviewAt:   interviewAt ?? null,
     });
 
     revalidatePath("/staff/candidatures");
