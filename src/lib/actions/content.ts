@@ -164,6 +164,8 @@ export async function createCalendarEvent(
   const endAt = endAtRaw ? new Date(endAtRaw) : null;
 
   if (isNaN(startAt.getTime())) return { error: "Date de début invalide." };
+  if (endAt && isNaN(endAt.getTime())) return { error: "Date de fin invalide." };
+  if (endAt && endAt <= startAt) return { error: "La date de fin doit être après la date de début." };
 
   if (!["none", "weekly", "biweekly", "monthly"].includes(recurrence)) {
     return { error: "Récurrence invalide." };

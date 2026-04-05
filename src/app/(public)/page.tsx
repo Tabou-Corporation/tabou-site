@@ -25,9 +25,17 @@ export default async function HomePage() {
   // Les fetches zkillboard (kills, topPilot) sont déplacés dans des Server Components
   // wrappés par <Suspense> dans Hero — la page s'affiche sans les attendre.
   const [home, activities] = await Promise.all([
-    getHomeContent(),
-    getActivitiesContent(),
+    getHomeContent().catch(() => null),
+    getActivitiesContent().catch(() => []),
   ]);
+
+  if (!home) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-text-muted text-sm">Le contenu est temporairement indisponible.</p>
+      </div>
+    );
+  }
 
   const previewActivities = activities.slice(0, 4);
 

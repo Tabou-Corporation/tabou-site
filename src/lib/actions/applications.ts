@@ -7,6 +7,7 @@ import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionResult } from "@/types/actions";
+import { writeAuditLog } from "@/lib/audit";
 
 // ─── Limites de longueur ──────────────────────────────────────────────────────
 const LIMITS = {
@@ -110,6 +111,18 @@ export async function updateApplicationStatus(
       });
     }
 
+    writeAuditLog({
+      actorId:   session.user.id,
+      actorName: session.user.name,
+      action:    "application_status",
+      meta: {
+        applicationId: id,
+        candidateId:   application.userId,
+        from: application.status,
+        to:   status,
+      },
+    });
+
     revalidatePath("/staff/candidatures");
     revalidatePath(`/staff/candidatures/${id}`);
     revalidatePath("/membre");
@@ -171,6 +184,13 @@ export async function withdrawApplication(): Promise<ActionResult> {
         userId: session.user.id,
         status: { in: ["PENDING", "INTERVIEW"] },
       },
+    });
+
+    writeAuditLog({
+      actorId:   session.user.id,
+      actorName: session.user.name,
+      action:    "application_withdraw",
+      meta: { userId: session.user.id },
     });
 
     revalidatePath("/membre");

@@ -16,26 +16,33 @@ export default async function AnnuairePage() {
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
-  const members = await prisma.user.findMany({
-    where: {
-      role: { in: ["member_uz", "member", "officer", "director", "ceo", "admin"] },
-    },
-    select: {
-      id:            true,
-      name:          true,
-      image:         true,
-      role:          true,
-      specialty:     true,
-      bio:           true,
-      corporationId: true,
-      createdAt:     true,
-    },
-    orderBy: [{ role: "asc" }, { name: "asc" }],
-  });
-
-  const total     = members.length;
-  const officers  = members.filter((m) => ["officer", "director", "ceo", "admin"].includes(m.role)).length;
-  const uzCount   = members.filter((m) => m.role === "member_uz").length;
+  const [members, total, officers, uzCount] = await Promise.all([
+    prisma.user.findMany({
+      where: {
+        role: { in: ["member_uz", "member", "officer", "director", "ceo", "admin"] },
+      },
+      select: {
+        id:            true,
+        name:          true,
+        image:         true,
+        role:          true,
+        specialty:     true,
+        bio:           true,
+        corporationId: true,
+        createdAt:     true,
+      },
+      orderBy: [{ role: "asc" }, { name: "asc" }],
+    }),
+    prisma.user.count({
+      where: { role: { in: ["member_uz", "member", "officer", "director", "ceo", "admin"] } },
+    }),
+    prisma.user.count({
+      where: { role: { in: ["officer", "director", "ceo", "admin"] } },
+    }),
+    prisma.user.count({
+      where: { role: "member_uz" },
+    }),
+  ]);
 
   return (
     <div className="py-10 sm:py-14">

@@ -56,7 +56,7 @@ export async function cancelRsvp(eventId: string): Promise<ActionResult> {
 /**
  * Envoie une notification Discord pour un événement.
  * Nécessite DISCORD_WEBHOOK_URL dans les variables d'environnement.
- * TODO: brancher le bouton dans l'UI staff une fois le webhook configuré.
+ * Backend complet — à connecter via un bouton dans /staff/calendrier/[id].
  */
 export async function notifyDiscordEvent(eventId: string): Promise<{ error?: string }> {
   const session = await auth();

@@ -21,7 +21,18 @@ export default async function CalendrierPage() {
 
   const isOfficer = hasMinRole(role, "officer");
 
+  // Charger uniquement les événements pertinents :
+  // - Événements récurrents (toujours nécessaires pour l'expansion future)
+  // - Événements ponctuels des 30 derniers jours et futurs
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
   const events = await prisma.calendarEvent.findMany({
+    where: {
+      OR: [
+        { recurrence: { not: "none" } },
+        { startAt: { gte: thirtyDaysAgo } },
+      ],
+    },
     include: {
       author: { select: { name: true } },
       participations: {

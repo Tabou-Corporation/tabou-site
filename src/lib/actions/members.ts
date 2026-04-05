@@ -6,6 +6,7 @@ import { hasMinRole, ROLE_LEVEL } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { writeAuditLog } from "@/lib/audit";
 
 const ALLOWED_ROLES: UserRole[] = ["candidate", "member_uz", "member", "officer", "director", "ceo", "admin"];
 
@@ -53,6 +54,18 @@ export async function changeUserRole(
   await prisma.user.update({
     where: { id: targetUserId },
     data: { role: newRole },
+  });
+
+  writeAuditLog({
+    actorId:   session.user.id,
+    actorName: session.user.name,
+    action:    "role_change",
+    meta: {
+      targetUserId,
+      targetName: target.name,
+      from: targetRole,
+      to:   newRole,
+    },
   });
 
   revalidatePath("/staff/membres");

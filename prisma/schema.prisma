@@ -3,7 +3,7 @@
 // V2 : Auth (User, Account, Session) + rôle membre
 // V3 : + Application (candidatures)
 // V4 : + Announcement, Guide, CalendarEvent
-// V5 : + AuditLog, Permission
+// V5 : + AuditLog (actif), Permission (à venir)
 // V6 : + Character (ESI), Kill (zKillboard)
 
 generator client {
@@ -211,6 +211,26 @@ enum ParticipationStatus {
   GOING
   MAYBE
   NOT_GOING
+}
+
+// ─── V5 : Audit Log ───────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  /// Qui a effectué l'action (userId)
+  actorId   String
+  /// Nom du personnage au moment de l'action (dénormalisé pour lisibilité)
+  actorName String?
+  /// Type d'action : role_change | application_status | application_notes
+  action    String
+  /// Données de contexte JSON (avant/après, cible, etc.)
+  meta      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 // ─── V5 : CMS — Contenu éditorial ────────────────────────────────────────────
