@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { saveProfileExtra } from "@/lib/actions/profile-extra";
 import type { ProfileExtraState } from "@/lib/actions/profile-extra";
-import { ACTIVITIES } from "@/lib/profile-extra";
+import { ACTIVITIES, TIMEZONE_GROUPS, VALID_LANGUAGES, LANGUAGE_LABEL } from "@/lib/profile-extra";
 import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils/cn";
 import type { ProfileExtra } from "@/lib/profile-extra";
@@ -17,28 +17,48 @@ export function ProfileExtraEditor({ initial }: Props) {
 
   const [timezone,     setTimezone]     = useState(initial.timezone     ?? "");
   const [mainActivity, setMainActivity] = useState(initial.mainActivity ?? "");
-  const [alts,         setAlts]         = useState((initial.alts         ?? []).join(", "));
-  const [languages,    setLanguages]    = useState((initial.languages    ?? []).join(", "));
+  // Langues : FR par défaut si rien n'est encore renseigné
+  const [languages, setLanguages] = useState<Set<string>>(
+    () => new Set((initial.languages?.length ? initial.languages : ["fr"]))
+  );
+
+  function toggleLanguage(lang: string) {
+    setLanguages((prev) => {
+      const next = new Set(prev);
+      if (next.has(lang)) next.delete(lang);
+      else next.add(lang);
+      return next;
+    });
+  }
 
   return (
-    <form action={formAction} className="space-y-4">
-      {/* Timezone */}
+    <form action={formAction} className="space-y-5">
+      {/* Fuseau horaire */}
       <div>
         <label className="block text-text-muted text-xs font-medium mb-1">
           Fuseau horaire
         </label>
-        <input
+        <select
           name="timezone"
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
-          placeholder="ex. UTC+2, Europe/Paris, EVE Time…"
-          maxLength={50}
           className={cn(
             "w-full bg-bg-elevated border rounded px-3 py-2",
-            "text-text-primary text-sm",
+            "text-text-secondary text-sm",
             "border-border focus:border-gold/60 focus:outline-none transition-colors"
           )}
-        />
+        >
+          <option value="">— Non renseigné —</option>
+          {TIMEZONE_GROUPS.map((group) => (
+            <optgroup key={group.group} label={group.group}>
+              {group.options.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
       </div>
 
       {/* Activité principale */}
@@ -63,49 +83,39 @@ export function ProfileExtraEditor({ initial }: Props) {
         </select>
       </div>
 
-      {/* Langues */}
+      {/* Langues — checkboxes FR / EN */}
       <div>
-        <label className="block text-text-muted text-xs font-medium mb-1">
-          Langues parlées{" "}
-          <span className="font-normal text-text-muted/70">(séparées par des virgules)</span>
-        </label>
-        <input
-          name="languages"
-          value={languages}
-          onChange={(e) => setLanguages(e.target.value)}
-          placeholder="ex. fr, en, de"
-          className={cn(
-            "w-full bg-bg-elevated border rounded px-3 py-2",
-            "text-text-primary text-sm",
-            "border-border focus:border-gold/60 focus:outline-none transition-colors"
-          )}
-        />
-      </div>
-
-      {/* Alts */}
-      <div>
-        <label className="block text-text-muted text-xs font-medium mb-1">
-          Personnages alternatifs{" "}
-          <span className="font-normal text-text-muted/70">(séparés par des virgules, max 10)</span>
-        </label>
-        <input
-          name="alts"
-          value={alts}
-          onChange={(e) => setAlts(e.target.value)}
-          placeholder="ex. Alt Miner, Scout Caldari"
-          className={cn(
-            "w-full bg-bg-elevated border rounded px-3 py-2",
-            "text-text-primary text-sm",
-            "border-border focus:border-gold/60 focus:outline-none transition-colors"
-          )}
-        />
-        <p className="text-text-muted text-[11px] mt-1">
-          Visibles dans votre fiche de candidature et par les officiers.
+        <p className="block text-text-muted text-xs font-medium mb-2">
+          Langues parlées
         </p>
+        <div className="flex items-center gap-4">
+          {VALID_LANGUAGES.map((lang) => {
+            const checked = languages.has(lang);
+            return (
+              <label key={lang} className="flex items-center gap-2 cursor-pointer select-none">
+                {/* Checkboxes envoyées dans le FormData */}
+                <input
+                  type="checkbox"
+                  name="languages"
+                  value={lang}
+                  checked={checked}
+                  onChange={() => toggleLanguage(lang)}
+                  className="w-4 h-4 rounded border-border bg-bg-elevated accent-[#c9a227] cursor-pointer"
+                />
+                <span className={cn(
+                  "text-sm font-medium transition-colors",
+                  checked ? "text-text-primary" : "text-text-muted"
+                )}>
+                  {LANGUAGE_LABEL[lang]}
+                </span>
+              </label>
+            );
+          })}
+        </div>
       </div>
 
       {/* Save bar */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex items-center gap-3 pt-1">
         <button
           type="submit"
           disabled={pending}

@@ -216,7 +216,7 @@ export default async function CandidatureDetailPage({
             </Card>
 
             {/* Profil étendu du pilote */}
-            {(profileExtra.timezone || profileExtra.mainActivity || (profileExtra.alts?.length ?? 0) > 0 || (profileExtra.languages?.length ?? 0) > 0) && (
+            {(profileExtra.timezone || profileExtra.mainActivity || (profileExtra.languages?.length ?? 0) > 0) && (
               <Card>
                 <CardHeader>
                   <h2 className="font-display font-semibold text-base text-text-primary">
@@ -244,20 +244,6 @@ export default async function CandidatureDetailPage({
                       <span className="text-text-secondary text-sm text-right uppercase">
                         {profileExtra.languages!.join(", ")}
                       </span>
-                    </div>
-                  )}
-                  {(profileExtra.alts?.length ?? 0) > 0 && (
-                    <div>
-                      <p className="text-text-muted text-xs uppercase tracking-wide font-semibold mb-1.5">
-                        Alts déclarés
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {profileExtra.alts!.map((alt) => (
-                          <span key={alt} className="inline-flex px-2 py-0.5 rounded bg-bg-elevated border border-border text-text-secondary text-xs font-mono">
-                            {alt}
-                          </span>
-                        ))}
-                      </div>
                     </div>
                   )}
                 </CardBody>

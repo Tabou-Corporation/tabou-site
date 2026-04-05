@@ -256,6 +256,18 @@ export async function assignApplication(
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
+  // Vérifier que la cible a bien un rôle recruteur (officer+) — évite l'assignation à un simple membre/candidat
+  if (assignedToId !== null) {
+    const target = await prisma.user.findUnique({
+      where: { id: assignedToId },
+      select: { role: true },
+    });
+    const RECRUITER_ROLES = ["officer", "director", "ceo", "admin"];
+    if (!target || !RECRUITER_ROLES.includes(target.role)) {
+      return { success: false, error: "L'utilisateur ciblé n'a pas le rôle requis pour être recruteur." };
+    }
+  }
+
   try {
     await prisma.application.update({
       where: { id },

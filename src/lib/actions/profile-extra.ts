@@ -4,13 +4,10 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { VALID_LANGUAGES, VALID_TIMEZONES } from "@/lib/profile-extra";
 import type { ProfileExtra } from "@/lib/profile-extra";
 
-const MAX_ALT_LENGTH    = 50;
-const MAX_ALTS          = 10;
-const MAX_TIMEZONE      = 50;
-const MAX_LANGUAGES     = 10;
-const VALID_ACTIVITIES  = ["pvp", "pve", "industry", "exploration", "logistics", "other"];
+const VALID_ACTIVITIES = ["pvp", "pve", "industry", "exploration", "logistics", "other"];
 
 export interface ProfileExtraState {
   error?:   string;
@@ -24,37 +21,28 @@ export async function saveProfileExtra(
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const timezoneRaw  = (formData.get("timezone")     as string | null)?.trim().slice(0, MAX_TIMEZONE) || "";
+  // Timezone — valeur de la liste (ou vide)
+  const timezone     = (formData.get("timezone")     as string | null)?.trim() || "";
   const mainActivity = (formData.get("mainActivity") as string | null)?.trim() || "";
-  const altsRaw      = (formData.get("alts")         as string | null)?.trim() || "";
-  const langsRaw     = (formData.get("languages")    as string | null)?.trim() || "";
 
+  // Langues — checkboxes (plusieurs valeurs possibles)
+  const langs = formData.getAll("languages") as string[];
+
+  // Validations
+  if (timezone && !VALID_TIMEZONES.has(timezone)) {
+    return { success: false, error: "Fuseau horaire invalide." };
+  }
   if (mainActivity && !VALID_ACTIVITIES.includes(mainActivity)) {
     return { success: false, error: "Activité principale invalide." };
   }
+  const languages = langs.filter((l): l is string =>
+    VALID_LANGUAGES.includes(l as "fr" | "en")
+  );
 
-  const alts = altsRaw
-    ? altsRaw
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .slice(0, MAX_ALTS)
-        .map((s) => s.slice(0, MAX_ALT_LENGTH))
-    : [];
-
-  const languages = langsRaw
-    ? langsRaw
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean)
-        .slice(0, MAX_LANGUAGES)
-    : [];
-
-  // Construire le profil étendu en omettant les champs vides (exactOptionalPropertyTypes)
+  // Construire le profil étendu (omettre les champs vides — exactOptionalPropertyTypes)
   const extra: ProfileExtra = {
-    ...(timezoneRaw  ? { timezone:     timezoneRaw  } : {}),
-    ...(mainActivity ? { mainActivity: mainActivity } : {}),
-    ...(alts.length  > 0 ? { alts }      : {}),
+    ...(timezone      ? { timezone }     : {}),
+    ...(mainActivity  ? { mainActivity } : {}),
     ...(languages.length > 0 ? { languages } : {}),
   };
 

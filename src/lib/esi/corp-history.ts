@@ -2,12 +2,14 @@
  * ESI — historique de corporation d'un personnage.
  *
  * Toutes les requêtes sont mises en cache 1h (revalidate: 3600).
+ * Timeout explicite de 5s par fetch pour ne pas bloquer le rendu si ESI est lent.
  * Les endpoints utilisés sont publics (aucun scope requis).
  */
 
 import { cache } from "react";
 
-const ESI_BASE = "https://esi.evetech.net/latest";
+const ESI_BASE     = "https://esi.evetech.net/latest";
+const ESI_TIMEOUT  = 5_000; // 5 secondes max par requête
 
 interface EsiCorpHistoryEntry {
   corporation_id: number;
@@ -29,11 +31,12 @@ export interface CorpHistoryEntry {
   isDeleted: boolean;
 }
 
-/** Récupère le nom et le ticker d'une corporation (cache React 1h). */
+/** Récupère le nom et le ticker d'une corporation (cache React 1h, timeout 5s). */
 const fetchCorpInfo = cache(async (corpId: number): Promise<EsiCorporation | null> => {
   try {
     const res = await fetch(`${ESI_BASE}/corporations/${corpId}/`, {
-      next: { revalidate: 3600 },
+      next:   { revalidate: 3600 },
+      signal: AbortSignal.timeout(ESI_TIMEOUT),
     });
     if (!res.ok) return null;
     return await res.json() as EsiCorporation;
@@ -44,12 +47,13 @@ const fetchCorpInfo = cache(async (corpId: number): Promise<EsiCorporation | nul
 
 /**
  * Retourne les 10 dernières corporations d'un personnage, les plus récentes en premier.
- * Retourne [] en cas d'erreur ou de characterId absent.
+ * Retourne [] en cas d'erreur, de timeout ou de characterId absent.
  */
 export async function fetchCorpHistory(characterId: string): Promise<CorpHistoryEntry[]> {
   try {
     const res = await fetch(`${ESI_BASE}/characters/${characterId}/corporationhistory/`, {
-      next: { revalidate: 3600 },
+      next:   { revalidate: 3600 },
+      signal: AbortSignal.timeout(ESI_TIMEOUT),
     });
     if (!res.ok) return [];
 
@@ -60,7 +64,7 @@ export async function fetchCorpHistory(characterId: string): Promise<CorpHistory
       .sort((a, b) => b.record_id - a.record_id)
       .slice(0, 10);
 
-    // Résoudre les noms en parallèle
+    // Résoudre les noms en parallèle (chacun avec son propre timeout)
     const entries = await Promise.all(
       sorted.map(async (entry) => {
         const info = await fetchCorpInfo(entry.corporation_id);
