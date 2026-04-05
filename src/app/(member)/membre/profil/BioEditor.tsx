@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 
 const MAX_BIO = 160;
@@ -13,6 +14,7 @@ export function BioEditor({ initialBio }: BioEditorProps) {
   const [bio, setBio] = useState(initialBio);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const router = useRouter();
 
   const remaining = MAX_BIO - bio.length;
   const isOverLimit = remaining < 0;
@@ -29,6 +31,7 @@ export function BioEditor({ initialBio }: BioEditorProps) {
       });
       if (!res.ok) throw new Error();
       setStatus("saved");
+      router.refresh();
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setStatus("idle"), 2500);
     } catch {

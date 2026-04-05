@@ -5,6 +5,7 @@ import { changeUserRoleAction } from "@/lib/actions/members";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils/cn";
+import { useRefreshOnSuccess } from "@/lib/hooks/useRefreshOnSuccess";
 
 const ROLES = [
   { value: "candidate",  label: "Candidat" },
@@ -32,8 +33,10 @@ interface Props {
 }
 
 export function RoleForm({ userId, currentRole, currentSpecialty, actorRole }: Props) {
-  const [state, formAction, pending] = useActionState(changeUserRoleAction, {});
+  const [state, dispatch, pending] = useActionState(changeUserRoleAction, {});
   const [selectedRole, setSelectedRole] = useState(currentRole);
+  const [selectedSpecialty, setSelectedSpecialty] = useState(currentSpecialty ?? "");
+  useRefreshOnSuccess(state.success);
 
   // Rôles disponibles selon l'acteur
   const allowedRoles = actorRole === "admin"
@@ -44,8 +47,13 @@ export function RoleForm({ userId, currentRole, currentSpecialty, actorRole }: P
 
   const showSpecialty = selectedRole === "officer";
 
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    dispatch(new FormData(e.currentTarget));
+  }
+
   return (
-    <form action={formAction} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <input type="hidden" name="userId" value={userId} />
 
       <div className="space-y-1.5">
@@ -81,7 +89,8 @@ export function RoleForm({ userId, currentRole, currentSpecialty, actorRole }: P
           </label>
           <select
             name="specialty"
-            defaultValue={currentSpecialty ?? ""}
+            value={selectedSpecialty}
+            onChange={(e) => setSelectedSpecialty(e.target.value)}
             className={cn(
               "w-full bg-bg-elevated border rounded px-3 py-2",
               "text-text-primary text-sm border-border",

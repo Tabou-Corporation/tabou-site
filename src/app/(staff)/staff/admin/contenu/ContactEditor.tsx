@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { saveSiteContentAction } from "@/lib/actions/site-content";
+import { useRefreshOnSuccess } from "@/lib/hooks/useRefreshOnSuccess";
 import { Field, TextareaField, EditorSection, SaveBar } from "./EditorFields";
 import type { ContactContent, ContactChannel } from "@/lib/site-content/types";
 
@@ -77,6 +78,7 @@ function ChannelEditor({
 
 export function ContactEditor({ initialContent }: { initialContent: ContactContent }) {
   const [state, formAction, pending] = useActionState(saveSiteContentAction, {});
+  useRefreshOnSuccess(state.success);
   const [content, setContent] = useState<ContactContent>(initialContent);
 
   const set = <K extends keyof ContactContent>(key: K, value: ContactContent[K]) =>

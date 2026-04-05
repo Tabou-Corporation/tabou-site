@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { saveSiteContentAction } from "@/lib/actions/site-content";
+import { useRefreshOnSuccess } from "@/lib/hooks/useRefreshOnSuccess";
 import {
   Field,
   TextareaField,
@@ -14,6 +15,7 @@ import type { CorporationContent } from "@/lib/site-content/types";
 
 export function CorporationEditor({ initialContent }: { initialContent: CorporationContent }) {
   const [state, formAction, pending] = useActionState(saveSiteContentAction, {});
+  useRefreshOnSuccess(state.success);
   const [content, setContent] = useState<CorporationContent>(initialContent);
 
   const set = <K extends keyof CorporationContent>(key: K, value: CorporationContent[K]) =>

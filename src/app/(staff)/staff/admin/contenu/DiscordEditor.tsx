@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { saveSiteContentAction } from "@/lib/actions/site-content";
+import { useRefreshOnSuccess } from "@/lib/hooks/useRefreshOnSuccess";
 import { Field, EditorSection, SaveBar } from "./EditorFields";
 import type { DiscordConfig } from "@/lib/site-content/types";
 
@@ -11,6 +12,7 @@ interface Props {
 
 export function DiscordEditor({ initialContent }: Props) {
   const [state, formAction, pending] = useActionState(saveSiteContentAction, {});
+  useRefreshOnSuccess(state.success);
   const [content, setContent] = useState<DiscordConfig>(initialContent);
 
   const set = <K extends keyof DiscordConfig>(key: K, value: DiscordConfig[K]) =>

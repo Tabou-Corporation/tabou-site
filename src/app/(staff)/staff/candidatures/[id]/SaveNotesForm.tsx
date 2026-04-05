@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { saveApplicationNotes } from "@/lib/actions/applications";
@@ -15,6 +16,7 @@ interface Props {
 export function SaveNotesForm({ applicationId, defaultNotes }: Props) {
   const [isPending, startTransition] = useTransition();
   const { addToast } = useToast();
+  const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   function handleSubmit(e: React.FormEvent) {
@@ -26,6 +28,7 @@ export function SaveNotesForm({ applicationId, defaultNotes }: Props) {
         addToast(result.error, "error");
       } else {
         addToast("Notes sauvegardées.", "success");
+        router.refresh();
       }
     });
   }

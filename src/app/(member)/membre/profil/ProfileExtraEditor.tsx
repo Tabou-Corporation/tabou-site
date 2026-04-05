@@ -3,6 +3,7 @@
 import { useActionState, useState, useEffect } from "react";
 import { saveProfileExtra } from "@/lib/actions/profile-extra";
 import type { ProfileExtraState } from "@/lib/actions/profile-extra";
+import { useRefreshOnSuccess } from "@/lib/hooks/useRefreshOnSuccess";
 import { ACTIVITIES, TIMEZONE_GROUPS, VALID_LANGUAGES, LANGUAGE_LABEL } from "@/lib/profile-extra";
 import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils/cn";
@@ -14,6 +15,7 @@ interface Props {
 
 export function ProfileExtraEditor({ initial }: Props) {
   const [state, dispatch, pending] = useActionState<ProfileExtraState, FormData>(saveProfileExtra, {});
+  useRefreshOnSuccess(state.success);
 
   const [timezone,          setTimezone]          = useState(initial.timezone          ?? "");
   const [mainActivity,      setMainActivity]      = useState(initial.mainActivity      ?? "");

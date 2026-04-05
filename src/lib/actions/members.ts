@@ -14,9 +14,9 @@ const VALID_SPECIALTIES = ["", "recruitment", "logistics", "diplomacy", "militar
 
 /** Utilisée avec useActionState depuis le client */
 export async function changeUserRoleAction(
-  _prev: { error?: string },
+  _prev: { error?: string; success?: boolean },
   formData: FormData
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; success?: boolean }> {
   const targetUserId = formData.get("userId") as string;
   const newRole      = formData.get("role")   as string;
   const specialty    = (formData.get("specialty") as string | null) ?? "";
@@ -28,7 +28,7 @@ export async function changeUserRole(
   targetUserId: string,
   newRole: string,
   specialty: string | null = null,
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; success?: boolean }> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -83,5 +83,5 @@ export async function changeUserRole(
   revalidatePath(`/staff/membres/${targetUserId}`);
   revalidatePath("/membre");
 
-  return {};
+  return { success: true };
 }

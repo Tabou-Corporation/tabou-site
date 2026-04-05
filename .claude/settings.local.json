@@ -27,7 +27,10 @@
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue | Select-Object LocalPort,State,OwningProcess\")",
       "Bash(powershell -Command \"Stop-Process -Id 142040 -Force -ErrorAction SilentlyContinue; Stop-Process -Id 222776 -Force -ErrorAction SilentlyContinue; Write-Host ''Done''\")",
       "Bash(npx tsx:*)",
-      "Bash(ls \"F:/Documents/Tabou/src/app/\\(public\\)/\")"
+      "Bash(ls \"F:/Documents/Tabou/src/app/\\(public\\)/\")",
+      "Bash(grep -r \"error\\\\.tsx\\\\|loading\\\\.tsx\" F:/Documents/Tabou/src/app --include=*.tsx)",
+      "Bash(npx next:*)",
+      "Bash(xargs grep:*)"
     ],
     "deny": [
       "Bash(*--force-reset*)",

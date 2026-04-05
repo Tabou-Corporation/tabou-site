@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { saveSiteContentAction } from "@/lib/actions/site-content";
+import { useRefreshOnSuccess } from "@/lib/hooks/useRefreshOnSuccess";
 import { Field, TextareaField, StringListField, SaveBar } from "./EditorFields";
 import type { ActivityItem } from "@/lib/site-content/types";
 
@@ -90,6 +91,7 @@ function ActivityEditor({
 
 export function ActivitiesEditor({ initialContent }: { initialContent: ActivityItem[] }) {
   const [state, formAction, pending] = useActionState(saveSiteContentAction, {});
+  useRefreshOnSuccess(state.success);
   const [activities, setActivities] = useState<ActivityItem[]>(initialContent);
 
   const byCategory = CATEGORIES.map((cat) => ({

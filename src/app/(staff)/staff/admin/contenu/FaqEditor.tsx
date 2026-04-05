@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { saveSiteContentAction } from "@/lib/actions/site-content";
+import { useRefreshOnSuccess } from "@/lib/hooks/useRefreshOnSuccess";
 import { Field, TextareaField, SaveBar } from "./EditorFields";
 import type { FaqItem } from "@/lib/site-content/types";
 
@@ -70,6 +71,7 @@ function FaqItemEditor({
 
 export function FaqEditor({ initialContent }: { initialContent: FaqItem[] }) {
   const [state, formAction, pending] = useActionState(saveSiteContentAction, {});
+  useRefreshOnSuccess(state.success);
   const [items, setItems] = useState<FaqItem[]>(initialContent);
 
   const categories = [...new Set(items.map((i) => i.category))];
