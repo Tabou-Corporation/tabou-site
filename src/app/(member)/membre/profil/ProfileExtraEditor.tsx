@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { saveProfileExtra } from "@/lib/actions/profile-extra";
 import type { ProfileExtraState } from "@/lib/actions/profile-extra";
 import { ACTIVITIES, TIMEZONE_GROUPS, VALID_LANGUAGES, LANGUAGE_LABEL } from "@/lib/profile-extra";
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function ProfileExtraEditor({ initial }: Props) {
-  const [state, formAction, pending] = useActionState<ProfileExtraState, FormData>(saveProfileExtra, {});
+  const [state, dispatch, pending] = useActionState<ProfileExtraState, FormData>(saveProfileExtra, {});
 
   const [timezone,          setTimezone]          = useState(initial.timezone          ?? "");
   const [mainActivity,      setMainActivity]      = useState(initial.mainActivity      ?? "");
@@ -22,6 +22,14 @@ export function ProfileExtraEditor({ initial }: Props) {
   const [languages, setLanguages] = useState<Set<string>>(
     () => new Set((initial.languages?.length ? initial.languages : ["fr"]))
   );
+
+  // Sync state when initial prop changes (router refresh after revalidatePath)
+  useEffect(() => {
+    setTimezone(initial.timezone          ?? "");
+    setMainActivity(initial.mainActivity      ?? "");
+    setSecondaryActivity(initial.secondaryActivity ?? "");
+    setLanguages(new Set(initial.languages?.length ? initial.languages : ["fr"]));
+  }, [initial]);
 
   function toggleLanguage(lang: string) {
     setLanguages((prev) => {
@@ -32,8 +40,14 @@ export function ProfileExtraEditor({ initial }: Props) {
     });
   }
 
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    // Prevent React 19's automatic form reset after server action
+    e.preventDefault();
+    dispatch(new FormData(e.currentTarget));
+  }
+
   return (
-    <form action={formAction} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {/* Fuseau horaire */}
       <div>
         <label className="block text-text-muted text-xs font-medium mb-1">
