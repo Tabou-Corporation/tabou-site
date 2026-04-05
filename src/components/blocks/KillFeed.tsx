@@ -108,7 +108,6 @@ export function KillFeed({ initialKills }: KillFeedProps) {
                   width={36}
                   height={36}
                   className="w-full h-full object-cover"
-                  unoptimized
                 />
               </div>
 

@@ -40,7 +40,7 @@ export function TopPilotCard({ pilot }: TopPilotCardProps) {
               width={48}
               height={48}
               className="w-full h-full object-cover"
-              unoptimized
+              priority
             />
           </div>
           {/* Badge #1 */}
