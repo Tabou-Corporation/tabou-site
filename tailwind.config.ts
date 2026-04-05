@@ -106,6 +106,24 @@ const config: Config = {
           "66%":  { transform: "scale(1.05) translate(0.8%, 0.4%)" },
           "100%": { transform: "scale(1.1) translate(-0.5%, 0.8%)" },
         },
+        /* Terminal EVE Time */
+        "scanline": {
+          "0%":   { top: "-2px", opacity: "0" },
+          "10%":  { opacity: "1" },
+          "90%":  { opacity: "1" },
+          "100%": { top: "100%", opacity: "0" },
+        },
+        "terminal-glitch": {
+          "0%, 100%": { transform: "translate(0, 0)", opacity: "1" },
+          "20%":  { transform: "translate(-2px, 1px)", opacity: "0.8" },
+          "40%":  { transform: "translate(2px, -1px)", opacity: "0.6" },
+          "60%":  { transform: "translate(-1px, 0)", opacity: "0.9" },
+          "80%":  { transform: "translate(1px, 1px)", opacity: "0.7" },
+        },
+        "terminal-cursor": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.4s ease-out forwards",
@@ -113,6 +131,9 @@ const config: Config = {
         shimmer: "shimmer 2.5s ease-in-out infinite",
         "bounce-slow": "bounce-slow 2.5s ease-in-out infinite",
         "ken-burns": "ken-burns 32s ease-in-out infinite alternate",
+        "scanline": "scanline 4s linear infinite",
+        "terminal-glitch": "terminal-glitch 0.3s ease-in-out",
+        "terminal-cursor": "terminal-cursor 0.6s step-end infinite",
       },
 
       // ─── Espacements supplémentaires ──────────────────────────────────────
