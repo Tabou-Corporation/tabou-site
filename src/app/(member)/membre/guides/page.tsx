@@ -8,6 +8,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { BookOpen, Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
 
@@ -57,13 +58,10 @@ export default async function GuidesPage() {
             </h1>
           </div>
           {isOfficer && (
-            <Link
-              href="/staff/guides/new"
-              className="inline-flex items-center gap-1.5 text-gold text-sm hover:text-gold-light transition-colors mt-1"
-            >
-              <Plus size={16} />
+            <Button as="a" href="/staff/guides/new" size="sm">
+              <Plus size={14} />
               Nouveau guide
-            </Link>
+            </Button>
           )}
         </div>
 

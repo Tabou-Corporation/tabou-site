@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
@@ -8,6 +7,7 @@ import { Separator } from "@/components/ui/Separator";
 import { CorpCalendarLazy as CorpCalendar } from "@/components/blocks/CorpCalendarLazy";
 import { expandRecurringEvents } from "@/lib/utils/recurrence";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { UserRole } from "@/types/roles";
 
 export const dynamic = "force-dynamic";
@@ -97,13 +97,10 @@ export default async function CalendrierPage() {
             </p>
           </div>
           {isOfficer && (
-            <Link
-              href="/staff/calendrier/new"
-              className="inline-flex items-center gap-1.5 text-gold text-sm hover:text-gold-light transition-colors mt-1"
-            >
-              <Plus size={16} />
+            <Button as="a" href="/staff/calendrier/new" size="sm">
+              <Plus size={14} />
               Nouvel événement
-            </Link>
+            </Button>
           )}
         </div>
 

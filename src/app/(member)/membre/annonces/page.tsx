@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
@@ -7,6 +6,7 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Separator } from "@/components/ui/Separator";
 import { Pin, Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { deleteAnnouncement } from "@/lib/actions/content";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { RichTextContent } from "@/components/ui/RichTextContent";
@@ -39,13 +39,10 @@ export default async function AnnoncesPage() {
             </h1>
           </div>
           {isOfficer && (
-            <Link
-              href="/staff/annonces/new"
-              className="inline-flex items-center gap-1.5 text-gold text-sm hover:text-gold-light transition-colors mt-1"
-            >
-              <Plus size={16} />
+            <Button as="a" href="/staff/annonces/new" size="sm">
+              <Plus size={14} />
               Nouvelle annonce
-            </Link>
+            </Button>
           )}
         </div>
 

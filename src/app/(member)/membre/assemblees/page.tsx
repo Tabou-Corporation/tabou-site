@@ -8,6 +8,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { Plus, Video, Scroll } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { UserRole } from "@/types/roles";
 
 const ASSEMBLY_TYPE_LABELS: Record<string, string> = {
@@ -53,13 +54,10 @@ export default async function AssembleesPage() {
             </p>
           </div>
           {isOfficer && (
-            <Link
-              href="/staff/assemblees/new"
-              className="inline-flex items-center gap-1.5 text-gold text-sm hover:text-gold-light transition-colors mt-1"
-            >
-              <Plus size={16} />
+            <Button as="a" href="/staff/assemblees/new" size="sm">
+              <Plus size={14} />
               Nouveau compte rendu
-            </Link>
+            </Button>
           )}
         </div>
 
