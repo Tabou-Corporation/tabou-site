@@ -8,9 +8,9 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
-import { Clock, CheckCircle, XCircle, MessageCircle, Users } from "lucide-react";
+import { Clock, CheckCircle, XCircle, MessageCircle, Users, UserCheck } from "lucide-react";
 import { STATUS_LABELS, STATUS_BADGE, STATUS_ORDER } from "@/lib/constants/labels";
-import { UserCheck } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 import type { UserRole } from "@/types/roles";
 
 // STATUS_ICON reste local car il contient du JSX
@@ -21,20 +21,36 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
   REJECTED:  <XCircle size={14} className="text-red-400" />,
 };
 
-export default async function CandidaturesPage() {
+export default async function CandidaturesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
+  const { filter: rawFilter } = await searchParams;
+  const isMine = rawFilter === "mine";
+
   const applications = await prisma.application.findMany({
+    ...(isMine ? { where: { assignedToId: session.user.id } } : {}),
     include: {
       user: { select: { name: true, image: true } },
       assignedTo: { select: { name: true } },
     },
     orderBy: [{ createdAt: "desc" }],
     take: 200,
+  });
+
+  // Compteur "mes candidatures" pour le badge du bouton
+  const myCount = await prisma.application.count({
+    where: {
+      assignedToId: session.user.id,
+      status: { in: ["PENDING", "INTERVIEW"] },
+    },
   });
 
   // Tri par statut puis par date
@@ -63,7 +79,45 @@ export default async function CandidaturesPage() {
           </h1>
         </div>
 
-        <Separator gold className="mb-8" />
+        <Separator gold className="mb-6" />
+
+        {/* Filtres */}
+        <div className="flex items-center gap-2 mb-6">
+          <Link
+            href="/staff/candidatures"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors",
+              !isMine
+                ? "bg-gold text-text-inverted"
+                : "bg-bg-elevated text-text-secondary border border-border hover:border-border-accent"
+            )}
+          >
+            Toutes
+            <span className={!isMine ? "opacity-70" : "text-text-muted"}>
+              {counts.total}
+            </span>
+          </Link>
+          <Link
+            href="/staff/candidatures?filter=mine"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors",
+              isMine
+                ? "bg-gold text-text-inverted"
+                : "bg-bg-elevated text-text-secondary border border-border hover:border-border-accent"
+            )}
+          >
+            <UserCheck size={12} />
+            Mes candidatures
+            {myCount > 0 && (
+              <span className={cn(
+                "inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold",
+                isMine ? "bg-white/20" : "bg-gold/20 text-gold"
+              )}>
+                {myCount}
+              </span>
+            )}
+          </Link>
+        </div>
 
         {/* Compteurs */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
@@ -92,7 +146,11 @@ export default async function CandidaturesPage() {
           <Card>
             <CardBody className="py-12 text-center">
               <Users size={32} className="text-text-muted mx-auto mb-3" />
-              <p className="text-text-muted text-sm">Aucune candidature pour le moment.</p>
+              <p className="text-text-muted text-sm">
+                {isMine
+                  ? "Aucune candidature ne vous est assignée pour le moment."
+                  : "Aucune candidature pour le moment."}
+              </p>
             </CardBody>
           </Card>
         ) : (
