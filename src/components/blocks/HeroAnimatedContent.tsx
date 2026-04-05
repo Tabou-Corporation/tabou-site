@@ -35,32 +35,38 @@ function LogoDisplay({
 }) {
   return (
     <div className="flex flex-col items-center text-center gap-6 sm:gap-8">
-      {/* Emblème détouré — apparaît APRÈS les lettres */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={logoUrl}
-        alt="Tabou"
-        width={220}
-        height={220}
-        style={fadeIn("4.5s", "1.5s")}
-        className="w-36 h-36 sm:w-44 sm:h-44 lg:w-[220px] lg:h-[220px] drop-shadow-[0_0_48px_rgba(240,176,48,0.25)] animate-glitch-logo"
-      />
-
-      {/* Wordmark "TABOU" — lettres staggerées */}
+      {/* Wordmark "TABOU" — lettres staggerées + logo ancré au-dessus du gap T-A */}
       <h1
         aria-label="TABOU"
         style={{
           textShadow: "0 2px 60px rgba(0,0,0,0.9), 0 0 120px rgba(0,0,0,0.6)",
-          letterSpacing: "0.35em",
+          gap: "0.35em",
         }}
-        className="font-display font-black text-7xl sm:text-8xl lg:text-9xl xl:text-[11rem] text-text-primary leading-none"
+        className="flex items-center justify-center font-display font-black text-7xl sm:text-8xl lg:text-9xl xl:text-[11rem] text-text-primary leading-none"
       >
-        {"TABOU".split("").map((letter, i) => (
-          <span
-            key={i}
-            style={fadeIn(`${0.8 + i * 0.65}s`, "1.2s")}
-            className="inline-block"
-          >
+        {/* T — le logo est ancré ici, centré dans le gap T-A */}
+        <span className="relative" style={fadeIn("0.8s", "1.2s")}>
+          T
+          {/* Logo au-dessus, centré entre T et A :
+              left:100% = bord droit du T
+              translateX(-50% + 0.175em) = centre dans le gap (gap/2 = 0.175em) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoUrl}
+            alt="Tabou"
+            style={{
+              ...fadeIn("4.5s", "1.5s"),
+              position: "absolute",
+              bottom: "calc(100% + 1rem)",
+              left: "100%",
+              transform: "translateX(calc(-50% + 0.175em))",
+            }}
+            className="max-w-none w-36 h-36 sm:w-44 sm:h-44 lg:w-[200px] lg:h-[200px] object-contain drop-shadow-[0_0_48px_rgba(240,176,48,0.25)] animate-glitch-logo"
+          />
+        </span>
+
+        {["A", "B", "O", "U"].map((letter, i) => (
+          <span key={letter} style={fadeIn(`${0.8 + (i + 1) * 0.65}s`, "1.2s")}>
             {letter}
           </span>
         ))}
