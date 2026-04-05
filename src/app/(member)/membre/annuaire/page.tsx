@@ -32,6 +32,7 @@ export default async function AnnuairePage() {
         createdAt:      true,
         profileExtra:   true,
         securityStatus: true,
+        accounts:       { where: { provider: "eveonline" }, select: { providerAccountId: true }, take: 1 },
       },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     }),
@@ -67,7 +68,10 @@ export default async function AnnuairePage() {
         <Separator gold className="mb-8" />
 
         {/* ── Grille animée ── */}
-        <PilotGrid members={members} />
+        <PilotGrid members={members.map((m) => ({
+          ...m,
+          eveCharacterId: m.accounts[0]?.providerAccountId ?? null,
+        }))} />
       </Container>
     </div>
   );

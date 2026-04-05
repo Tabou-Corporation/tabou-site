@@ -19,6 +19,8 @@ export interface PilotData {
   /** JSON brut de profileExtra — parsé côté affichage */
   profileExtra?: string | null;
   securityStatus?: number | null;
+  /** EVE character ID — pour le lien zKillboard */
+  eveCharacterId?: string | null;
 }
 
 const isHighRank = (role: string) =>

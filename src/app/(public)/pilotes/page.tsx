@@ -28,6 +28,9 @@ export default async function PilotesPage() {
       bio:           true,
       corporationId: true,
       createdAt:     true,
+      profileExtra:  true,
+      securityStatus: true,
+      accounts:      { where: { provider: "eveonline" }, select: { providerAccountId: true }, take: 1 },
     },
     orderBy: [{ role: "asc" }, { name: "asc" }],
   });
@@ -60,7 +63,10 @@ export default async function PilotesPage() {
 
         <Separator gold className="mb-10" />
 
-        <PilotGrid members={members} />
+        <PilotGrid members={members.map((m) => ({
+          ...m,
+          eveCharacterId: m.accounts[0]?.providerAccountId ?? null,
+        }))} />
       </Container>
     </div>
   );
