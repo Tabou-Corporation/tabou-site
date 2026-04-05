@@ -11,8 +11,17 @@
 export interface ProfileExtra {
   timezone?:          string;
   languages?:         string[];
+  /** Nouveau format — liste ordonnée par priorité */
+  activities?:        string[];
+  /** Legacy — conservé pour la rétro-compatibilité */
   mainActivity?:      string;
   secondaryActivity?: string;
+}
+
+/** Retourne les activités ordonnées, en gérant les anciens profils */
+export function getActivities(extra: ProfileExtra): string[] {
+  if (extra.activities?.length) return extra.activities;
+  return [extra.mainActivity, extra.secondaryActivity].filter((a): a is string => !!a);
 }
 
 // ─── Activités ────────────────────────────────────────────────────────────────

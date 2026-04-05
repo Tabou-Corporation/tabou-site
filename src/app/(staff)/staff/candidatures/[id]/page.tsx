@@ -20,7 +20,7 @@ import { SecurityStatusBadge } from "@/components/ui/SecurityStatusBadge";
 import { CorpHistoryTimeline } from "@/components/ui/CorpHistoryTimeline";
 import { cn } from "@/lib/utils/cn";
 import { hasMinRole } from "@/types/roles";
-import { parseProfileExtra, ACTIVITY_LABEL } from "@/lib/profile-extra";
+import { parseProfileExtra, ACTIVITY_LABEL, getActivities } from "@/lib/profile-extra";
 import type { UserRole } from "@/types/roles";
 
 export default async function CandidatureDetailPage({
@@ -262,7 +262,7 @@ export default async function CandidatureDetailPage({
             </Card>
 
             {/* Profil étendu du pilote */}
-            {(profileExtra.timezone || profileExtra.mainActivity || profileExtra.secondaryActivity || (profileExtra.languages?.length ?? 0) > 0) && (
+            {(profileExtra.timezone || getActivities(profileExtra).length > 0 || (profileExtra.languages?.length ?? 0) > 0) && (
               <Card>
                 <CardHeader>
                   <h2 className="font-display font-semibold text-base text-text-primary">
@@ -276,19 +276,16 @@ export default async function CandidatureDetailPage({
                       <span className="text-text-secondary text-sm text-right">{profileExtra.timezone}</span>
                     </div>
                   )}
-                  {profileExtra.mainActivity && (
+                  {getActivities(profileExtra).length > 0 && (
                     <div className="flex items-start justify-between gap-4">
-                      <span className="text-text-muted text-sm flex-shrink-0">Activité principale</span>
-                      <span className="text-text-secondary text-sm text-right">
-                        {ACTIVITY_LABEL[profileExtra.mainActivity] ?? profileExtra.mainActivity}
-                      </span>
-                    </div>
-                  )}
-                  {profileExtra.secondaryActivity && (
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-text-muted text-sm flex-shrink-0">Activité secondaire</span>
-                      <span className="text-text-secondary text-sm text-right">
-                        {ACTIVITY_LABEL[profileExtra.secondaryActivity] ?? profileExtra.secondaryActivity}
+                      <span className="text-text-muted text-sm flex-shrink-0">Activités</span>
+                      <span className="text-text-secondary text-sm text-right space-y-0.5">
+                        {getActivities(profileExtra).map((val, i) => (
+                          <span key={val} className="flex items-center gap-1.5 justify-end">
+                            <span className="text-gold/60 text-xs font-bold">{i + 1}.</span>
+                            {ACTIVITY_LABEL[val] ?? val}
+                          </span>
+                        ))}
                       </span>
                     </div>
                   )}

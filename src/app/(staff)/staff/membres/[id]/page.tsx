@@ -14,7 +14,7 @@ import { SecurityStatusBadge } from "@/components/ui/SecurityStatusBadge";
 import { CorpHistoryTimeline } from "@/components/ui/CorpHistoryTimeline";
 import { ROLE_LABELS, ROLE_BADGE, DOMAIN_LABELS, STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
 import { parseSpecialties } from "@/types/roles";
-import { parseProfileExtra, ACTIVITY_LABEL, LANGUAGE_LABEL } from "@/lib/profile-extra";
+import { parseProfileExtra, ACTIVITY_LABEL, LANGUAGE_LABEL, getActivities } from "@/lib/profile-extra";
 import type { Language } from "@/lib/profile-extra";
 import type { UserRole } from "@/types/roles";
 
@@ -139,7 +139,7 @@ export default async function MembreDetailPage({
             </Card>
 
             {/* Profil étendu */}
-            {(profileExtra.timezone || profileExtra.mainActivity || profileExtra.secondaryActivity || (profileExtra.languages?.length ?? 0) > 0) && (
+            {(profileExtra.timezone || getActivities(profileExtra).length > 0 || (profileExtra.languages?.length ?? 0) > 0) && (
               <Card>
                 <CardHeader>
                   <h2 className="font-display font-semibold text-base text-text-primary">
@@ -150,11 +150,18 @@ export default async function MembreDetailPage({
                   {profileExtra.timezone && (
                     <InfoRow label="Fuseau horaire" value={profileExtra.timezone} />
                   )}
-                  {profileExtra.mainActivity && (
-                    <InfoRow label="Activité principale" value={ACTIVITY_LABEL[profileExtra.mainActivity] ?? profileExtra.mainActivity} />
-                  )}
-                  {profileExtra.secondaryActivity && (
-                    <InfoRow label="Activité secondaire" value={ACTIVITY_LABEL[profileExtra.secondaryActivity] ?? profileExtra.secondaryActivity} />
+                  {getActivities(profileExtra).length > 0 && (
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-text-muted text-sm flex-shrink-0">Activités</span>
+                      <span className="text-text-secondary text-sm text-right space-y-0.5">
+                        {getActivities(profileExtra).map((val, i) => (
+                          <span key={val} className="flex items-center gap-1.5 justify-end">
+                            <span className="text-gold/60 text-xs font-bold">{i + 1}.</span>
+                            {ACTIVITY_LABEL[val] ?? val}
+                          </span>
+                        ))}
+                      </span>
+                    </div>
                   )}
                   {(profileExtra.languages?.length ?? 0) > 0 && (
                     <div className="flex items-start justify-between gap-4">
