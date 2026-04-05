@@ -261,7 +261,7 @@ export default async function MemberDashboardPage() {
                                 {a.title}
                               </p>
                               <p className="text-text-muted text-xs leading-relaxed mt-0.5 line-clamp-2">
-                                {a.content}
+                                {a.content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}
                               </p>
                             </div>
                           </div>

@@ -6,6 +6,7 @@
  */
 
 import React from "react";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 // ── Styles communs ─────────────────────────────────────────────────────────────
 const inputCls =
@@ -68,6 +69,37 @@ export function TextareaField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
+// ── Champ rich text (Tiptap) — pour les textes longs CMS ──────────────────────
+export function RichTextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  hint,
+  minHeight = 120,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  hint?: string;
+  minHeight?: number;
+}) {
+  return (
+    <div>
+      <label className={labelCls}>{label}</label>
+      {hint && <p className="text-text-muted text-xs mb-1">{hint}</p>}
+      <RichTextEditor
+        name={`__rich_${label}`}
+        defaultValue={value}
+        {...(placeholder !== undefined ? { placeholder } : {})}
+        minHeight={minHeight}
+        onChange={onChange}
       />
     </div>
   );

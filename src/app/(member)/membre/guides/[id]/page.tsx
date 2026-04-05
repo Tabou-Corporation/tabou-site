@@ -11,6 +11,7 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import { deleteGuide } from "@/lib/actions/content";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { CATEGORY_LABELS } from "@/lib/constants/labels";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import type { UserRole } from "@/types/roles";
 
 export default async function GuideDetailPage({
@@ -94,11 +95,7 @@ export default async function GuideDetailPage({
 
         <Card>
           <CardBody>
-            <div className="prose-eve">
-              <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap break-words">
-                {guide.content}
-              </p>
-            </div>
+            <RichTextContent html={guide.content} />
           </CardBody>
         </Card>
       </Container>

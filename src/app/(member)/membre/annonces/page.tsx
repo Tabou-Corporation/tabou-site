@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/Separator";
 import { Pin, Plus } from "lucide-react";
 import { deleteAnnouncement } from "@/lib/actions/content";
 import { DeleteButton } from "@/components/ui/DeleteButton";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import type { UserRole } from "@/types/roles";
 
 export default async function AnnoncesPage() {
@@ -85,9 +86,7 @@ export default async function AnnoncesPage() {
                   </p>
                 </CardHeader>
                 <CardBody>
-                  <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap break-words">
-                    {a.content}
-                  </p>
+                  <RichTextContent html={a.content} />
                 </CardBody>
               </Card>
             ))}

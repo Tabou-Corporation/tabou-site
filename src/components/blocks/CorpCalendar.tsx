@@ -10,6 +10,7 @@ import { rsvpEvent, cancelRsvp, notifyDiscordEvent } from "@/lib/actions/rsvp";
 import { deleteCalendarEvent } from "@/lib/actions/content";
 import { useToast } from "@/contexts/ToastContext";
 import { cn } from "@/lib/utils/cn";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../app/(member)/membre/calendrier/calendar.css";
 
@@ -203,9 +204,9 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
 
                 {/* Description */}
                 {selectedEvent.description && (
-                  <p className="text-sm text-text-secondary leading-relaxed border-l-2 border-gold/30 pl-4">
-                    {selectedEvent.description}
-                  </p>
+                  <div className="border-l-2 border-gold/30 pl-4">
+                    <RichTextContent html={selectedEvent.description} />
+                  </div>
                 )}
 
                 {/* Séparateur */}

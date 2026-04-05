@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/Separator";
 import { getAllowedContentDomains, parseSpecialties } from "@/types/roles";
 import { CONTENT_DOMAIN_LABELS } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -90,12 +91,10 @@ export default function NewAnnouncementPage() {
                 <label className="block text-text-secondary text-sm font-medium">
                   Contenu <span className="text-red-400 text-xs">*</span>
                 </label>
-                <textarea
+                <RichTextEditor
                   name="content"
-                  required
-                  rows={8}
-                  placeholder="Contenu de l'annonce..."
-                  className={`${inputClass} resize-y min-h-[160px]`}
+                  placeholder="Contenu de l'annonce…"
+                  minHeight={180}
                 />
               </div>
 

@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/Separator";
 import { getAllowedContentDomains, parseSpecialties } from "@/types/roles";
 import { CONTENT_DOMAIN_LABELS } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import Link from "next/link";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 
@@ -130,11 +131,10 @@ export default function NewCalendarEventPage() {
                 <label className="block text-text-secondary text-sm font-medium">
                   Description <span className="text-text-muted font-normal">(optionnel)</span>
                 </label>
-                <textarea
+                <RichTextEditor
                   name="description"
-                  rows={4}
                   placeholder="Doctrine, objectif, point de rendez-vous…"
-                  className={`${inputClass} resize-y`}
+                  minHeight={120}
                 />
               </div>
 

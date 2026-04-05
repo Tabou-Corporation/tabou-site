@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/Separator";
 import { getAllowedGuideCategories, parseSpecialties } from "@/types/roles";
 import { CATEGORY_LABELS } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -90,12 +91,10 @@ export default function NewGuidePage() {
                 <label className="block text-text-secondary text-sm font-medium">
                   Contenu <span className="text-red-400 text-xs">*</span>
                 </label>
-                <textarea
+                <RichTextEditor
                   name="content"
-                  required
-                  rows={16}
-                  placeholder="Rédigez le guide ici…&#10;&#10;Vous pouvez utiliser des sauts de ligne pour structurer le contenu."
-                  className={`${inputClass} resize-y min-h-[300px] font-mono text-xs`}
+                  placeholder="Rédigez le guide ici…"
+                  minHeight={300}
                 />
               </div>
 

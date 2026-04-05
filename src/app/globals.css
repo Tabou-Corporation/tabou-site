@@ -119,6 +119,136 @@
   }
 }
 
+/* ─── Rich text editor (Tiptap) ───────────────────────────────────────────── */
+
+/* Zone d'édition interne */
+.rich-editor-content {
+  outline: none;
+  min-height: inherit;
+}
+
+.rich-editor-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* ─── Prose EVE — rendu des contenus rich text ────────────────────────────── */
+/* Utilisé aussi bien dans l'éditeur (.rich-editor-content) que dans les pages */
+/* d'affichage (.prose-eve).                                                    */
+
+.prose-eve,
+.rich-editor-content {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+
+.prose-eve p,
+.rich-editor-content p {
+  margin-bottom: 0.75rem;
+}
+.prose-eve p:last-child,
+.rich-editor-content p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-eve h2,
+.rich-editor-content h2 {
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--color-text-primary);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prose-eve h3,
+.rich-editor-content h3 {
+  font-family: var(--font-display, inherit);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  margin-top: 1.25rem;
+  margin-bottom: 0.375rem;
+}
+
+.prose-eve strong,
+.rich-editor-content strong {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.prose-eve em,
+.rich-editor-content em {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.prose-eve u,
+.rich-editor-content u {
+  text-decoration: underline;
+  text-decoration-color: rgba(240, 176, 48, 0.5);
+  text-underline-offset: 2px;
+}
+
+.prose-eve s,
+.rich-editor-content s {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.prose-eve ul,
+.rich-editor-content ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  space-y: 0.25rem;
+}
+
+.prose-eve ol,
+.rich-editor-content ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-eve li,
+.rich-editor-content li {
+  margin-bottom: 0.2rem;
+}
+
+.prose-eve blockquote,
+.rich-editor-content blockquote {
+  border-left: 3px solid var(--color-gold);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.prose-eve hr,
+.rich-editor-content hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1.25rem 0;
+}
+
+.prose-eve code,
+.rich-editor-content code {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  font-size: 0.8em;
+  color: var(--color-gold-light);
+  font-family: 'Courier New', monospace;
+}
+
 /* ─── Glitch cinématique (logo hero) ─────────────────────────────────────── */
 /* Rafales de parasites toutes les ~8 s, façon transmission corrompue         */
 @keyframes glitch-logo {

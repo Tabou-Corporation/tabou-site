@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { getAllowedGuideCategories, parseSpecialties } from "@/types/roles";
 import { CATEGORY_LABELS } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 const inputClass = [
   "w-full bg-bg-elevated border rounded px-3 py-2.5",
@@ -69,12 +70,10 @@ export function EditGuideForm({ id, defaultTitle, defaultCategory, defaultConten
         <label className="block text-text-secondary text-sm font-medium">
           Contenu <span className="text-red-400 text-xs">*</span>
         </label>
-        <textarea
+        <RichTextEditor
           name="content"
-          required
-          rows={16}
           defaultValue={defaultContent}
-          className={`${inputClass} resize-y min-h-[300px] font-mono text-xs`}
+          minHeight={300}
         />
       </div>
 
