@@ -14,48 +14,48 @@ export function TopPilotCard({ pilot }: TopPilotCardProps) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "w-[210px] flex flex-col",
+        "w-[260px] flex flex-col",
         "border-l-2 border-l-gold/70",
         "hover:border-l-gold transition-colors duration-200",
         "group"
       )}
     >
       {/* ── Header ── */}
-      <div className="px-3 pb-1.5">
-        <span className="text-gold/50 text-2xs font-bold tracking-extra-wide uppercase">
+      <div className="px-4 pb-2">
+        <span className="text-gold/50 text-xs font-bold tracking-extra-wide uppercase">
           Focus
         </span>
       </div>
 
       {/* ── Pilote ── */}
-      <div className="flex items-center gap-3 px-3 pb-3">
+      <div className="flex items-center gap-3 px-4 pb-4">
         {/* Portrait */}
         <div className="flex-shrink-0 relative">
-          <div className="w-12 h-12 rounded-sm overflow-hidden border border-gold/40 bg-bg-elevated">
+          <div className="w-16 h-16 rounded-sm overflow-hidden border border-gold/40 bg-bg-elevated">
             <Image
               src={pilot.portraitUrl}
               alt={pilot.name}
-              width={48}
-              height={48}
+              width={64}
+              height={64}
               className="w-full h-full object-cover"
               priority
             />
           </div>
           {/* Badge #1 */}
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gold flex items-center justify-center text-bg-deep text-[9px] font-black leading-none">
+          <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gold flex items-center justify-center text-bg-deep text-[10px] font-black leading-none">
             1
           </span>
         </div>
 
         {/* Infos */}
         <div className="flex-1 min-w-0">
-          <p className="text-text-primary text-xs font-display font-semibold truncate group-hover:text-gold transition-colors">
+          <p className="text-text-primary text-sm font-display font-semibold truncate group-hover:text-gold transition-colors">
             {pilot.name}
           </p>
-          <p className="text-gold text-2xs font-bold mt-0.5">
+          <p className="text-gold text-xs font-bold mt-0.5">
             ◆ {pilot.kills.toLocaleString("fr-FR")} kills
           </p>
-          <p className="text-text-muted text-2xs">All‑time</p>
+          <p className="text-text-muted text-xs">All‑time</p>
         </div>
       </div>
     </Link>

@@ -124,7 +124,7 @@ export function Hero({
       {/* Sur desktop, on compense les 210 px du kill feed à gauche      */}
       {/* pour que le contenu reste visuellement centré sur l'espace libre */}
       <Container className="relative z-10 pt-32 pb-8 flex-1 flex flex-col justify-center">
-        <div className={cn(showKillFeed ? "lg:pl-[210px]" : "")}>
+        <div className={cn(showKillFeed ? "lg:pl-[260px]" : "")}>
           <HeroAnimatedContent
             {...(eyebrow     ? { eyebrow }     : {})}
             {...(headline    ? { headline }    : {})}

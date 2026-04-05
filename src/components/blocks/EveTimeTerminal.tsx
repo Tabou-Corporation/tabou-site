@@ -135,7 +135,7 @@ export function EveTimeTerminal() {
   const isLive = stage === "live" || stage === "glitch";
 
   return (
-    <div className="w-[210px] flex flex-col border-l-2 border-l-gold/30 relative overflow-hidden">
+    <div className="w-[260px] flex flex-col border-l-2 border-l-gold/30 relative overflow-hidden">
       {/* Scanlines statiques */}
       <div
         aria-hidden

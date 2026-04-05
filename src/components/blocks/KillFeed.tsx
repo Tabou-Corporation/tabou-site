@@ -11,7 +11,7 @@ interface KillFeedProps {
   initialKills: KillDisplayEntry[];
 }
 
-const ITEM_HEIGHT = 68; // px — hauteur d'un kill dans la liste
+const ITEM_HEIGHT = 84; // px — hauteur d'un kill dans la liste
 const VISIBLE     = 3;  // nombre de kills visibles simultanément
 const SCROLL_MS   = 2800; // durée entre chaque défilement
 
@@ -60,17 +60,17 @@ export function KillFeed({ initialKills }: KillFeedProps) {
   return (
     <div className={cn(
       "hidden lg:flex flex-col",
-      "w-[210px]",
+      "w-[260px]",
       "border-l-2 border-l-gold/50",
     )}>
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-3 pb-2">
-        <span className="text-gold/50 text-2xs font-bold tracking-extra-wide uppercase">
+      <div className="flex items-center justify-between px-4 pb-2">
+        <span className="text-gold/50 text-xs font-bold tracking-extra-wide uppercase">
           Kills récents
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-red-light animate-pulse" />
-          <span className="text-red-light text-2xs font-bold tracking-widest uppercase">Live</span>
+          <span className="text-red-light text-xs font-bold tracking-widest uppercase">Live</span>
         </span>
       </div>
 
@@ -92,34 +92,34 @@ export function KillFeed({ initialKills }: KillFeedProps) {
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
-                "flex items-center gap-2.5 px-3 group",
+                "flex items-center gap-3 px-4 group",
                 "hover:bg-white/[0.03] transition-colors duration-150",
               )}
               style={{ height: ITEM_HEIGHT }}
             >
               {/* Icône ship */}
-              <div className="flex-shrink-0 w-9 h-9 rounded-sm overflow-hidden border border-gold/20 bg-bg-elevated">
+              <div className="flex-shrink-0 w-12 h-12 rounded-sm overflow-hidden border border-gold/20 bg-bg-elevated">
                 <Image
                   src={`https://images.evetech.net/types/${kill.shipTypeId}/render?size=64`}
                   alt={kill.shipName}
-                  width={36}
-                  height={36}
+                  width={48}
+                  height={48}
                   className="w-full h-full object-cover"
                 />
               </div>
 
               {/* Infos */}
               <div className="flex-1 min-w-0">
-                <p className="text-text-primary text-xs font-display font-semibold truncate group-hover:text-gold transition-colors">
+                <p className="text-text-primary text-sm font-display font-semibold truncate group-hover:text-gold transition-colors">
                   {kill.shipName}
                 </p>
-                <p className="text-text-muted text-2xs truncate leading-tight">
+                <p className="text-text-muted text-xs truncate leading-tight">
                   {kill.victimName}
                 </p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-gold text-2xs font-bold">◆ {kill.iskValue}</span>
-                  <span className="text-border text-2xs">·</span>
-                  <span className="text-text-muted text-2xs">{kill.timeAgo}</span>
+                  <span className="text-gold text-xs font-bold">◆ {kill.iskValue}</span>
+                  <span className="text-border text-xs">·</span>
+                  <span className="text-text-muted text-xs">{kill.timeAgo}</span>
                 </div>
               </div>
             </Link>
@@ -132,7 +132,7 @@ export function KillFeed({ initialKills }: KillFeedProps) {
         href={`${ZKILL_CONFIG.baseUrl}/corporation/${ZKILL_CONFIG.corpId}/`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-1 px-3 pt-2 text-text-muted/60 text-2xs hover:text-gold transition-colors group"
+        className="flex items-center gap-1 px-4 pt-2 text-text-muted/60 text-xs hover:text-gold transition-colors group"
       >
         Tous les kills
         <span className="group-hover:translate-x-0.5 transition-transform">→</span>
