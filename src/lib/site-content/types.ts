@@ -130,6 +130,16 @@ export interface ContactContent {
   formNote: string;
 }
 
+// ── Discord ───────────────────────────────────────────────────────────────────
+export interface DiscordConfig {
+  /** Webhook du canal #recrutement (staff) — notifications candidatures */
+  recruitmentWebhookUrl: string;
+  /** Webhook du canal opérations — notifications événements calendrier */
+  calendarWebhookUrl: string;
+  /** Lien d'invitation public affiché sur le site */
+  inviteUrl: string;
+}
+
 // ── Page registry ─────────────────────────────────────────────────────────────
 export type PageKey =
   | "home"
@@ -137,7 +147,8 @@ export type PageKey =
   | "recruitment"
   | "faq"
   | "activities"
-  | "contact";
+  | "contact"
+  | "discord";
 
 export type ContentByPage = {
   home: HomeContent;
@@ -146,4 +157,5 @@ export type ContentByPage = {
   faq: FaqItem[];
   activities: ActivityItem[];
   contact: ContactContent;
+  discord: DiscordConfig;
 };

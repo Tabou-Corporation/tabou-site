@@ -8,8 +8,22 @@
  * (webhook d'un canal #recrutement privé staff)
  */
 
+import { getDiscordConfig } from "@/lib/site-content/loader";
+
 const SITE_URL = process.env.NEXTAUTH_URL ?? "https://tabou-eve.fr";
-const WEBHOOK  = () => process.env.DISCORD_RECRUITMENT_WEBHOOK_URL ?? "";
+
+/**
+ * Résout l'URL du webhook recrutement :
+ * 1. Config DB (admin) — prioritaire
+ * 2. Variable d'environnement DISCORD_RECRUITMENT_WEBHOOK_URL — fallback
+ */
+async function getRecruitmentWebhookUrl(): Promise<string> {
+  try {
+    const config = await getDiscordConfig();
+    if (config.recruitmentWebhookUrl?.trim()) return config.recruitmentWebhookUrl.trim();
+  } catch { /* fallback silencieux */ }
+  return process.env.DISCORD_RECRUITMENT_WEBHOOK_URL ?? "";
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -21,7 +35,7 @@ function formatSP(sp: number | null): string {
 }
 
 async function sendWebhook(payload: object): Promise<void> {
-  const url = WEBHOOK();
+  const url = await getRecruitmentWebhookUrl();
   if (!url) return; // Webhook non configuré — silencieux
 
   try {

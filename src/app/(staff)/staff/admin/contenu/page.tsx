@@ -12,6 +12,7 @@ import { RecruitmentEditor } from "./RecruitmentEditor";
 import { FaqEditor } from "./FaqEditor";
 import { ActivitiesEditor } from "./ActivitiesEditor";
 import { ContactEditor } from "./ContactEditor";
+import { DiscordEditor } from "./DiscordEditor";
 import type { UserRole } from "@/types/roles";
 
 const TABS = [
@@ -21,6 +22,7 @@ const TABS = [
   { key: "faq",         label: "FAQ" },
   { key: "activities",  label: "Activités" },
   { key: "contact",     label: "Contact" },
+  { key: "discord",     label: "Discord" },
 ] as const;
 
 type TabKey = typeof TABS[number]["key"];
@@ -41,7 +43,7 @@ export default async function ContenuPage({
     TABS.find((t) => t.key === tab)?.key ?? "home";
 
   // Charger le contenu de l'onglet actif
-  const [homeContent, corpContent, recruitContent, faqContent, activitiesContent, contactContent] =
+  const [homeContent, corpContent, recruitContent, faqContent, activitiesContent, contactContent, discordContent] =
     await Promise.all([
       getRawPageContent("home"),
       getRawPageContent("corporation"),
@@ -49,6 +51,7 @@ export default async function ContenuPage({
       getRawPageContent("faq"),
       getRawPageContent("activities"),
       getRawPageContent("contact"),
+      getRawPageContent("discord"),
     ]);
 
   return (
@@ -101,6 +104,7 @@ export default async function ContenuPage({
           {activeTab === "faq" && <FaqEditor initialContent={faqContent} />}
           {activeTab === "activities" && <ActivitiesEditor initialContent={activitiesContent} />}
           {activeTab === "contact" && <ContactEditor initialContent={contactContent} />}
+          {activeTab === "discord" && <DiscordEditor initialContent={discordContent} />}
         </div>
       </Container>
     </div>

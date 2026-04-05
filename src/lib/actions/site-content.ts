@@ -14,6 +14,7 @@ const VALID_PAGES: PageKey[] = [
   "faq",
   "activities",
   "contact",
+  "discord",
 ];
 
 /** Chemin public correspondant à chaque clé de page */
@@ -24,6 +25,7 @@ const PAGE_PATHS: Record<PageKey, string> = {
   faq:         "/faq",
   activities:  "/activites",
   contact:     "/contact",
+  discord:     "/staff/admin/contenu",
 };
 
 export interface SaveContentState {

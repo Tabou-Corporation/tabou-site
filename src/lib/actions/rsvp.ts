@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@/types/roles";
 import type { ActionResult } from "@/types/actions";
+import { getDiscordConfig } from "@/lib/site-content/loader";
 
 export type RsvpStatus = "GOING" | "MAYBE" | "NOT_GOING";
 
@@ -65,8 +66,13 @@ export async function notifyDiscordEvent(eventId: string): Promise<{ error?: str
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "officer")) return { error: "Accès refusé." };
 
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-  if (!webhookUrl) return { error: "DISCORD_WEBHOOK_URL non configuré." };
+  // Résolution : DB (admin) en priorité, puis variable d'environnement
+  const discordConfig = await getDiscordConfig().catch(() => null);
+  const webhookUrl =
+    discordConfig?.calendarWebhookUrl?.trim() ||
+    process.env.DISCORD_WEBHOOK_URL ||
+    "";
+  if (!webhookUrl) return { error: "Webhook Discord non configuré (aucune URL dans l'admin ni en variable d'environnement)." };
 
   const event = await prisma.calendarEvent.findUnique({
     where: { id: eventId },

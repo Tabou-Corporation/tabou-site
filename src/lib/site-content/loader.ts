@@ -52,9 +52,10 @@ export async function getRawPageContent<K extends PageKey>(
 /** Lecture avec déduplication intra-request (cache React) */
 const fetchContent = cache(getRawPageContent);
 
-export const getHomeContent       = () => fetchContent("home");
+export const getHomeContent        = () => fetchContent("home");
 export const getCorporationContent = () => fetchContent("corporation");
 export const getRecruitmentContent = () => fetchContent("recruitment");
 export const getFaqContent         = () => fetchContent("faq");
 export const getActivitiesContent  = () => fetchContent("activities");
 export const getContactContent     = () => fetchContent("contact");
+export const getDiscordConfig      = () => fetchContent("discord");

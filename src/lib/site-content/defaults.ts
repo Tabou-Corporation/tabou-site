@@ -9,6 +9,7 @@ import type {
   FaqItem,
   ActivityItem,
   ContactContent,
+  DiscordConfig,
   ContentByPage,
 } from "./types";
 
@@ -499,11 +500,18 @@ export const DEFAULT_CONTACT: ContactContent = {
     "Le formulaire de contact direct sera disponible dans une prochaine version. En attendant, Discord reste le canal préférentiel.",
 };
 
+export const DEFAULT_DISCORD: DiscordConfig = {
+  recruitmentWebhookUrl: "",
+  calendarWebhookUrl:    "",
+  inviteUrl:             "https://discord.gg/tabou",
+};
+
 export const DEFAULTS: ContentByPage = {
-  home: DEFAULT_HOME,
+  home:        DEFAULT_HOME,
   corporation: DEFAULT_CORPORATION,
   recruitment: DEFAULT_RECRUITMENT,
-  faq: DEFAULT_FAQ,
-  activities: DEFAULT_ACTIVITIES,
-  contact: DEFAULT_CONTACT,
+  faq:         DEFAULT_FAQ,
+  activities:  DEFAULT_ACTIVITIES,
+  contact:     DEFAULT_CONTACT,
+  discord:     DEFAULT_DISCORD,
 };
