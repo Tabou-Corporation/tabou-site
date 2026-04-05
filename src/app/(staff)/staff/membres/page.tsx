@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/Separator";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { Users } from "lucide-react";
 import { ROLE_LABELS, ROLE_BADGE, ROLE_ORDER } from "@/lib/constants/labels";
+import { cn } from "@/lib/utils/cn";
 import type { UserRole } from "@/types/roles";
 
 export default async function MembresPage({
@@ -80,12 +81,12 @@ export default async function MembresPage({
               <Link
                 key={tab.key}
                 href={`/staff/membres${tab.key !== "all" ? `?filter=${tab.key}` : ""}`}
-                className={[
+                className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors",
                   active
                     ? "bg-gold text-text-inverted"
-                    : "bg-bg-elevated text-text-secondary border border-border hover:border-border-accent",
-                ].join(" ")}
+                    : "bg-bg-elevated text-text-secondary border border-border hover:border-border-accent"
+                )}
               >
                 {tab.label}
                 <span className={active ? "opacity-70" : "text-text-muted"}>

@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import "@/lib/env"; // valide les env vars au démarrage
 
 /**
  * Singleton Prisma Client.

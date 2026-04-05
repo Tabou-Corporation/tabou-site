@@ -43,7 +43,8 @@ export async function getRawPageContent<K extends PageKey>(
     if (!row) return DEFAULTS[page];
     const parsed = JSON.parse(row.content) as Partial<ContentByPage[K]>;
     return deepMerge(DEFAULTS[page], parsed);
-  } catch {
+  } catch (e) {
+    console.error(`[site-content] Erreur lors du chargement de la page "${page}" :`, e);
     return DEFAULTS[page];
   }
 }

@@ -33,6 +33,11 @@ export default function StaffError({
           >
             ↺ Réessayer
           </button>
+          {error.digest && (
+            <p className="text-text-muted text-[11px] font-mono mt-3 opacity-50">
+              ref: {error.digest}
+            </p>
+          )}
         </div>
       </Container>
     </div>

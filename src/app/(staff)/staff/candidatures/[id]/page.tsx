@@ -10,12 +10,11 @@ import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { ArrowLeft, MessageSquare } from "lucide-react";
-import {
-  updateApplicationStatus,
-  takeChargeApplication,
-  saveApplicationNotes,
-} from "@/lib/actions/applications";
+import { takeChargeApplication } from "@/lib/actions/applications";
 import { STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
+import { CandidatureDecisionButtons } from "./CandidatureDecisionButtons";
+import { SaveNotesForm } from "./SaveNotesForm";
+import { cn } from "@/lib/utils/cn";
 import type { UserRole } from "@/types/roles";
 
 export default async function CandidatureDetailPage({
@@ -53,22 +52,13 @@ export default async function CandidatureDetailPage({
   // Avec le filtre where, accounts[0] est forcément le compte EVE (ou undefined)
   const characterId = application.user.accounts[0]?.providerAccountId;
 
-  // ── Actions inline (Server Actions via form) ───────────────────────────────
-
-  async function actionSetStatus(status: "PENDING" | "ACCEPTED" | "REJECTED") {
-    "use server";
-    await updateApplicationStatus(id, status);
-  }
+  // ── Actions inline (Server Actions via form) ─────────────────────────────
+  // Note : actionSetStatus et actionSaveNotes sont gérés par les Client Components
+  // CandidatureDecisionButtons et SaveNotesForm (useTransition + toast feedback).
 
   async function actionTakeCharge(formData: FormData) {
     "use server";
     await takeChargeApplication(id, formData);
-  }
-
-  async function actionSaveNotes(formData: FormData) {
-    "use server";
-    const notes = formData.get("notes") as string | null;
-    await saveApplicationNotes(id, notes ?? "");
   }
 
   return (
@@ -196,23 +186,10 @@ export default async function CandidatureDetailPage({
                 </h2>
               </CardHeader>
               <CardBody>
-                <form action={actionSaveNotes} className="space-y-3">
-                  <textarea
-                    name="notes"
-                    defaultValue={application.notes ?? ""}
-                    rows={5}
-                    placeholder="Impressions, points à vérifier, remarques..."
-                    className={[
-                      "w-full bg-bg-elevated border rounded px-3 py-2.5 resize-y",
-                      "text-text-primary text-sm placeholder:text-text-muted",
-                      "border-border focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40",
-                      "transition-colors duration-150",
-                    ].join(" ")}
-                  />
-                  <Button type="submit" variant="secondary" size="sm">
-                    Sauvegarder les notes
-                  </Button>
-                </form>
+                <SaveNotesForm
+                  applicationId={id}
+                  defaultNotes={application.notes ?? ""}
+                />
               </CardBody>
             </Card>
           </div>
@@ -271,12 +248,12 @@ export default async function CandidatureDetailPage({
                             ? application.interviewAt.toISOString().slice(0, 16)
                             : ""
                         }
-                        className={[
+                        className={cn(
                           "w-full bg-bg-elevated border rounded px-3 py-2",
                           "text-text-primary text-xs",
                           "border-border focus:border-gold/60 focus:outline-none",
-                          "transition-colors duration-150",
-                        ].join(" ")}
+                          "transition-colors duration-150"
+                        )}
                       />
                       <p className="text-text-muted text-[11px]">
                         Heure locale — pense à préciser EVE Time au candidat.
@@ -312,12 +289,12 @@ export default async function CandidatureDetailPage({
                             ? application.interviewAt.toISOString().slice(0, 16)
                             : ""
                         }
-                        className={[
+                        className={cn(
                           "w-full bg-bg-elevated border rounded px-3 py-2",
                           "text-text-primary text-xs",
                           "border-border focus:border-gold/60 focus:outline-none",
-                          "transition-colors duration-150",
-                        ].join(" ")}
+                          "transition-colors duration-150"
+                        )}
                       />
                     </div>
                     <Button type="submit" variant="ghost" size="sm" className="w-full">
@@ -335,28 +312,11 @@ export default async function CandidatureDetailPage({
                   Décision
                 </h2>
               </CardHeader>
-              <CardBody className="space-y-2">
-                {application.status !== "ACCEPTED" && (
-                  <form action={actionSetStatus.bind(null, "ACCEPTED")}>
-                    <Button type="submit" variant="primary" size="sm" className="w-full">
-                      Accepter → promouvoir membre
-                    </Button>
-                  </form>
-                )}
-                {application.status !== "REJECTED" && (
-                  <form action={actionSetStatus.bind(null, "REJECTED")}>
-                    <Button type="submit" variant="danger" size="sm" className="w-full">
-                      Refuser
-                    </Button>
-                  </form>
-                )}
-                {application.status !== "PENDING" && (
-                  <form action={actionSetStatus.bind(null, "PENDING")}>
-                    <Button type="submit" variant="ghost" size="sm" className="w-full">
-                      Remettre en attente
-                    </Button>
-                  </form>
-                )}
+              <CardBody>
+                <CandidatureDecisionButtons
+                  applicationId={id}
+                  currentStatus={application.status}
+                />
               </CardBody>
             </Card>
 

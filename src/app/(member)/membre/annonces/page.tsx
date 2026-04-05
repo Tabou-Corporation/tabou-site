@@ -8,6 +8,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Separator } from "@/components/ui/Separator";
 import { Pin, Plus } from "lucide-react";
 import { deleteAnnouncement } from "@/lib/actions/content";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import type { UserRole } from "@/types/roles";
 
 export default async function AnnoncesPage() {
@@ -68,14 +69,10 @@ export default async function AnnoncesPage() {
                       </h2>
                     </div>
                     {isOfficer && (
-                      <form action={deleteAnnouncement.bind(null, a.id) as unknown as (fd: FormData) => Promise<void>}>
-                        <button
-                          type="submit"
-                          className="text-text-muted text-xs hover:text-red-400 transition-colors flex-shrink-0"
-                        >
-                          Supprimer
-                        </button>
-                      </form>
+                      <DeleteButton
+                        action={deleteAnnouncement.bind(null, a.id)}
+                        confirmMessage={`Supprimer l'annonce "${a.title}" définitivement ?`}
+                      />
                     )}
                   </div>
                   <p className="text-text-muted text-xs mt-1">

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { changeUserRoleAction } from "@/lib/actions/members";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils/cn";
 
 const ROLES = [
   { value: "candidate",  label: "Candidat" },
@@ -42,11 +43,11 @@ export function RoleForm({ userId, currentRole, actorRole }: Props) {
           <select
             name="role"
             defaultValue={currentRole}
-            className={[
+            className={cn(
               "flex-1 min-w-[160px] bg-bg-elevated border rounded px-3 py-2",
               "text-text-primary text-sm border-border",
-              "focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40",
-            ].join(" ")}
+              "focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40"
+            )}
           >
             {allowedRoles.map((r) => (
               <option key={r.value} value={r.value}>{r.label}</option>

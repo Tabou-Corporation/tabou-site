@@ -9,11 +9,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { deleteGuide } from "@/lib/actions/content";
+import { DeleteButton } from "@/components/ui/DeleteButton";
+import { CATEGORY_LABELS } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  general: "Général", pvp: "PvP", logistics: "Logistique", fits: "Fits", other: "Autre",
-};
 
 export default async function GuideDetailPage({
   params,
@@ -57,14 +55,11 @@ export default async function GuideDetailPage({
                 <Pencil size={13} />
                 Modifier
               </Link>
-              <form action={deleteGuide.bind(null, id) as unknown as (fd: FormData) => Promise<void>}>
-                <button
-                  type="submit"
-                  className="text-text-muted text-xs hover:text-red-400 transition-colors"
-                >
-                  Supprimer
-                </button>
-              </form>
+              <DeleteButton
+                action={deleteGuide.bind(null, id)}
+                confirmMessage={`Supprimer le guide "${guide.title}" définitivement ?`}
+                className="text-text-muted text-xs hover:text-red-400 transition-colors"
+              />
             </div>
           )}
         </div>

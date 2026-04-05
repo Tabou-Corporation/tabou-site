@@ -256,7 +256,12 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                     </button>
                     <form
                       action={async () => {
-                        await deleteCalendarEvent(selectedEvent.eventId);
+                        if (!window.confirm(`Supprimer "${selectedEvent.title}" définitivement ?`)) return;
+                        const result = await deleteCalendarEvent(selectedEvent.eventId);
+                        if (!result.success) {
+                          addToast(result.error, "error");
+                          return;
+                        }
                         setSelectedEvent(null);
                         addToast("Événement supprimé", "info");
                       }}

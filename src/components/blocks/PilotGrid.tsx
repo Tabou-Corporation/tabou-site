@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { CORPORATIONS } from "@/lib/constants/corporations";
@@ -21,19 +21,27 @@ type Tab = "tabou" | "uz";
 export function PilotGrid({ members }: PilotGridProps) {
   const [activeTab, setActiveTab] = useState<Tab>("tabou");
 
-  const tabouMembers = members
-    .filter((m) =>
-      m.corporationId === CORPORATIONS.tabou.id ||
-      (!m.corporationId && m.role !== "member_uz")
-    )
-    .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9));
+  const tabouMembers = useMemo(
+    () =>
+      members
+        .filter((m) =>
+          m.corporationId === CORPORATIONS.tabou.id ||
+          (!m.corporationId && m.role !== "member_uz")
+        )
+        .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9)),
+    [members]
+  );
 
-  const uzMembers = members
-    .filter((m) =>
-      m.corporationId === CORPORATIONS.urbanZone.id ||
-      (!m.corporationId && m.role === "member_uz")
-    )
-    .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+  const uzMembers = useMemo(
+    () =>
+      members
+        .filter((m) =>
+          m.corporationId === CORPORATIONS.urbanZone.id ||
+          (!m.corporationId && m.role === "member_uz")
+        )
+        .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
+    [members]
+  );
 
   const displayed = activeTab === "tabou" ? tabouMembers : uzMembers;
 
