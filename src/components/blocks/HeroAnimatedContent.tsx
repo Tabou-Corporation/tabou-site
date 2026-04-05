@@ -35,32 +35,40 @@ function LogoDisplay({
 }) {
   return (
     <div className="flex flex-col items-center text-center gap-6 sm:gap-8">
-      {/* Emblème détouré — PNG transparent EVE CDN */}
+      {/* Emblème détouré — apparaît APRÈS les lettres */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={logoUrl}
         alt="Tabou"
         width={220}
         height={220}
-        style={fadeIn("0.1s")}
+        style={fadeIn("1.6s")}
         className="w-36 h-36 sm:w-44 sm:h-44 lg:w-[220px] lg:h-[220px] drop-shadow-[0_0_48px_rgba(240,176,48,0.25)] animate-glitch-logo"
       />
 
-      {/* Wordmark "TABOU" — massive */}
+      {/* Wordmark "TABOU" — lettres staggerées */}
       <h1
+        aria-label="TABOU"
         style={{
-          ...fadeIn("0.3s"),
           textShadow: "0 2px 60px rgba(0,0,0,0.9), 0 0 120px rgba(0,0,0,0.6)",
           letterSpacing: "0.35em",
         }}
         className="font-display font-black text-7xl sm:text-8xl lg:text-9xl xl:text-[11rem] text-text-primary leading-none"
       >
-        TABOU
+        {"TABOU".split("").map((letter, i) => (
+          <span
+            key={i}
+            style={fadeIn(`${0.3 + i * 0.2}s`)}
+            className="inline-block"
+          >
+            {letter}
+          </span>
+        ))}
       </h1>
 
       {/* CTAs */}
       {(primaryCTA ?? secondaryCTA) && (
-        <div style={fadeIn("0.5s")} className="flex flex-wrap justify-center gap-4 mt-2">
+        <div style={fadeIn("2.0s")} className="flex flex-wrap justify-center gap-4 mt-2">
           {primaryCTA && (
             <Button
               as="a"
