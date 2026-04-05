@@ -5,13 +5,11 @@ import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
-import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { Users } from "lucide-react";
-import { ROLE_LABELS, ROLE_BADGE, ROLE_ORDER } from "@/lib/constants/labels";
 import { cn } from "@/lib/utils/cn";
 import type { UserRole } from "@/types/roles";
+import { MembersTable } from "./MembersTable";
 
 export default async function MembresPage({
   searchParams,
@@ -43,10 +41,6 @@ export default async function MembresPage({
     orderBy: { createdAt: "asc" },
   });
 
-  const sorted = [...users].sort(
-    (a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9)
-  );
-
   const counts = await prisma.user.groupBy({
     by: ["role"],
     _count: true,
@@ -62,6 +56,15 @@ export default async function MembresPage({
     { key: "director",   label: "Directeurs",   count: (countMap["director"] ?? 0) + (countMap["ceo"] ?? 0) + (countMap["admin"] ?? 0) },
   ];
 
+  // Serialize for client component
+  const serialized = users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    image: u.image,
+    role: u.role,
+    createdAt: u.createdAt.toISOString(),
+  }));
+
   return (
     <div className="py-10 sm:py-14">
       <Container>
@@ -73,7 +76,7 @@ export default async function MembresPage({
 
         <Separator gold className="mb-6" />
 
-        {/* Filtres */}
+        {/* Filtres par rôle */}
         <div className="flex flex-wrap gap-2 mb-6">
           {tabs.map((tab) => {
             const active = (filter ?? "all") === tab.key;
@@ -97,7 +100,8 @@ export default async function MembresPage({
           })}
         </div>
 
-        {sorted.length === 0 ? (
+        {/* Table des membres */}
+        {users.length === 0 ? (
           <Card>
             <CardBody className="py-12 text-center">
               <Users size={32} className="text-text-muted mx-auto mb-3" />
@@ -105,32 +109,7 @@ export default async function MembresPage({
             </CardBody>
           </Card>
         ) : (
-          <div className="space-y-2">
-            {sorted.map((u) => (
-              <Link key={u.id} href={`/staff/membres/${u.id}`} className="block">
-                <Card interactive>
-                  <CardBody className="flex items-center gap-4 py-3">
-                    <AvatarDisplay
-                      image={u.image}
-                      name={u.name}
-                      size={36}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-text-primary font-display font-semibold text-sm truncate">
-                        {u.name ?? "Pilote inconnu"}
-                      </p>
-                      <p className="text-text-muted text-xs">
-                        Membre depuis {u.createdAt.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
-                      </p>
-                    </div>
-                    <Badge variant={ROLE_BADGE[u.role] ?? "muted"}>
-                      {ROLE_LABELS[u.role] ?? u.role}
-                    </Badge>
-                  </CardBody>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          <MembersTable users={serialized} />
         )}
       </Container>
     </div>
