@@ -67,7 +67,7 @@ export function MainNav() {
                 alt="Logo Tabou"
                 width={56}
                 height={56}
-                className="rounded-sm opacity-90 group-hover:opacity-100 transition-opacity duration-[180ms]"
+                className="rounded-sm transition-[filter] duration-200 [filter:sepia(1)_saturate(4)_hue-rotate(-10deg)_brightness(1.1)] hover:[filter:brightness(0)_invert(1)]"
                 priority
               />
               <div className="flex flex-col leading-none">
