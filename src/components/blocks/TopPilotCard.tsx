@@ -15,22 +15,20 @@ export function TopPilotCard({ pilot }: TopPilotCardProps) {
       rel="noopener noreferrer"
       className={cn(
         "w-[210px] flex flex-col",
-        "bg-bg-deep/85 backdrop-blur-sm",
-        "border border-gold/30 border-l-2 border-l-gold",
-        "hover:border-gold/60 hover:border-l-gold transition-colors duration-200",
+        "border-l-2 border-l-gold/70",
+        "hover:border-l-gold transition-colors duration-200",
         "group"
       )}
     >
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gold/15">
-        <span className="text-gold text-2xs font-bold tracking-extra-wide uppercase">
+      <div className="px-3 pb-1.5">
+        <span className="text-gold/50 text-2xs font-bold tracking-extra-wide uppercase">
           Focus
         </span>
-        <span className="text-gold text-xs">👑</span>
       </div>
 
       {/* ── Pilote ── */}
-      <div className="flex items-center gap-3 px-3 py-3">
+      <div className="flex items-center gap-3 px-3 pb-3">
         {/* Portrait */}
         <div className="flex-shrink-0 relative">
           <div className="w-12 h-12 rounded-sm overflow-hidden border border-gold/40 bg-bg-elevated">

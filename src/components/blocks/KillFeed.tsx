@@ -61,13 +61,11 @@ export function KillFeed({ initialKills }: KillFeedProps) {
     <div className={cn(
       "hidden lg:flex flex-col",
       "w-[210px]",
-      "bg-bg-deep/85 backdrop-blur-sm",
-      "border-r border-r-gold/20 border-t border-t-gold/10 border-b border-b-gold/10",
       "border-l-2 border-l-gold/50",
     )}>
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gold/15">
-        <span className="text-gold text-2xs font-bold tracking-extra-wide uppercase">
+      <div className="flex items-center justify-between px-3 pb-2">
+        <span className="text-gold/50 text-2xs font-bold tracking-extra-wide uppercase">
           Kills récents
         </span>
         <span className="flex items-center gap-1.5">
@@ -95,8 +93,7 @@ export function KillFeed({ initialKills }: KillFeedProps) {
               rel="noopener noreferrer"
               className={cn(
                 "flex items-center gap-2.5 px-3 group",
-                "hover:bg-gold/5 transition-colors duration-150",
-                "border-b border-gold/10 last:border-0",
+                "hover:bg-white/[0.03] transition-colors duration-150",
               )}
               style={{ height: ITEM_HEIGHT }}
             >
@@ -130,27 +127,12 @@ export function KillFeed({ initialKills }: KillFeedProps) {
         </div>
       </div>
 
-      {/* ── Indicateur de progression ──────────────────────────────── */}
-      <div className="flex items-center justify-center gap-1 py-1.5 border-t border-gold/15">
-        {kills.map((_, i) => (
-          <span
-            key={i}
-            className={cn(
-              "block rounded-full transition-all duration-300",
-              i === offset % kills.length
-                ? "w-3 h-1 bg-gold"
-                : "w-1 h-1 bg-gold/25"
-            )}
-          />
-        ))}
-      </div>
-
       {/* ── Footer ─────────────────────────────────────────────────── */}
       <Link
         href={`${ZKILL_CONFIG.baseUrl}/corporation/${ZKILL_CONFIG.corpId}/`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-1 px-3 py-2 border-t border-gold/15 text-text-muted text-2xs hover:text-gold transition-colors group"
+        className="flex items-center gap-1 px-3 pt-2 text-text-muted/60 text-2xs hover:text-gold transition-colors group"
       >
         Tous les kills
         <span className="group-hover:translate-x-0.5 transition-transform">→</span>
