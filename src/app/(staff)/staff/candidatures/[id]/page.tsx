@@ -1,5 +1,4 @@
 import { redirect, notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -9,27 +8,15 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
+import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import {
   updateApplicationStatus,
   takeChargeApplication,
   saveApplicationNotes,
 } from "@/lib/actions/applications";
+import { STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING:   "En attente",
-  INTERVIEW: "En cours de traitement",
-  ACCEPTED:  "Acceptée",
-  REJECTED:  "Refusée",
-};
-
-const STATUS_BADGE: Record<string, "muted" | "gold" | "default" | "red"> = {
-  PENDING:   "muted",
-  INTERVIEW: "gold",
-  ACCEPTED:  "gold",
-  REJECTED:  "red",
-};
 
 export default async function CandidatureDetailPage({
   params,
@@ -46,14 +33,25 @@ export default async function CandidatureDetailPage({
 
   const application = await prisma.application.findUnique({
     where: { id },
-    include: { user: { include: { accounts: true } } },
+    include: {
+      user: {
+        select: {
+          name: true,
+          image: true,
+          // On ne charge que le compte EVE Online (providerAccountId = characterId)
+          accounts: {
+            where: { provider: "eveonline" },
+            select: { providerAccountId: true },
+          },
+        },
+      },
+    },
   });
 
   if (!application) notFound();
 
-  const characterId = application.user.accounts.find(
-    (a) => a.provider === "eveonline"
-  )?.providerAccountId;
+  // Avec le filtre where, accounts[0] est forcément le compte EVE (ou undefined)
+  const characterId = application.user.accounts[0]?.providerAccountId;
 
   // ── Actions inline (Server Actions via form) ───────────────────────────────
 
@@ -89,22 +87,12 @@ export default async function CandidatureDetailPage({
 
         {/* En-tête candidat */}
         <div className="flex items-center gap-4 mb-8">
-          {application.user.image ? (
-            <Image
-              src={application.user.image}
-              alt={application.user.name ?? "Pilote"}
-              width={64}
-              height={64}
-              className="rounded-full border-2 border-gold/20 flex-shrink-0"
-              unoptimized
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-bg-elevated border-2 border-border flex items-center justify-center flex-shrink-0">
-              <span className="text-text-muted text-xl font-display font-bold">
-                {(application.user.name ?? "?")[0]}
-              </span>
-            </div>
-          )}
+          <AvatarDisplay
+            image={application.user.image}
+            name={application.user.name}
+            size={64}
+            border="thick"
+          />
           <div>
             <h1 className="font-display font-bold text-2xl text-text-primary">
               {application.user.name ?? "Pilote inconnu"}

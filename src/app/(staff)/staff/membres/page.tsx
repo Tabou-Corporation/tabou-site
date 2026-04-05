@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -8,30 +7,10 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
+import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { Users } from "lucide-react";
+import { ROLE_LABELS, ROLE_BADGE, ROLE_ORDER } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
-
-const ROLE_LABELS: Record<string, string> = {
-  candidate:  "Candidat",
-  member_uz:  "Urban Zone",
-  member:     "Membre",
-  officer:    "Officier",
-  director:   "Directeur",
-  ceo:        "CEO",
-  admin:      "Administrateur",
-};
-const ROLE_BADGE: Record<string, "muted" | "gold" | "red"> = {
-  candidate:  "muted",
-  member_uz:  "muted",
-  member:     "muted",
-  officer:    "gold",
-  director:   "gold",
-  ceo:        "gold",
-  admin:      "gold",
-};
-const ROLE_ORDER: Record<string, number> = {
-  admin: 0, ceo: 1, director: 2, officer: 3, member: 4, member_uz: 5, candidate: 6,
-};
 
 export default async function MembresPage({
   searchParams,
@@ -130,20 +109,11 @@ export default async function MembresPage({
               <Link key={u.id} href={`/staff/membres/${u.id}`} className="block">
                 <Card interactive>
                   <CardBody className="flex items-center gap-4 py-3">
-                    {u.image ? (
-                      <Image
-                        src={u.image} alt={u.name ?? "Pilote"}
-                        width={36} height={36}
-                        className="rounded-full border border-gold/20 flex-shrink-0"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-bg-elevated border border-border flex items-center justify-center flex-shrink-0">
-                        <span className="text-text-muted text-xs font-display font-bold">
-                          {(u.name ?? "?")[0]}
-                        </span>
-                      </div>
-                    )}
+                    <AvatarDisplay
+                      image={u.image}
+                      name={u.name}
+                      size={36}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-text-primary font-display font-semibold text-sm truncate">
                         {u.name ?? "Pilote inconnu"}

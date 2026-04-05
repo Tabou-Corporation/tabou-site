@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -8,33 +7,17 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
+import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { Clock, CheckCircle, XCircle, MessageCircle, Users } from "lucide-react";
+import { STATUS_LABELS, STATUS_BADGE, STATUS_ORDER } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING:   "En attente",
-  INTERVIEW: "Entretien",
-  ACCEPTED:  "Acceptée",
-  REJECTED:  "Refusée",
-};
-
-const STATUS_BADGE: Record<string, "muted" | "gold" | "default" | "red"> = {
-  PENDING:   "muted",
-  INTERVIEW: "gold",
-  ACCEPTED:  "gold",
-  REJECTED:  "red",
-};
-
+// STATUS_ICON reste local car il contient du JSX
 const STATUS_ICON: Record<string, React.ReactNode> = {
   PENDING:   <Clock size={14} className="text-text-muted" />,
   INTERVIEW: <MessageCircle size={14} className="text-gold/80" />,
   ACCEPTED:  <CheckCircle size={14} className="text-gold/80" />,
   REJECTED:  <XCircle size={14} className="text-red-400" />,
-};
-
-// Ordre d'affichage : pending d'abord
-const STATUS_ORDER: Record<string, number> = {
-  PENDING: 0, INTERVIEW: 1, ACCEPTED: 2, REJECTED: 3,
 };
 
 export default async function CandidaturesPage() {
@@ -45,8 +28,9 @@ export default async function CandidaturesPage() {
   if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
   const applications = await prisma.application.findMany({
-    include: { user: true },
+    include: { user: { select: { name: true, image: true } } },
     orderBy: [{ createdAt: "desc" }],
+    take: 200,
   });
 
   // Tri par statut puis par date
@@ -119,22 +103,11 @@ export default async function CandidaturesPage() {
                   <Card interactive>
                     <CardBody className="flex items-center gap-4 py-4">
                       {/* Portrait */}
-                      {application.user.image ? (
-                        <Image
-                          src={application.user.image}
-                          alt={application.user.name ?? "Pilote"}
-                          width={40}
-                          height={40}
-                          className="rounded-full border border-gold/20 flex-shrink-0"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-bg-elevated border border-border flex items-center justify-center flex-shrink-0">
-                          <span className="text-text-muted text-sm font-display font-bold">
-                            {(application.user.name ?? "?")[0]}
-                          </span>
-                        </div>
-                      )}
+                      <AvatarDisplay
+                        image={application.user.image}
+                        name={application.user.name}
+                        size={40}
+                      />
 
                       {/* Infos */}
                       <div className="flex-1 min-w-0">

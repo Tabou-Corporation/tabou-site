@@ -7,21 +7,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { ApplicationForm } from "./ApplicationForm";
 import { withdrawApplication } from "@/lib/actions/applications";
+import { STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING:   "En attente",
-  INTERVIEW: "Entretien en cours",
-  ACCEPTED:  "Acceptée",
-  REJECTED:  "Refusée",
-};
-
-const STATUS_BADGE: Record<string, "muted" | "gold" | "default" | "red"> = {
-  PENDING:   "muted",
-  INTERVIEW: "gold",
-  ACCEPTED:  "gold",
-  REJECTED:  "red",
-};
 
 export default async function CandidaturePage() {
   const session = await auth();

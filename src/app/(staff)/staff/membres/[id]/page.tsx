@@ -1,5 +1,4 @@
 import { redirect, notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -8,34 +7,11 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
+import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { ArrowLeft } from "lucide-react";
 import { RoleForm } from "./RoleForm";
+import { ROLE_LABELS, ROLE_BADGE, STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
-
-const ROLE_LABELS: Record<string, string> = {
-  candidate:  "Candidat",
-  member_uz:  "Urban Zone",
-  member:     "Membre",
-  officer:    "Officier",
-  director:   "Directeur",
-  ceo:        "CEO",
-  admin:      "Administrateur",
-};
-const ROLE_BADGE: Record<string, "muted" | "gold"> = {
-  candidate:  "muted",
-  member_uz:  "muted",
-  member:     "muted",
-  officer:    "gold",
-  director:   "gold",
-  ceo:        "gold",
-  admin:      "gold",
-};
-const APP_STATUS_LABELS: Record<string, string> = {
-  PENDING: "En attente", INTERVIEW: "Entretien", ACCEPTED: "Acceptée", REJECTED: "Refusée",
-};
-const APP_STATUS_BADGE: Record<string, "muted" | "gold" | "red"> = {
-  PENDING: "muted", INTERVIEW: "gold", ACCEPTED: "gold", REJECTED: "red",
-};
 
 export default async function MembreDetailPage({
   params,
@@ -52,17 +28,28 @@ export default async function MembreDetailPage({
 
   const user = await prisma.user.findUnique({
     where: { id },
-    include: {
-      accounts: true,
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      role: true,
+      createdAt: true,
+      // Uniquement le compte EVE Online — pas les autres providers OAuth
+      accounts: {
+        where: { provider: "eveonline" },
+        select: { providerAccountId: true },
+      },
       applications: {
         orderBy: { createdAt: "desc" },
         take: 5,
+        select: { id: true, status: true, spCount: true, createdAt: true },
       },
     },
   });
   if (!user) notFound();
 
-  const characterId = user.accounts.find((a) => a.provider === "eveonline")?.providerAccountId;
+  // accounts est déjà filtré sur "eveonline"
+  const characterId = user.accounts[0]?.providerAccountId;
   const isSelf = user.id === session.user.id;
   const canEdit = !isSelf && hasMinRole(actorRole, "director");
 
@@ -81,20 +68,12 @@ export default async function MembreDetailPage({
 
         {/* En-tête */}
         <div className="flex items-center gap-4 mb-8">
-          {user.image ? (
-            <Image
-              src={user.image} alt={user.name ?? "Pilote"}
-              width={64} height={64}
-              className="rounded-full border-2 border-gold/20 flex-shrink-0"
-              unoptimized
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-bg-elevated border-2 border-border flex items-center justify-center flex-shrink-0">
-              <span className="text-text-muted text-xl font-display font-bold">
-                {(user.name ?? "?")[0]}
-              </span>
-            </div>
-          )}
+          <AvatarDisplay
+            image={user.image}
+            name={user.name}
+            size={64}
+            border="thick"
+          />
           <div>
             <h1 className="font-display font-bold text-2xl text-text-primary">
               {user.name ?? "Pilote inconnu"}
@@ -157,8 +136,8 @@ export default async function MembreDetailPage({
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={APP_STATUS_BADGE[app.status] ?? "muted"}>
-                          {APP_STATUS_LABELS[app.status] ?? app.status}
+                        <Badge variant={STATUS_BADGE[app.status] ?? "muted"}>
+                          {STATUS_LABELS[app.status] ?? app.status}
                         </Badge>
                         <Link
                           href={`/staff/candidatures/${app.id}`}

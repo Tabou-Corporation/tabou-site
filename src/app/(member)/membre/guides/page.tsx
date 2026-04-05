@@ -8,17 +8,8 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { BookOpen, Plus } from "lucide-react";
+import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  general:   "Général",
-  pvp:       "PvP",
-  logistics: "Logistique",
-  fits:      "Fits",
-  other:     "Autre",
-};
-
-const CATEGORY_ORDER = ["general", "pvp", "logistics", "fits", "other"];
 
 export default async function GuidesPage() {
   const session = await auth();
@@ -30,8 +21,9 @@ export default async function GuidesPage() {
   const isOfficer = hasMinRole(role, "officer");
 
   const guides = await prisma.guide.findMany({
-    include: { author: true },
+    include: { author: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   // Grouper par catégorie
@@ -46,7 +38,7 @@ export default async function GuidesPage() {
 
   // Catégories inconnues en fin
   guides.forEach((g) => {
-    if (!CATEGORY_ORDER.includes(g.category)) {
+    if (!(CATEGORY_ORDER as readonly string[]).includes(g.category)) {
       if (!grouped[g.category]) grouped[g.category] = [];
       grouped[g.category]!.push(g);
     }
