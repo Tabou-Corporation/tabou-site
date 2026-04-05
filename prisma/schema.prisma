@@ -5,6 +5,7 @@
 // V4 : + Announcement, Guide, CalendarEvent
 // V5 : + AuditLog (actif), Permission (à venir)
 // V6 : + Character (ESI), Kill (zKillboard)
+// V7 : + securityStatus + profileExtra on User ; assignedToId on Application
 
 generator client {
   provider = "prisma-client-js"
@@ -76,13 +77,18 @@ model User {
   /// Présentation personnelle (max 160 caractères)
   bio           String?   @db.VarChar(160)
   /// ID de la corporation EVE actuelle (issu de l'ESI au login)
-  corporationId Int?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  corporationId  Int?
+  /// Statut de sécurité EVE (-10.0 → +5.0) — mis à jour à chaque login
+  securityStatus Float?
+  /// Profil étendu JSON : { timezone, languages[], mainActivity, alts[] }
+  profileExtra   String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   accounts      Account[]
   sessions      Session[]
   applications         Application[]
+  assignedApplications Application[] @relation("AssignedRecruiter")
   announcements        Announcement[]
   guides               Guide[]
   events               CalendarEvent[]
@@ -110,12 +116,15 @@ model Application {
   notes         String?         @db.Text
   /// Date/heure de l'entretien Discord (optionnel)
   interviewAt   DateTime?
+  /// Recruteur assigné (userId)
+  assignedToId  String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   reviewedAt  DateTime?
   reviewedBy  String?
 
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedTo  User?             @relation("AssignedRecruiter", fields: [assignedToId], references: [id], onDelete: SetNull)
 
   @@index([userId, status])
   @@index([status])

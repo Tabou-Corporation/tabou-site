@@ -10,6 +10,9 @@ import { prisma } from "@/lib/db";
 import { BioEditor } from "./BioEditor";
 import type { UserRole } from "@/types/roles";
 import { ROLE_LABELS } from "@/lib/constants/labels";
+import { SecurityStatusBadge } from "@/components/ui/SecurityStatusBadge";
+import { ProfileExtraEditor } from "./ProfileExtraEditor";
+import { parseProfileExtra, ACTIVITY_LABEL } from "@/lib/profile-extra";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -17,14 +20,16 @@ export default async function ProfilePage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    include: { accounts: true },
+    include: { accounts: true, },
+    // profileExtra est un champ scalaire — déjà chargé automatiquement
   });
 
   if (!user) redirect("/login");
 
-  const eveAccount = user.accounts.find((a) => a.provider === "eveonline");
+  const eveAccount  = user.accounts.find((a) => a.provider === "eveonline");
   const characterId = eveAccount?.providerAccountId;
-  const role = (user.role ?? "candidate") as UserRole;
+  const role        = (user.role ?? "candidate") as UserRole;
+  const profileExtra = parseProfileExtra(user.profileExtra);
 
   return (
     <div className="py-10 sm:py-14">
@@ -84,6 +89,12 @@ export default async function ProfilePage() {
                 {characterId && (
                   <InfoRow label="Character ID" value={characterId} mono />
                 )}
+                {user.securityStatus !== null && user.securityStatus !== undefined && (
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-text-muted text-sm flex-shrink-0">Statut de sécu.</span>
+                    <SecurityStatusBadge value={user.securityStatus} />
+                  </div>
+                )}
                 <InfoRow
                   label="Membre depuis"
                   value={user.createdAt.toLocaleDateString("fr-FR", {
@@ -136,6 +147,41 @@ export default async function ProfilePage() {
               </CardHeader>
               <CardBody>
                 <BioEditor initialBio={user.bio ?? ""} />
+              </CardBody>
+            </Card>
+
+            {/* Profil étendu */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display font-semibold text-base text-text-primary">
+                    Informations complémentaires
+                  </h3>
+                  <span className="text-text-muted text-xs">Visible par les officiers</span>
+                </div>
+              </CardHeader>
+              <CardBody className="space-y-4">
+                {/* Résumé actuel si renseigné */}
+                {(profileExtra.timezone || profileExtra.mainActivity || (profileExtra.languages?.length ?? 0) > 0) && (
+                  <div className="flex flex-wrap gap-2 pb-3 border-b border-border-subtle">
+                    {profileExtra.timezone && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gold/5 border border-gold/15 text-text-secondary text-xs">
+                        🕐 {profileExtra.timezone}
+                      </span>
+                    )}
+                    {profileExtra.mainActivity && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gold/5 border border-gold/15 text-text-secondary text-xs">
+                        🎮 {ACTIVITY_LABEL[profileExtra.mainActivity] ?? profileExtra.mainActivity}
+                      </span>
+                    )}
+                    {profileExtra.languages?.map((l) => (
+                      <span key={l} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gold/5 border border-gold/15 text-text-secondary text-xs uppercase">
+                        {l}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <ProfileExtraEditor initial={profileExtra} />
               </CardBody>
             </Card>
 

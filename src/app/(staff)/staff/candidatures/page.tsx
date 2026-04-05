@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/Separator";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { Clock, CheckCircle, XCircle, MessageCircle, Users } from "lucide-react";
 import { STATUS_LABELS, STATUS_BADGE, STATUS_ORDER } from "@/lib/constants/labels";
+import { UserCheck } from "lucide-react";
 import type { UserRole } from "@/types/roles";
 
 // STATUS_ICON reste local car il contient du JSX
@@ -28,7 +29,10 @@ export default async function CandidaturesPage() {
   if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
   const applications = await prisma.application.findMany({
-    include: { user: { select: { name: true, image: true } } },
+    include: {
+      user: { select: { name: true, image: true } },
+      assignedTo: { select: { name: true } },
+    },
     orderBy: [{ createdAt: "desc" }],
     take: 200,
   });
@@ -125,6 +129,14 @@ export default async function CandidaturesPage() {
                           })}
                         </p>
                       </div>
+
+                      {/* Recruteur assigné */}
+                      {application.assignedTo?.name && (
+                        <div className="hidden sm:flex items-center gap-1 text-text-muted text-xs flex-shrink-0">
+                          <UserCheck size={12} />
+                          <span className="truncate max-w-[100px]">{application.assignedTo.name}</span>
+                        </div>
+                      )}
 
                       {/* Status */}
                       <div className="flex items-center gap-2 flex-shrink-0">

@@ -189,10 +189,11 @@ export async function takeChargeApplication(
     await prisma.application.update({
       where: { id },
       data: {
-        status:      "INTERVIEW",
-        interviewAt: interviewAt ?? null,
-        reviewedAt:  new Date(),
-        reviewedBy:  session.user.name ?? session.user.id,
+        status:       "INTERVIEW",
+        interviewAt:  interviewAt ?? null,
+        reviewedAt:   new Date(),
+        reviewedBy:   session.user.name ?? session.user.id,
+        assignedToId: session.user.id,
       },
     });
 
@@ -240,6 +241,31 @@ export async function withdrawApplication(): Promise<ActionResult> {
     return { success: true };
   } catch {
     return { success: false, error: "Erreur lors du retrait de la candidature." };
+  }
+}
+
+// ─── Recruteur : assigner / se désassigner ────────────────────────────────────
+
+export async function assignApplication(
+  id: string,
+  assignedToId: string | null
+): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const role = (session.user.role ?? "candidate") as UserRole;
+  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
+
+  try {
+    await prisma.application.update({
+      where: { id },
+      data: { assignedToId },
+    });
+    revalidatePath("/staff/candidatures");
+    revalidatePath(`/staff/candidatures/${id}`);
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de l'assignation." };
   }
 }
 

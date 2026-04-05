@@ -97,6 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       // Récupère la corporation EVE actuelle via ESI public
       let corporationId: number | undefined;
+      let securityStatus: number | undefined;
       if (characterId) {
         try {
           const esiRes = await fetch(
@@ -104,8 +105,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             { next: { revalidate: 3600 } }
           );
           if (esiRes.ok) {
-            const esiData = await esiRes.json() as { corporation_id?: number };
+            const esiData = await esiRes.json() as { corporation_id?: number; security_status?: number };
             if (esiData.corporation_id) corporationId = esiData.corporation_id;
+            if (typeof esiData.security_status === "number") securityStatus = esiData.security_status;
           }
         } catch (err) {
           console.error("[auth] ESI indisponible lors du login de", characterId, err);
@@ -142,6 +144,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name,
               ...(image ? { image } : {}),
               ...(corporationId ? { corporationId } : {}),
+              ...(securityStatus !== undefined ? { securityStatus } : {}),
               ...(autoRole ? { role: autoRole } : {}),
             },
           });

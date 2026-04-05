@@ -14,7 +14,12 @@ import { takeChargeApplication } from "@/lib/actions/applications";
 import { STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
 import { CandidatureDecisionButtons } from "./CandidatureDecisionButtons";
 import { SaveNotesForm } from "./SaveNotesForm";
+import { AssignRecruiterForm } from "./AssignRecruiterForm";
+import { SecurityStatusBadge } from "@/components/ui/SecurityStatusBadge";
+import { CorpHistoryTimeline } from "@/components/ui/CorpHistoryTimeline";
 import { cn } from "@/lib/utils/cn";
+import { hasMinRole } from "@/types/roles";
+import { parseProfileExtra, ACTIVITY_LABEL } from "@/lib/profile-extra";
 import type { UserRole } from "@/types/roles";
 
 export default async function CandidatureDetailPage({
@@ -30,27 +35,43 @@ export default async function CandidatureDetailPage({
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
-  const application = await prisma.application.findUnique({
-    where: { id },
-    include: {
-      user: {
-        select: {
-          name: true,
-          image: true,
-          // On ne charge que le compte EVE Online (providerAccountId = characterId)
-          accounts: {
-            where: { provider: "eveonline" },
-            select: { providerAccountId: true },
+  const canReassign = hasMinRole(role, "director");
+
+  const [application, recruiters] = await Promise.all([
+    prisma.application.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+            securityStatus: true,
+            profileExtra:   true,
+            // On ne charge que le compte EVE Online (providerAccountId = characterId)
+            accounts: {
+              where: { provider: "eveonline" },
+              select: { providerAccountId: true },
+            },
           },
         },
+        assignedTo: { select: { id: true, name: true } },
       },
-    },
-  });
+    }),
+    // Charge les recruteurs uniquement pour director+
+    canReassign
+      ? prisma.user.findMany({
+          where: { role: { in: ["officer", "director", "ceo", "admin"] } },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([]),
+  ]);
 
   if (!application) notFound();
 
   // Avec le filtre where, accounts[0] est forcément le compte EVE (ou undefined)
-  const characterId = application.user.accounts[0]?.providerAccountId;
+  const characterId  = application.user.accounts[0]?.providerAccountId;
+  const profileExtra = parseProfileExtra(application.user.profileExtra);
 
   // ── Actions inline (Server Actions via form) ─────────────────────────────
   // Note : actionSetStatus et actionSaveNotes sont gérés par les Client Components
@@ -87,10 +108,11 @@ export default async function CandidatureDetailPage({
             <h1 className="font-display font-bold text-2xl text-text-primary">
               {application.user.name ?? "Pilote inconnu"}
             </h1>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant={STATUS_BADGE[application.status] ?? "muted"}>
                 {STATUS_LABELS[application.status] ?? application.status}
               </Badge>
+              <SecurityStatusBadge value={application.user.securityStatus} showLabel />
               {characterId && (
                 <span className="text-text-muted text-xs font-mono">
                   ID: {characterId}
@@ -192,6 +214,55 @@ export default async function CandidatureDetailPage({
                 />
               </CardBody>
             </Card>
+
+            {/* Profil étendu du pilote */}
+            {(profileExtra.timezone || profileExtra.mainActivity || (profileExtra.alts?.length ?? 0) > 0 || (profileExtra.languages?.length ?? 0) > 0) && (
+              <Card>
+                <CardHeader>
+                  <h2 className="font-display font-semibold text-base text-text-primary">
+                    Profil du pilote
+                  </h2>
+                </CardHeader>
+                <CardBody className="space-y-3">
+                  {profileExtra.timezone && (
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-text-muted text-sm flex-shrink-0">Fuseau</span>
+                      <span className="text-text-secondary text-sm text-right">{profileExtra.timezone}</span>
+                    </div>
+                  )}
+                  {profileExtra.mainActivity && (
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-text-muted text-sm flex-shrink-0">Activité</span>
+                      <span className="text-text-secondary text-sm text-right">
+                        {ACTIVITY_LABEL[profileExtra.mainActivity] ?? profileExtra.mainActivity}
+                      </span>
+                    </div>
+                  )}
+                  {(profileExtra.languages?.length ?? 0) > 0 && (
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-text-muted text-sm flex-shrink-0">Langues</span>
+                      <span className="text-text-secondary text-sm text-right uppercase">
+                        {profileExtra.languages!.join(", ")}
+                      </span>
+                    </div>
+                  )}
+                  {(profileExtra.alts?.length ?? 0) > 0 && (
+                    <div>
+                      <p className="text-text-muted text-xs uppercase tracking-wide font-semibold mb-1.5">
+                        Alts déclarés
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {profileExtra.alts!.map((alt) => (
+                          <span key={alt} className="inline-flex px-2 py-0.5 rounded bg-bg-elevated border border-border text-text-secondary text-xs font-mono">
+                            {alt}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            )}
           </div>
 
           {/* Colonne actions */}
@@ -224,6 +295,39 @@ export default async function CandidatureDetailPage({
                 </CardBody>
               </Card>
             )}
+
+            {/* Historique de corporation */}
+            {characterId && (
+              <Card>
+                <CardHeader>
+                  <h2 className="font-display font-semibold text-sm text-text-primary">
+                    Historique corpo
+                  </h2>
+                </CardHeader>
+                <CardBody>
+                  <CorpHistoryTimeline characterId={characterId} />
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Recruteur assigné */}
+            <Card>
+              <CardHeader>
+                <h2 className="font-display font-semibold text-sm text-text-primary">
+                  Recruteur assigné
+                </h2>
+              </CardHeader>
+              <CardBody>
+                <AssignRecruiterForm
+                  applicationId={id}
+                  currentUserId={session.user.id}
+                  assignedToId={application.assignedTo?.id ?? null}
+                  assignedToName={application.assignedTo?.name ?? null}
+                  recruiters={recruiters}
+                  canReassign={canReassign}
+                />
+              </CardBody>
+            </Card>
 
             {/* Prendre en charge */}
             {application.status === "PENDING" && (
