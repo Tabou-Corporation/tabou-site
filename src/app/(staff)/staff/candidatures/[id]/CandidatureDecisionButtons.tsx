@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { updateApplicationStatus } from "@/lib/actions/applications";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -44,7 +45,7 @@ export function CandidatureDecisionButtons({ applicationId, currentStatus }: Pro
           disabled={isPending}
           onClick={() => handleStatus("ACCEPTED")}
         >
-          {isPending ? "…" : "Accepter → promouvoir membre"}
+          {isPending ? <><Spinner />Traitement…</> : "Accepter → promouvoir membre"}
         </Button>
       )}
       {currentStatus !== "REJECTED" && (
@@ -56,7 +57,7 @@ export function CandidatureDecisionButtons({ applicationId, currentStatus }: Pro
           disabled={isPending}
           onClick={() => handleStatus("REJECTED")}
         >
-          {isPending ? "…" : "Refuser"}
+          {isPending ? <><Spinner />Traitement…</> : "Refuser"}
         </Button>
       )}
       {currentStatus !== "PENDING" && (
@@ -68,7 +69,7 @@ export function CandidatureDecisionButtons({ applicationId, currentStatus }: Pro
           disabled={isPending}
           onClick={() => handleStatus("PENDING")}
         >
-          {isPending ? "…" : "Remettre en attente"}
+          {isPending ? <><Spinner />Traitement…</> : "Remettre en attente"}
         </Button>
       )}
     </div>

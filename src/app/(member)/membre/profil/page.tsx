@@ -9,17 +9,7 @@ import { CORPORATIONS } from "@/lib/constants/corporations";
 import { prisma } from "@/lib/db";
 import { BioEditor } from "./BioEditor";
 import type { UserRole } from "@/types/roles";
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  candidate:  "Candidat",
-  member_uz:  "Urban Zone",
-  member:     "Membre",
-  officer:    "Officier",
-  director:   "Directeur",
-  ceo:        "CEO",
-  admin:      "Administrateur",
-  suspended:  "Suspendu",
-};
+import { ROLE_LABELS } from "@/lib/constants/labels";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -126,7 +116,7 @@ export default async function ProfilePage() {
                 </div>
               </CardHeader>
               <CardBody className="space-y-4">
-                <InfoRow label="Rôle" value={ROLE_LABELS[role]} />
+                <InfoRow label="Rôle" value={ROLE_LABELS[role] ?? role} />
                 <InfoRow
                   label="Statut"
                   value={role === "candidate" ? "En période d'essai" : "Membre actif"}

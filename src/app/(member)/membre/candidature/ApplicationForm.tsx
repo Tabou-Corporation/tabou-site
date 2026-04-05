@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { submitApplication, type ApplicationFormState } from "@/lib/actions/applications";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { MessageSquare } from "lucide-react";
 import { SITE_CONFIG } from "@/config/site";
 
@@ -70,6 +71,10 @@ export function ApplicationForm() {
           name="discordHandle"
           type="text"
           required
+          // Nouveau format Discord : pseudo (2-32 chars, lettres/chiffres/._-)
+          // Ancien format accepté aussi : pseudo#1234
+          pattern="^@?[a-zA-Z0-9_.]{2,32}(#[0-9]{4})?$"
+          title="Pseudo Discord valide — ex : @tonpseudo ou tonpseudo#1234 (2 à 32 caractères)"
           placeholder="ex: @tonpseudo"
           className={inputClass}
         />
@@ -136,7 +141,7 @@ export function ApplicationForm() {
       )}
 
       <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-        {pending ? "Envoi en cours…" : "Soumettre ma candidature"}
+        {pending ? <><Spinner />Envoi en cours…</> : "Soumettre ma candidature"}
       </Button>
     </form>
   );

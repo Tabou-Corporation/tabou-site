@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { changeUserRoleAction } from "@/lib/actions/members";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils/cn";
 
 const ROLES = [
@@ -54,7 +55,7 @@ export function RoleForm({ userId, currentRole, actorRole }: Props) {
             ))}
           </select>
           <Button type="submit" variant="secondary" size="sm" disabled={pending}>
-            {pending ? "…" : "Appliquer"}
+            {pending ? <><Spinner />Application…</> : "Appliquer"}
           </Button>
         </div>
       </div>

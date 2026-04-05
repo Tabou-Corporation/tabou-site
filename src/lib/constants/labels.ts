@@ -33,8 +33,22 @@ export const ROLE_LABELS: Record<string, string> = {
   director:   "Directeur",
   ceo:        "CEO",
   admin:      "Administrateur",
+  suspended:  "Suspendu",
 };
 
+/** Variante Badge pour chaque rôle (utilise la palette complète du composant Badge). */
+export const ROLE_BADGE_VARIANT: Record<string, "muted" | "gold" | "default"> = {
+  candidate:  "muted",
+  member_uz:  "default",
+  member:     "gold",
+  officer:    "gold",
+  director:   "gold",
+  ceo:        "gold",
+  admin:      "gold",
+  suspended:  "muted",
+};
+
+/** Alias simplifié (muted/gold) pour les contextes staff ne nécessitant pas "default". */
 export const ROLE_BADGE: Record<string, "muted" | "gold"> = {
   candidate:  "muted",
   member_uz:  "muted",
@@ -43,10 +57,22 @@ export const ROLE_BADGE: Record<string, "muted" | "gold"> = {
   director:   "gold",
   ceo:        "gold",
   admin:      "gold",
+  suspended:  "muted",
 };
 
 export const ROLE_ORDER: Record<string, number> = {
-  admin: 0, ceo: 1, director: 2, officer: 3, member: 4, member_uz: 5, candidate: 6,
+  admin: 0, ceo: 1, director: 2, officer: 3, member: 4, member_uz: 5, candidate: 6, suspended: 7,
+};
+
+// ─── Spécialités officer ───────────────────────────────────────────────────────
+
+export const SPECIALTY_LABELS: Record<string, string> = {
+  pvp:           "PvP",
+  pve:           "PvE",
+  industry:      "Industrie",
+  exploration:   "Exploration",
+  communication: "Communication",
+  recruitment:   "Recrutement",
 };
 
 // ─── Catégories de guides ─────────────────────────────────────────────────────

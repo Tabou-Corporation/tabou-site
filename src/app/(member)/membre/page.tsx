@@ -15,30 +15,7 @@ import {
 import { SITE_CONFIG } from "@/config/site";
 import { hasMinRole } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
-
-// ── Labels ────────────────────────────────────────────────────────────────
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  candidate: "Candidat",
-  member_uz: "Urban Zone",
-  member:    "Membre",
-  officer:   "Officier",
-  director:  "Directeur",
-  ceo:       "CEO",
-  admin:     "Administrateur",
-  suspended: "Suspendu",
-};
-
-const ROLE_BADGE_VARIANT: Record<UserRole, "muted" | "gold" | "default"> = {
-  candidate: "muted",
-  member_uz: "default",
-  member:    "gold",
-  officer:   "gold",
-  director:  "gold",
-  ceo:       "gold",
-  admin:     "gold",
-  suspended: "muted",
-};
+import { ROLE_LABELS, ROLE_BADGE_VARIANT } from "@/lib/constants/labels";
 
 const APP_STATUS_LABEL: Record<string, string> = {
   PENDING:   "En attente de traitement",
@@ -154,7 +131,7 @@ export default async function MemberDashboardPage() {
               {name}
             </h1>
             <div className="mt-2">
-              <Badge variant={ROLE_BADGE_VARIANT[role]}>{ROLE_LABELS[role]}</Badge>
+              <Badge variant={ROLE_BADGE_VARIANT[role] ?? "default"}>{ROLE_LABELS[role] ?? role}</Badge>
             </div>
           </div>
         </div>

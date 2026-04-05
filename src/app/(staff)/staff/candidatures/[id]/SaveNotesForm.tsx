@@ -2,6 +2,7 @@
 
 import { useTransition, useRef } from "react";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { saveApplicationNotes } from "@/lib/actions/applications";
 import { useToast } from "@/contexts/ToastContext";
 import { cn } from "@/lib/utils/cn";
@@ -44,7 +45,7 @@ export function SaveNotesForm({ applicationId, defaultNotes }: Props) {
         )}
       />
       <Button type="submit" variant="secondary" size="sm" disabled={isPending}>
-        {isPending ? "Sauvegarde…" : "Sauvegarder les notes"}
+        {isPending ? <><Spinner />Sauvegarde…</> : "Sauvegarder les notes"}
       </Button>
     </form>
   );

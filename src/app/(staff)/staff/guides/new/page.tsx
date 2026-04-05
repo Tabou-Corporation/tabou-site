@@ -5,6 +5,7 @@ import { createGuide } from "@/lib/actions/content";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { Separator } from "@/components/ui/Separator";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -104,7 +105,7 @@ export default function NewGuidePage() {
               )}
 
               <Button type="submit" disabled={pending}>
-                {pending ? "Création…" : "Créer le guide"}
+                {pending ? <><Spinner />Création…</> : "Créer le guide"}
               </Button>
             </form>
           </CardBody>

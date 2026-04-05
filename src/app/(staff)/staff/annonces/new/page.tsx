@@ -5,6 +5,7 @@ import { createAnnouncement } from "@/lib/actions/content";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { Separator } from "@/components/ui/Separator";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -96,7 +97,7 @@ export default function NewAnnouncementPage() {
               )}
 
               <Button type="submit" disabled={pending}>
-                {pending ? "Publication…" : "Publier l'annonce"}
+                {pending ? <><Spinner />Publication…</> : "Publier l'annonce"}
               </Button>
             </form>
           </CardBody>

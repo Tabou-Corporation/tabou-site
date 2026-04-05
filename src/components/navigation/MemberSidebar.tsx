@@ -15,30 +15,7 @@ import { hasMinRole, canManageRecruitment } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { Badge } from "@/components/ui/Badge";
 import { SITE_CONFIG } from "@/config/site";
-
-// ── Labels ────────────────────────────────────────────────────────────────
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  candidate:  "Candidat",
-  member_uz:  "Urban Zone",
-  member:     "Membre",
-  officer:    "Officier",
-  director:   "Directeur",
-  ceo:        "CEO",
-  admin:      "Administrateur",
-  suspended:  "Suspendu",
-};
-
-const ROLE_BADGE_VARIANT: Record<UserRole, "muted" | "gold" | "default"> = {
-  candidate:  "muted",
-  member_uz:  "default",
-  member:     "gold",
-  officer:    "gold",
-  director:   "gold",
-  ceo:        "gold",
-  admin:      "gold",
-  suspended:  "muted",
-};
+import { ROLE_LABELS, ROLE_BADGE_VARIANT } from "@/lib/constants/labels";
 
 // ── NavItem ────────────────────────────────────────────────────────────────
 
@@ -148,8 +125,8 @@ export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
               {session.user.name ?? "Pilote"}
             </p>
             <div className="mt-1">
-              <Badge variant={ROLE_BADGE_VARIANT[role]} className="text-[10px] px-1.5 py-0">
-                {ROLE_LABELS[role]}
+              <Badge variant={ROLE_BADGE_VARIANT[role] ?? "default"} className="text-[10px] px-1.5 py-0">
+                {ROLE_LABELS[role] ?? role}
               </Badge>
             </div>
           </div>

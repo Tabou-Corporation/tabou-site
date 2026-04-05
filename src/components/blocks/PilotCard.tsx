@@ -4,25 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { CORPORATIONS } from "@/lib/constants/corporations";
-
-const ROLE_LABELS: Record<string, string> = {
-  candidate:  "Candidat",
-  member_uz:  "Urban Zone",
-  member:     "Membre",
-  officer:    "Officier",
-  director:   "Directeur",
-  ceo:        "CEO",
-  admin:      "Administrateur",
-};
-
-const SPECIALTY_LABELS: Record<string, string> = {
-  pvp:           "PvP",
-  pve:           "PvE",
-  industry:      "Industrie",
-  exploration:   "Exploration",
-  communication: "Communication",
-  recruitment:   "Recrutement",
-};
+import { ROLE_LABELS, SPECIALTY_LABELS } from "@/lib/constants/labels";
 
 export interface PilotData {
   id: string;
