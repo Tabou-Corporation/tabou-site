@@ -162,7 +162,7 @@ export default async function ProfilePage() {
               </CardHeader>
               <CardBody className="space-y-4">
                 {/* Résumé actuel si renseigné */}
-                {(profileExtra.timezone || profileExtra.mainActivity || (profileExtra.languages?.length ?? 0) > 0) && (
+                {(profileExtra.timezone || profileExtra.mainActivity || profileExtra.secondaryActivity || (profileExtra.languages?.length ?? 0) > 0) && (
                   <div className="flex flex-wrap gap-2 pb-3 border-b border-border-subtle">
                     {profileExtra.timezone && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gold/5 border border-gold/15 text-text-secondary text-xs">
@@ -172,6 +172,12 @@ export default async function ProfilePage() {
                     {profileExtra.mainActivity && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gold/5 border border-gold/15 text-text-secondary text-xs">
                         🎮 {ACTIVITY_LABEL[profileExtra.mainActivity] ?? profileExtra.mainActivity}
+                      </span>
+                    )}
+                    {profileExtra.secondaryActivity && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gold/5 border border-gold/15 text-text-muted text-xs">
+                        🎮 {ACTIVITY_LABEL[profileExtra.secondaryActivity] ?? profileExtra.secondaryActivity}
+                        <span className="text-[10px] opacity-60">sec.</span>
                       </span>
                     )}
                     {profileExtra.languages?.map((l) => (

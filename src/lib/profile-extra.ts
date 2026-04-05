@@ -2,15 +2,17 @@
  * Profil étendu d'un membre — stocké dans User.profileExtra (JSON).
  *
  * Champs :
- *   timezone     : valeur de la liste TIMEZONES (ex. "France (UTC+1/+2)")
- *   languages    : sous-ensemble de ["fr", "en"]
- *   mainActivity : "pvp" | "pve" | "industry" | "exploration" | "logistics" | "other"
+ *   timezone          : valeur de la liste TIMEZONES (ex. "France (UTC+1/+2)")
+ *   languages         : sous-ensemble de ["fr", "en"]
+ *   mainActivity      : activité principale
+ *   secondaryActivity : activité secondaire (doit être différente de la principale)
  */
 
 export interface ProfileExtra {
-  timezone?:     string;
-  languages?:    string[];
-  mainActivity?: string;
+  timezone?:          string;
+  languages?:         string[];
+  mainActivity?:      string;
+  secondaryActivity?: string;
 }
 
 // ─── Activités ────────────────────────────────────────────────────────────────

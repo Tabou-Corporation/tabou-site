@@ -216,7 +216,7 @@ export default async function CandidatureDetailPage({
             </Card>
 
             {/* Profil étendu du pilote */}
-            {(profileExtra.timezone || profileExtra.mainActivity || (profileExtra.languages?.length ?? 0) > 0) && (
+            {(profileExtra.timezone || profileExtra.mainActivity || profileExtra.secondaryActivity || (profileExtra.languages?.length ?? 0) > 0) && (
               <Card>
                 <CardHeader>
                   <h2 className="font-display font-semibold text-base text-text-primary">
@@ -232,9 +232,17 @@ export default async function CandidatureDetailPage({
                   )}
                   {profileExtra.mainActivity && (
                     <div className="flex items-start justify-between gap-4">
-                      <span className="text-text-muted text-sm flex-shrink-0">Activité</span>
+                      <span className="text-text-muted text-sm flex-shrink-0">Activité principale</span>
                       <span className="text-text-secondary text-sm text-right">
                         {ACTIVITY_LABEL[profileExtra.mainActivity] ?? profileExtra.mainActivity}
+                      </span>
+                    </div>
+                  )}
+                  {profileExtra.secondaryActivity && (
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-text-muted text-sm flex-shrink-0">Activité secondaire</span>
+                      <span className="text-text-secondary text-sm text-right">
+                        {ACTIVITY_LABEL[profileExtra.secondaryActivity] ?? profileExtra.secondaryActivity}
                       </span>
                     </div>
                   )}

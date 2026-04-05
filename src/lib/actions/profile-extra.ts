@@ -22,8 +22,9 @@ export async function saveProfileExtra(
   if (!session?.user?.id) redirect("/login");
 
   // Timezone — valeur de la liste (ou vide)
-  const timezone     = (formData.get("timezone")     as string | null)?.trim() || "";
-  const mainActivity = (formData.get("mainActivity") as string | null)?.trim() || "";
+  const timezone          = (formData.get("timezone")          as string | null)?.trim() || "";
+  const mainActivity      = (formData.get("mainActivity")      as string | null)?.trim() || "";
+  const secondaryActivity = (formData.get("secondaryActivity") as string | null)?.trim() || "";
 
   // Langues — checkboxes (plusieurs valeurs possibles)
   const langs = formData.getAll("languages") as string[];
@@ -35,15 +36,22 @@ export async function saveProfileExtra(
   if (mainActivity && !VALID_ACTIVITIES.includes(mainActivity)) {
     return { success: false, error: "Activité principale invalide." };
   }
+  if (secondaryActivity && !VALID_ACTIVITIES.includes(secondaryActivity)) {
+    return { success: false, error: "Activité secondaire invalide." };
+  }
+  if (secondaryActivity && secondaryActivity === mainActivity) {
+    return { success: false, error: "L'activité secondaire doit être différente de la principale." };
+  }
   const languages = langs.filter((l): l is string =>
     VALID_LANGUAGES.includes(l as "fr" | "en")
   );
 
   // Construire le profil étendu (omettre les champs vides — exactOptionalPropertyTypes)
   const extra: ProfileExtra = {
-    ...(timezone      ? { timezone }     : {}),
-    ...(mainActivity  ? { mainActivity } : {}),
-    ...(languages.length > 0 ? { languages } : {}),
+    ...(timezone          ? { timezone }          : {}),
+    ...(mainActivity      ? { mainActivity }      : {}),
+    ...(secondaryActivity ? { secondaryActivity } : {}),
+    ...(languages.length > 0 ? { languages }      : {}),
   };
 
   await prisma.user.update({

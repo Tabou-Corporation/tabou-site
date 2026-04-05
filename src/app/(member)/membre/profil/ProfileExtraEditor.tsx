@@ -15,8 +15,9 @@ interface Props {
 export function ProfileExtraEditor({ initial }: Props) {
   const [state, formAction, pending] = useActionState<ProfileExtraState, FormData>(saveProfileExtra, {});
 
-  const [timezone,     setTimezone]     = useState(initial.timezone     ?? "");
-  const [mainActivity, setMainActivity] = useState(initial.mainActivity ?? "");
+  const [timezone,          setTimezone]          = useState(initial.timezone          ?? "");
+  const [mainActivity,      setMainActivity]      = useState(initial.mainActivity      ?? "");
+  const [secondaryActivity, setSecondaryActivity] = useState(initial.secondaryActivity ?? "");
   // Langues : FR par défaut si rien n'est encore renseigné
   const [languages, setLanguages] = useState<Set<string>>(
     () => new Set((initial.languages?.length ? initial.languages : ["fr"]))
@@ -61,26 +62,57 @@ export function ProfileExtraEditor({ initial }: Props) {
         </select>
       </div>
 
-      {/* Activité principale */}
-      <div>
-        <label className="block text-text-muted text-xs font-medium mb-1">
-          Activité principale
-        </label>
-        <select
-          name="mainActivity"
-          value={mainActivity}
-          onChange={(e) => setMainActivity(e.target.value)}
-          className={cn(
-            "w-full bg-bg-elevated border rounded px-3 py-2",
-            "text-text-secondary text-sm",
-            "border-border focus:border-gold/60 focus:outline-none transition-colors"
-          )}
-        >
-          <option value="">— Non renseignée —</option>
-          {ACTIVITIES.map((a) => (
-            <option key={a.value} value={a.value}>{a.label}</option>
-          ))}
-        </select>
+      {/* Activités */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-text-muted text-xs font-medium mb-1">
+            Activité principale
+          </label>
+          <select
+            name="mainActivity"
+            value={mainActivity}
+            onChange={(e) => {
+              setMainActivity(e.target.value);
+              // Réinitialiser la secondaire si elle devient identique
+              if (e.target.value && e.target.value === secondaryActivity) {
+                setSecondaryActivity("");
+              }
+            }}
+            className={cn(
+              "w-full bg-bg-elevated border rounded px-3 py-2",
+              "text-text-secondary text-sm",
+              "border-border focus:border-gold/60 focus:outline-none transition-colors"
+            )}
+          >
+            <option value="">— Non renseignée —</option>
+            {ACTIVITIES.map((a) => (
+              <option key={a.value} value={a.value}>{a.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-text-muted text-xs font-medium mb-1">
+            Activité secondaire
+          </label>
+          <select
+            name="secondaryActivity"
+            value={secondaryActivity}
+            onChange={(e) => setSecondaryActivity(e.target.value)}
+            className={cn(
+              "w-full bg-bg-elevated border rounded px-3 py-2",
+              "text-text-secondary text-sm",
+              "border-border focus:border-gold/60 focus:outline-none transition-colors"
+            )}
+          >
+            <option value="">— Aucune —</option>
+            {ACTIVITIES
+              .filter((a) => a.value !== mainActivity)
+              .map((a) => (
+                <option key={a.value} value={a.value}>{a.label}</option>
+              ))}
+          </select>
+        </div>
       </div>
 
       {/* Langues — checkboxes FR / EN */}
