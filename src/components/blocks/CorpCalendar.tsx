@@ -5,7 +5,7 @@ import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/fr";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, User, Check, HelpCircle, XCircle, Send, RefreshCw, Trash2 } from "lucide-react";
+import { X, Clock, User, Check, HelpCircle, XCircle, Send, RefreshCw, Trash2, Pencil } from "lucide-react";
 import { rsvpEvent, cancelRsvp, notifyDiscordEvent } from "@/lib/actions/rsvp";
 import { deleteCalendarEvent } from "@/lib/actions/content";
 import { useToast } from "@/contexts/ToastContext";
@@ -255,6 +255,13 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                       <Send size={14} />
                       {discordSent ? "Envoyé sur Discord ✓" : "Notifier sur Discord"}
                     </button>
+                    <a
+                      href={`/staff/calendrier/${selectedEvent.eventId}/edit`}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-border text-text-muted rounded hover:border-gold/40 hover:text-gold hover:bg-gold/5 transition-colors"
+                    >
+                      <Pencil size={14} />
+                      Modifier l&apos;événement
+                    </a>
                     <form
                       action={async () => {
                         if (!window.confirm(`Supprimer "${selectedEvent.title}" définitivement ?`)) return;

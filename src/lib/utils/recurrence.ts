@@ -33,7 +33,10 @@ export function expandRecurringEvents<T extends BaseEvent>(events: T[]): Expande
       continue;
     }
 
-    const endBoundary = event.recurrenceEndAt < horizon ? event.recurrenceEndAt : horizon;
+    // Étendre la borne de fin à 23:59:59 pour inclure les événements du dernier jour
+    const recEndEOD = new Date(event.recurrenceEndAt);
+    recEndEOD.setHours(23, 59, 59, 999);
+    const endBoundary = recEndEOD < horizon ? recEndEOD : horizon;
     const duration = event.endAt
       ? event.endAt.getTime() - event.startAt.getTime()
       : 0;
@@ -52,9 +55,16 @@ export function expandRecurringEvents<T extends BaseEvent>(events: T[]): Expande
 
       // Avancer selon la récurrence
       const next = new Date(current);
-      if (event.recurrence === "weekly")    next.setDate(next.getDate() + 7);
-      else if (event.recurrence === "biweekly") next.setDate(next.getDate() + 14);
-      else if (event.recurrence === "monthly")  next.setMonth(next.getMonth() + 1);
+      if (event.recurrence === "weekly")         next.setDate(next.getDate() + 7);
+      else if (event.recurrence === "biweekly")  next.setDate(next.getDate() + 14);
+      else if (event.recurrence === "monthly") {
+        // Conserver le jour d'origine (ex: 31 → dernier jour si le mois est plus court)
+        const originalDay = event.startAt.getDate();
+        next.setDate(1); // éviter l'overflow de setMonth
+        next.setMonth(next.getMonth() + 1);
+        const daysInMonth = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+        next.setDate(Math.min(originalDay, daysInMonth));
+      }
       else break; // pattern inconnu
 
       current = next;

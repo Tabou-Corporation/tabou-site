@@ -209,6 +209,66 @@ export async function createCalendarEvent(
   redirect("/membre/calendrier");
 }
 
+export async function updateCalendarEvent(
+  _prev: ContentFormState,
+  formData: FormData
+): Promise<ContentFormState> {
+  await requireOfficer();
+
+  const id          = formData.get("id") as string | null;
+  const title       = (formData.get("title")       as string | null)?.trim() ?? "";
+  const description = (formData.get("description") as string | null)?.trim() || null;
+  const type        = (formData.get("type")        as string | null) ?? "op";
+  const domain      = (formData.get("domain")      as string | null)?.trim() || "general";
+
+  if (!id) return { error: "Événement introuvable." };
+  if (!["op", "training", "social", "other"].includes(type)) return { error: "Type d'événement invalide." };
+
+  const startAtRaw         = formData.get("startAt")         as string | null;
+  const endAtRaw           = formData.get("endAt")           as string | null;
+  const recurrence         = (formData.get("recurrence")     as string | null) ?? "none";
+  const recurrenceEndAtRaw = formData.get("recurrenceEndAt") as string | null;
+
+  if (!title) return { error: "Le titre est requis." };
+  if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
+  if (description && description.length > LIMITS.description)
+    return { error: `La description ne peut pas dépasser ${LIMITS.description} caractères.` };
+  if (!startAtRaw) return { error: "La date de début est requise." };
+
+  const startAt = new Date(startAtRaw);
+  const endAt = endAtRaw ? new Date(endAtRaw) : null;
+
+  if (isNaN(startAt.getTime())) return { error: "Date de début invalide." };
+  if (endAt && isNaN(endAt.getTime())) return { error: "Date de fin invalide." };
+  if (endAt && endAt <= startAt) return { error: "La date de fin doit être après la date de début." };
+
+  if (!["none", "weekly", "biweekly", "monthly"].includes(recurrence)) {
+    return { error: "Récurrence invalide." };
+  }
+
+  const recurrenceEndAt = recurrenceEndAtRaw ? new Date(recurrenceEndAtRaw) : null;
+  if (recurrence !== "none" && !recurrenceEndAt) {
+    return { error: "Une date de fin est requise pour les événements récurrents." };
+  }
+
+  await prisma.calendarEvent.update({
+    where: { id },
+    data: {
+      title,
+      description,
+      type,
+      domain,
+      startAt,
+      endAt:           endAt ?? null,
+      recurrence,
+      recurrenceEndAt: recurrenceEndAt ?? null,
+    },
+  });
+
+  revalidatePath("/membre/calendrier");
+  redirect("/membre/calendrier");
+}
+
 export async function deleteCalendarEvent(id: string): Promise<ActionResult> {
   await requireOfficer();
   try {
