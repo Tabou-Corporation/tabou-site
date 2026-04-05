@@ -173,10 +173,10 @@ export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
               />
             )}
 
-            {/* Actions rapides */}
-            <NavItem href="/staff/annonces/new"   icon={MegaphoneIcon} label="+ Annonce"     muted exact />
-            <NavItem href="/staff/guides/new"     icon={BookPlus}      label="+ Guide"       muted exact />
-            <NavItem href="/staff/calendrier/new" icon={CalendarPlus}  label="+ Événement"   muted exact />
+            {/* Gestion de contenu */}
+            <NavItem href="/staff/annonces"   icon={MegaphoneIcon} label="Annonces"     />
+            <NavItem href="/staff/guides"     icon={BookPlus}      label="Guides"       />
+            <NavItem href="/staff/calendrier" icon={CalendarPlus}  label="Événements"   />
           </div>
         )}
 

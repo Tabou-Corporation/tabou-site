@@ -71,6 +71,38 @@ export async function createAnnouncement(
   redirect("/membre/annonces");
 }
 
+export async function updateAnnouncement(
+  _prev: ContentFormState,
+  formData: FormData
+): Promise<ContentFormState> {
+  const user = await requireOfficer();
+  const id      = formData.get("id") as string | null;
+  const title   = (formData.get("title")   as string | null)?.trim() ?? "";
+  const content = (formData.get("content") as string | null)?.trim() ?? "";
+  const domain  = (formData.get("domain")  as string | null)?.trim() || "general";
+  const pinned  = formData.get("pinned") === "on";
+
+  if (!id) return { error: "Annonce introuvable." };
+  if (!title) return { error: "Le titre est requis." };
+  if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
+  if (!content) return { error: "Le contenu est requis." };
+  if (content.length > LIMITS.content) return { error: `Le contenu ne peut pas dépasser ${LIMITS.content} caractères.` };
+  if (!VALID_CONTENT_DOMAINS.includes(domain)) return { error: "Domaine invalide." };
+  if (!canCreateInDomain(user.role, user.domains, domain)) {
+    return { error: "Vous n'avez pas accès à ce domaine." };
+  }
+
+  await prisma.announcement.update({
+    where: { id },
+    data: { title, content, domain, pinned },
+  });
+
+  revalidatePath("/membre");
+  revalidatePath("/membre/annonces");
+  revalidatePath("/staff/annonces");
+  redirect("/staff/annonces");
+}
+
 export async function deleteAnnouncement(id: string): Promise<ActionResult> {
   await requireOfficer();
   try {
