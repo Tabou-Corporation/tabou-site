@@ -10,7 +10,11 @@ import { Separator } from "@/components/ui/Separator";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { ArrowLeft } from "lucide-react";
 import { RoleForm } from "./RoleForm";
-import { ROLE_LABELS, ROLE_BADGE, STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
+import { SecurityStatusBadge } from "@/components/ui/SecurityStatusBadge";
+import { CorpHistoryTimeline } from "@/components/ui/CorpHistoryTimeline";
+import { ROLE_LABELS, ROLE_BADGE, SPECIALTY_LABELS, STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
+import { parseProfileExtra, ACTIVITY_LABEL, LANGUAGE_LABEL } from "@/lib/profile-extra";
+import type { Language } from "@/lib/profile-extra";
 import type { UserRole } from "@/types/roles";
 
 export default async function MembreDetailPage({
@@ -29,11 +33,15 @@ export default async function MembreDetailPage({
   const user = await prisma.user.findUnique({
     where: { id },
     select: {
-      id: true,
-      name: true,
-      image: true,
-      role: true,
-      createdAt: true,
+      id:             true,
+      name:           true,
+      image:          true,
+      role:           true,
+      specialty:      true,
+      bio:            true,
+      securityStatus: true,
+      profileExtra:   true,
+      createdAt:      true,
       // Uniquement le compte EVE Online — pas les autres providers OAuth
       accounts: {
         where: { provider: "eveonline" },
@@ -49,9 +57,10 @@ export default async function MembreDetailPage({
   if (!user) notFound();
 
   // accounts est déjà filtré sur "eveonline"
-  const characterId = user.accounts[0]?.providerAccountId;
-  const isSelf = user.id === session.user.id;
-  const canEdit = !isSelf && hasMinRole(actorRole, "director");
+  const characterId  = user.accounts[0]?.providerAccountId;
+  const profileExtra = parseProfileExtra(user.profileExtra);
+  const isSelf       = user.id === session.user.id;
+  const canEdit      = !isSelf && hasMinRole(actorRole, "director");
 
   return (
     <div className="py-10 sm:py-14">
@@ -78,10 +87,11 @@ export default async function MembreDetailPage({
             <h1 className="font-display font-bold text-2xl text-text-primary">
               {user.name ?? "Pilote inconnu"}
             </h1>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant={ROLE_BADGE[user.role] ?? "muted"}>
                 {ROLE_LABELS[user.role] ?? user.role}
               </Badge>
+              <SecurityStatusBadge value={user.securityStatus} showLabel />
               {characterId && characterId !== "undefined" && (
                 <span className="text-text-muted text-xs font-mono">ID: {characterId}</span>
               )}
@@ -103,14 +113,63 @@ export default async function MembreDetailPage({
               <CardBody className="space-y-4">
                 <InfoRow label="Nom" value={user.name ?? "—"} />
                 <InfoRow label="Rôle" value={ROLE_LABELS[user.role] ?? user.role} />
+                {user.specialty && (
+                  <InfoRow label="Spécialité" value={SPECIALTY_LABELS[user.specialty] ?? user.specialty} />
+                )}
                 <InfoRow label="Membre depuis" value={user.createdAt.toLocaleDateString("fr-FR", {
                   day: "numeric", month: "long", year: "numeric",
                 })} />
                 {characterId && characterId !== "undefined" && (
                   <InfoRow label="Character ID" value={characterId} mono />
                 )}
+                {user.securityStatus !== null && user.securityStatus !== undefined && (
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-text-muted text-sm flex-shrink-0">Statut de sécu.</span>
+                    <SecurityStatusBadge value={user.securityStatus} />
+                  </div>
+                )}
+                {user.bio && (
+                  <div>
+                    <p className="text-text-muted text-xs font-medium mb-1">Présentation</p>
+                    <p className="text-text-secondary text-sm italic leading-relaxed">{user.bio}</p>
+                  </div>
+                )}
               </CardBody>
             </Card>
+
+            {/* Profil étendu */}
+            {(profileExtra.timezone || profileExtra.mainActivity || profileExtra.secondaryActivity || (profileExtra.languages?.length ?? 0) > 0) && (
+              <Card>
+                <CardHeader>
+                  <h2 className="font-display font-semibold text-base text-text-primary">
+                    Profil étendu
+                  </h2>
+                </CardHeader>
+                <CardBody className="space-y-3">
+                  {profileExtra.timezone && (
+                    <InfoRow label="Fuseau horaire" value={profileExtra.timezone} />
+                  )}
+                  {profileExtra.mainActivity && (
+                    <InfoRow label="Activité principale" value={ACTIVITY_LABEL[profileExtra.mainActivity] ?? profileExtra.mainActivity} />
+                  )}
+                  {profileExtra.secondaryActivity && (
+                    <InfoRow label="Activité secondaire" value={ACTIVITY_LABEL[profileExtra.secondaryActivity] ?? profileExtra.secondaryActivity} />
+                  )}
+                  {(profileExtra.languages?.length ?? 0) > 0 && (
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-text-muted text-sm flex-shrink-0">Langues</span>
+                      <div className="flex gap-1.5 flex-wrap justify-end">
+                        {profileExtra.languages!.map((l) => (
+                          <span key={l} className="px-1.5 py-0.5 rounded bg-gold/5 border border-gold/15 text-text-secondary text-xs font-semibold uppercase">
+                            {LANGUAGE_LABEL[l as Language] ?? l}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            )}
 
             {/* Historique candidatures */}
             {user.applications.length > 0 && (
@@ -153,8 +212,22 @@ export default async function MembreDetailPage({
             )}
           </div>
 
-          {/* Actions */}
+          {/* Colonne latérale */}
           <div className="space-y-4">
+            {/* Historique de corporation */}
+            {characterId && characterId !== "undefined" && (
+              <Card>
+                <CardHeader>
+                  <h2 className="font-display font-semibold text-sm text-text-primary">
+                    Historique corpo
+                  </h2>
+                </CardHeader>
+                <CardBody>
+                  <CorpHistoryTimeline characterId={characterId} />
+                </CardBody>
+              </Card>
+            )}
+
             {/* Liens EVE */}
             {characterId && characterId !== "undefined" && (
               <Card>

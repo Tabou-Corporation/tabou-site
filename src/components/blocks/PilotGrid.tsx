@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { CORPORATIONS } from "@/lib/constants/corporations";
 import { PilotCard } from "./PilotCard";
+import { PilotModal } from "./PilotModal";
 import { cn } from "@/lib/utils/cn";
 import type { PilotData } from "./PilotCard";
 
@@ -19,7 +20,10 @@ interface PilotGridProps {
 type Tab = "tabou" | "uz";
 
 export function PilotGrid({ members }: PilotGridProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("tabou");
+  const [activeTab,    setActiveTab]    = useState<Tab>("tabou");
+  const [selectedPilot, setSelectedPilot] = useState<PilotData | null>(null);
+  const openPilot  = useCallback((p: PilotData) => setSelectedPilot(p), []);
+  const closePilot = useCallback(() => setSelectedPilot(null), []);
 
   const tabouMembers = useMemo(
     () =>
@@ -52,7 +56,7 @@ export function PilotGrid({ members }: PilotGridProps) {
   ];
 
   return (
-    <div>
+    <div className="relative">
       {/* ── Tabs ── */}
       <div className="flex items-end gap-0 border-b border-border-subtle mb-8">
         {tabs.map(({ id, corp, count }) => (
@@ -113,12 +117,20 @@ export function PilotGrid({ members }: PilotGridProps) {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {displayed.map((pilot, i) => (
-                <PilotCard key={pilot.id} pilot={pilot} index={i} />
+                <PilotCard
+                  key={pilot.id}
+                  pilot={pilot}
+                  index={i}
+                  onClick={() => openPilot(pilot)}
+                />
               ))}
             </div>
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Modale pilote */}
+      <PilotModal pilot={selectedPilot} onClose={closePilot} />
     </div>
   );
 }

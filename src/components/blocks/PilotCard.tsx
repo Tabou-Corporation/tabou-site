@@ -15,12 +15,23 @@ export interface PilotData {
   bio: string | null;
   corporationId: number | null;
   createdAt: Date;
+  /** JSON brut de profileExtra — parsé côté affichage */
+  profileExtra?: string | null;
+  securityStatus?: number | null;
 }
 
 const isHighRank = (role: string) =>
   ["officer", "director", "ceo", "admin"].includes(role);
 
-export function PilotCard({ pilot, index }: { pilot: PilotData; index: number }) {
+export function PilotCard({
+  pilot,
+  index,
+  onClick,
+}: {
+  pilot: PilotData;
+  index: number;
+  onClick?: () => void;
+}) {
   const corp = pilot.corporationId === CORPORATIONS.urbanZone.id
     ? CORPORATIONS.urbanZone
     : CORPORATIONS.tabou;
@@ -36,10 +47,15 @@ export function PilotCard({ pilot, index }: { pilot: PilotData; index: number })
         ease: [0.22, 1, 0.36, 1],
       }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
       className={cn(
         "group relative flex flex-col overflow-hidden",
         "bg-bg-deep border border-border-subtle",
         "border-l-2 transition-colors duration-200",
+        onClick && "cursor-pointer",
         highRank
           ? "border-l-gold hover:border-l-gold hover:border-border"
           : "border-l-border-subtle hover:border-l-gold/50 hover:border-border"
