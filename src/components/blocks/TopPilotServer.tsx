@@ -9,5 +9,9 @@ import { TopPilotPodium } from "./TopPilotPodium";
 export async function TopPilotServer() {
   const pilots = await fetchTopPilotsPodium();
   if (!pilots.length) return null;
-  return <TopPilotPodium pilots={pilots} />;
+  return (
+    <div className="w-[260px] border-l-2 border-l-gold/70">
+      <TopPilotPodium pilots={pilots} />
+    </div>
+  );
 }

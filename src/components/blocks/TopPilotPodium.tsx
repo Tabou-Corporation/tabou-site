@@ -17,7 +17,7 @@ export function TopPilotPodium({ pilots }: TopPilotPodiumProps) {
   if (!pilots.length) return null;
 
   return (
-    <div className="w-[260px] flex flex-col border-l-2 border-l-gold/70">
+    <div className="w-full flex flex-col">
       {/* ── Header ── */}
       <div className="px-4 pb-2">
         <span className="text-gold/50 text-xs font-bold tracking-extra-wide uppercase">
