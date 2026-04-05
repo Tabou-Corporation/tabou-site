@@ -4,14 +4,15 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { CORPORATIONS } from "@/lib/constants/corporations";
-import { ROLE_LABELS, SPECIALTY_LABELS } from "@/lib/constants/labels";
+import { ROLE_LABELS, DOMAIN_LABELS } from "@/lib/constants/labels";
+import { parseSpecialties } from "@/types/roles";
 
 export interface PilotData {
   id: string;
   name: string | null;
   image: string | null;
   role: string;
-  specialty: string | null;
+  specialties: string | null;
   bio: string | null;
   corporationId: number | null;
   createdAt: Date;
@@ -122,9 +123,12 @@ export function PilotCard({
             "text-2xs font-semibold tracking-widest uppercase",
             highRank ? "text-gold/80" : "text-text-muted"
           )}>
-            {pilot.specialty
-              ? SPECIALTY_LABELS[pilot.specialty] ?? pilot.specialty
-              : ROLE_LABELS[pilot.role] ?? pilot.role}
+            {(() => {
+              const domains = parseSpecialties(pilot.specialties);
+              return domains.length > 0
+                ? domains.map((d) => DOMAIN_LABELS[d] ?? d).join(" / ")
+                : ROLE_LABELS[pilot.role] ?? pilot.role;
+            })()}
           </span>
           <Image
             src={corp.logoUrl(32)}

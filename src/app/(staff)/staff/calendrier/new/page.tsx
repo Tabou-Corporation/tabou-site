@@ -1,12 +1,16 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useSession } from "next-auth/react";
 import { createCalendarEvent } from "@/lib/actions/content";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Separator } from "@/components/ui/Separator";
+import { getAllowedContentDomains, parseSpecialties } from "@/types/roles";
+import { CONTENT_DOMAIN_LABELS } from "@/lib/constants/labels";
+import type { UserRole } from "@/types/roles";
 import Link from "next/link";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 
@@ -33,6 +37,11 @@ const RECURRENCE_OPTIONS = [
 export default function NewCalendarEventPage() {
   const [state, action, pending] = useActionState(createCalendarEvent, {});
   const [recurring, setRecurring] = useState(false);
+  const { data: session } = useSession();
+
+  const role = (session?.user?.role ?? "candidate") as UserRole;
+  const domains = parseSpecialties(session?.user?.specialties);
+  const allowedDomains = getAllowedContentDomains(role, domains);
 
   return (
     <div className="py-10 sm:py-14">
@@ -67,8 +76,8 @@ export default function NewCalendarEventPage() {
           <CardBody>
             <form action={action} className="space-y-5">
 
-              {/* Titre + Type */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Titre + Type + Domaine */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="sm:col-span-2 space-y-1.5">
                   <label className="block text-text-secondary text-sm font-medium">
                     Titre <span className="text-red-400 text-xs">*</span>
@@ -86,6 +95,14 @@ export default function NewCalendarEventPage() {
                   <select name="type" defaultValue="op" className={inputClass}>
                     {EVENT_TYPES.map((t) => (
                       <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-text-secondary text-sm font-medium">Domaine</label>
+                  <select name="domain" defaultValue={allowedDomains[0] ?? "general"} className={inputClass}>
+                    {allowedDomains.map((d) => (
+                      <option key={d} value={d}>{CONTENT_DOMAIN_LABELS[d] ?? d}</option>
                     ))}
                   </select>
                 </div>

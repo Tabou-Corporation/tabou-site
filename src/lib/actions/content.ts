@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { hasMinRole, canCreateGuideCategory } from "@/types/roles";
+import { hasMinRole, canCreateGuideCategory, canCreateInDomain, parseSpecialties } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -15,15 +15,18 @@ const LIMITS = {
   description: 500,
 } as const;
 
+const VALID_CONTENT_DOMAINS = ["general", "pvp", "pve", "industry", "exploration", "diplomacy"];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Vérifie que l'utilisateur est officer+ (pour annonces/events) */
-async function requireContentCreator() {
+/** Vérifie que l'utilisateur est officer+ et retourne son profil. */
+async function requireOfficer() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "officer")) redirect("/membre");
-  return session.user;
+  const domains = parseSpecialties(session.user.specialties);
+  return { ...session.user, role, domains };
 }
 
 /** Vérifie que l'utilisateur peut créer un guide dans cette catégorie */
@@ -31,9 +34,9 @@ async function requireGuideAccess(category: string) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const role = (session.user.role ?? "candidate") as UserRole;
-  const specialty = session.user.specialty ?? null;
-  if (!canCreateGuideCategory(role, specialty, category)) redirect("/membre");
-  return session.user;
+  const domains = parseSpecialties(session.user.specialties);
+  if (!canCreateGuideCategory(role, domains, category)) redirect("/membre");
+  return { ...session.user, role, domains };
 }
 
 // ─── Annonces ─────────────────────────────────────────────────────────────────
@@ -44,18 +47,23 @@ export async function createAnnouncement(
   _prev: ContentFormState,
   formData: FormData
 ): Promise<ContentFormState> {
-  const user = await requireContentCreator();
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
+  const user = await requireOfficer();
+  const title   = (formData.get("title")   as string | null)?.trim() ?? "";
   const content = (formData.get("content") as string | null)?.trim() ?? "";
-  const pinned = formData.get("pinned") === "on";
+  const domain  = (formData.get("domain")  as string | null)?.trim() || "general";
+  const pinned  = formData.get("pinned") === "on";
 
   if (!title) return { error: "Le titre est requis." };
   if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
   if (!content) return { error: "Le contenu est requis." };
   if (content.length > LIMITS.content) return { error: `Le contenu ne peut pas dépasser ${LIMITS.content} caractères.` };
+  if (!VALID_CONTENT_DOMAINS.includes(domain)) return { error: "Domaine invalide." };
+  if (!canCreateInDomain(user.role, user.domains, domain)) {
+    return { error: "Vous n'avez pas accès à ce domaine." };
+  }
 
   await prisma.announcement.create({
-    data: { title, content, pinned, authorId: user.id! },
+    data: { title, content, domain, pinned, authorId: user.id! },
   });
 
   revalidatePath("/membre");
@@ -64,7 +72,7 @@ export async function createAnnouncement(
 }
 
 export async function deleteAnnouncement(id: string): Promise<ActionResult> {
-  await requireContentCreator();
+  await requireOfficer();
   try {
     await prisma.announcement.delete({ where: { id } });
     revalidatePath("/membre");
@@ -83,7 +91,7 @@ export async function createGuide(
 ): Promise<ContentFormState> {
   const category = (formData.get("category") as string | null) ?? "general";
   const user = await requireGuideAccess(category);
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
+  const title   = (formData.get("title")   as string | null)?.trim() ?? "";
   const content = (formData.get("content") as string | null)?.trim() ?? "";
 
   if (!title) return { error: "Le titre est requis." };
@@ -106,7 +114,7 @@ export async function updateGuide(
 ): Promise<ContentFormState> {
   const category = (formData.get("category") as string | null) ?? "general";
   await requireGuideAccess(category);
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
+  const title   = (formData.get("title")   as string | null)?.trim() ?? "";
   const content = (formData.get("content") as string | null)?.trim() ?? "";
 
   if (!title) return { error: "Le titre est requis." };
@@ -144,14 +152,21 @@ export async function createCalendarEvent(
   _prev: ContentFormState,
   formData: FormData
 ): Promise<ContentFormState> {
-  const user = await requireContentCreator();
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
+  const user = await requireOfficer();
+  const title       = (formData.get("title")       as string | null)?.trim() ?? "";
   const description = (formData.get("description") as string | null)?.trim() || null;
-  const type = (formData.get("type") as string | null) ?? "op";
+  const type        = (formData.get("type")        as string | null) ?? "op";
+  const domain      = (formData.get("domain")      as string | null)?.trim() || "general";
+
   if (!["op", "training", "social", "other"].includes(type)) return { error: "Type d'événement invalide." };
-  const startAtRaw = formData.get("startAt") as string | null;
-  const endAtRaw = formData.get("endAt") as string | null;
-  const recurrence = (formData.get("recurrence") as string | null) ?? "none";
+  if (!VALID_CONTENT_DOMAINS.includes(domain)) return { error: "Domaine invalide." };
+  if (!canCreateInDomain(user.role, user.domains, domain)) {
+    return { error: "Vous n'avez pas accès à ce domaine." };
+  }
+
+  const startAtRaw         = formData.get("startAt")         as string | null;
+  const endAtRaw           = formData.get("endAt")           as string | null;
+  const recurrence         = (formData.get("recurrence")     as string | null) ?? "none";
   const recurrenceEndAtRaw = formData.get("recurrenceEndAt") as string | null;
 
   if (!title) return { error: "Le titre est requis." };
@@ -181,6 +196,7 @@ export async function createCalendarEvent(
       title,
       description,
       type,
+      domain,
       startAt,
       ...(endAt ? { endAt } : {}),
       recurrence,
@@ -194,7 +210,7 @@ export async function createCalendarEvent(
 }
 
 export async function deleteCalendarEvent(id: string): Promise<ActionResult> {
-  await requireContentCreator();
+  await requireOfficer();
   try {
     await prisma.calendarEvent.delete({ where: { id } });
     revalidatePath("/membre/calendrier");

@@ -53,4 +53,4 @@ export function routeGuard(
 
 // Conservé pour rétrocompatibilité et usage futur (V5 permissions granulaires)
 export { hasMinRole, canManageRecruitment, canCreateGuideCategory, canCreateContent, canView } from "@/types/roles";
-export type { UserRole, OfficerSpecialty, ContentVisibility } from "@/types/roles";
+export type { UserRole, OfficerDomain, ContentVisibility } from "@/types/roles";

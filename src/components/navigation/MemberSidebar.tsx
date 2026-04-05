@@ -11,7 +11,7 @@ import {
   UsersRound, LayoutGrid, PanelLeft, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { hasMinRole, canManageRecruitment } from "@/types/roles";
+import { hasMinRole, canManageRecruitment, parseSpecialties } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { Badge } from "@/components/ui/Badge";
 import { SITE_CONFIG } from "@/config/site";
@@ -26,7 +26,7 @@ interface NavItemProps {
   external?: boolean;
   exact?: boolean;
   badge?: number;
-  muted?: boolean; // pour les actions rapides (+ Annonce…)
+  muted?: boolean;
 }
 
 function NavItem({ href, icon: Icon, label, external, exact, badge, muted }: NavItemProps) {
@@ -92,13 +92,15 @@ export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
   const { data: session } = useSession();
   if (!session) return null;
 
-  const role      = (session.user.role ?? "candidate") as UserRole;
-  const specialty = session.user.specialty ?? null;
+  const role    = (session.user.role ?? "candidate") as UserRole;
+  const domains = parseSpecialties(session.user.specialties);
 
   const isMember      = hasMinRole(role, "member_uz");
   const isOfficer     = hasMinRole(role, "officer");
   const isDirector    = hasMinRole(role, "director");
-  const hasRecruiting = canManageRecruitment(role, specialty);
+  const hasRecruiting = canManageRecruitment(role, domains);
+  // Officers with content domains can access CMS activities
+  const hasContentDomain = isDirector || domains.some((d) => d !== "recruitment");
 
   return (
     <aside className="hidden lg:flex flex-col fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] bg-bg-deep border-r border-border z-30 overflow-y-auto">
@@ -188,8 +190,15 @@ export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
           </div>
         )}
 
+        {/* Officer avec domaine contenu : accès CMS activités */}
+        {isOfficer && !isDirector && hasContentDomain && (
+          <div className="border-t border-border-subtle mt-2 pt-1 space-y-0.5">
+            <NavItem href="/staff/admin/contenu?tab=activities" icon={PanelLeft} label="Contenu activités" muted exact />
+          </div>
+        )}
+
         {/* Officer sans director : lien admin simplifié */}
-        {isOfficer && !isDirector && (
+        {isOfficer && !isDirector && !hasContentDomain && (
           <div className="border-t border-border-subtle mt-2 pt-1 space-y-0.5">
             <NavItem href="/staff/admin" icon={Shield} label="Vue d'ensemble" exact />
           </div>
@@ -237,13 +246,13 @@ export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
   const { data: session } = useSession();
   if (!session) return null;
 
-  const role      = (session.user.role ?? "candidate") as UserRole;
-  const specialty = session.user.specialty ?? null;
+  const role    = (session.user.role ?? "candidate") as UserRole;
+  const domains = parseSpecialties(session.user.specialties);
 
   const isMember      = hasMinRole(role, "member_uz");
   const isOfficer     = hasMinRole(role, "officer");
   const isDirector    = hasMinRole(role, "director");
-  const hasRecruiting = canManageRecruitment(role, specialty);
+  const hasRecruiting = canManageRecruitment(role, domains);
 
   return (
     <div className="lg:hidden sticky top-16 z-30 bg-bg-deep/95 backdrop-blur border-b border-border overflow-x-auto">

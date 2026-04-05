@@ -26,7 +26,7 @@ export default async function AnnuairePage() {
         name:           true,
         image:          true,
         role:           true,
-        specialty:      true,
+        specialties:    true,
         bio:            true,
         corporationId:  true,
         createdAt:      true,

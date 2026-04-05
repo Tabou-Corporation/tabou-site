@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, Gamepad2, Languages } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { CORPORATIONS } from "@/lib/constants/corporations";
-import { ROLE_LABELS, SPECIALTY_LABELS } from "@/lib/constants/labels";
+import { ROLE_LABELS, DOMAIN_LABELS } from "@/lib/constants/labels";
+import { parseSpecialties } from "@/types/roles";
 import { SecurityStatusBadge } from "@/components/ui/SecurityStatusBadge";
 import { parseProfileExtra, ACTIVITY_LABEL, LANGUAGE_LABEL } from "@/lib/profile-extra";
 import type { PilotData } from "./PilotCard";
@@ -122,9 +123,12 @@ export function PilotModal({ pilot, onClose }: Props) {
                   "text-xs font-semibold tracking-widest uppercase mt-0.5",
                   highRank ? "text-gold" : "text-text-muted"
                 )}>
-                  {pilot.specialty
-                    ? SPECIALTY_LABELS[pilot.specialty] ?? pilot.specialty
-                    : ROLE_LABELS[pilot.role] ?? pilot.role}
+                  {(() => {
+                    const domains = parseSpecialties(pilot.specialties);
+                    return domains.length > 0
+                      ? domains.map((d) => DOMAIN_LABELS[d] ?? d).join(" / ")
+                      : ROLE_LABELS[pilot.role] ?? pilot.role;
+                  })()}
                 </p>
               </div>
             </div>

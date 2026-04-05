@@ -12,7 +12,8 @@ import { ArrowLeft } from "lucide-react";
 import { RoleForm } from "./RoleForm";
 import { SecurityStatusBadge } from "@/components/ui/SecurityStatusBadge";
 import { CorpHistoryTimeline } from "@/components/ui/CorpHistoryTimeline";
-import { ROLE_LABELS, ROLE_BADGE, SPECIALTY_LABELS, STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
+import { ROLE_LABELS, ROLE_BADGE, DOMAIN_LABELS, STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
+import { parseSpecialties } from "@/types/roles";
 import { parseProfileExtra, ACTIVITY_LABEL, LANGUAGE_LABEL } from "@/lib/profile-extra";
 import type { Language } from "@/lib/profile-extra";
 import type { UserRole } from "@/types/roles";
@@ -37,7 +38,7 @@ export default async function MembreDetailPage({
       name:           true,
       image:          true,
       role:           true,
-      specialty:      true,
+      specialties:    true,
       bio:            true,
       securityStatus: true,
       profileExtra:   true,
@@ -113,8 +114,8 @@ export default async function MembreDetailPage({
               <CardBody className="space-y-4">
                 <InfoRow label="Nom" value={user.name ?? "—"} />
                 <InfoRow label="Rôle" value={ROLE_LABELS[user.role] ?? user.role} />
-                {user.specialty && (
-                  <InfoRow label="Spécialité" value={SPECIALTY_LABELS[user.specialty] ?? user.specialty} />
+                {user.specialties && parseSpecialties(user.specialties).length > 0 && (
+                  <InfoRow label="Domaines" value={parseSpecialties(user.specialties).map((d) => DOMAIN_LABELS[d] ?? d).join(", ")} />
                 )}
                 <InfoRow label="Membre depuis" value={user.createdAt.toLocaleDateString("fr-FR", {
                   day: "numeric", month: "long", year: "numeric",
@@ -267,7 +268,7 @@ export default async function MembreDetailPage({
                   <RoleForm
                     userId={user.id}
                     currentRole={user.role}
-                    currentSpecialty={user.specialty}
+                    currentDomains={parseSpecialties(user.specialties)}
                     actorRole={actorRole}
                   />
                 </CardBody>

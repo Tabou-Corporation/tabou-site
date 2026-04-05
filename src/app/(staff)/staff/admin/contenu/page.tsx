@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { hasMinRole } from "@/types/roles";
+import { hasMinRole, parseSpecialties } from "@/types/roles";
 import { Container } from "@/components/layout/Container";
 import { Separator } from "@/components/ui/Separator";
 import Link from "next/link";
@@ -15,17 +15,17 @@ import { ContactEditor } from "./ContactEditor";
 import { DiscordEditor } from "./DiscordEditor";
 import type { UserRole } from "@/types/roles";
 
-const TABS = [
-  { key: "home",        label: "Accueil" },
-  { key: "corporation", label: "Corporation" },
-  { key: "recruitment", label: "Recrutement" },
-  { key: "faq",         label: "FAQ" },
-  { key: "activities",  label: "Activités" },
-  { key: "contact",     label: "Contact" },
-  { key: "discord",     label: "Discord" },
+const ALL_TABS = [
+  { key: "home",        label: "Accueil",      directorOnly: true },
+  { key: "corporation", label: "Corporation",   directorOnly: true },
+  { key: "recruitment", label: "Recrutement",   directorOnly: true },
+  { key: "faq",         label: "FAQ",           directorOnly: true },
+  { key: "activities",  label: "Activités",     directorOnly: false },
+  { key: "contact",     label: "Contact",       directorOnly: true },
+  { key: "discord",     label: "Discord",       directorOnly: true },
 ] as const;
 
-type TabKey = typeof TABS[number]["key"];
+type TabKey = typeof ALL_TABS[number]["key"];
 
 export default async function ContenuPage({
   searchParams,
@@ -36,11 +36,23 @@ export default async function ContenuPage({
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "director")) redirect("/membre");
+  const domains = parseSpecialties(session.user.specialties);
+  const isDirector = hasMinRole(role, "director");
+  const isOfficer = hasMinRole(role, "officer");
+
+  // Officer avec domaines de contenu : accès uniquement à l'onglet activités
+  // Director+ : accès à tout
+  const hasContentDomain = domains.some((d) => d !== "recruitment");
+  if (!isDirector && !(isOfficer && hasContentDomain)) redirect("/membre");
+
+  // Tabs visibles pour cet utilisateur
+  const visibleTabs = isDirector
+    ? ALL_TABS
+    : ALL_TABS.filter((t) => !t.directorOnly);
 
   const { tab } = await searchParams;
   const activeTab: TabKey =
-    TABS.find((t) => t.key === tab)?.key ?? "home";
+    visibleTabs.find((t) => t.key === tab)?.key ?? visibleTabs[0]?.key ?? "activities";
 
   // Charger le contenu de l'onglet actif
   const [homeContent, corpContent, recruitContent, faqContent, activitiesContent, contactContent, discordContent] =
@@ -80,7 +92,7 @@ export default async function ContenuPage({
 
         {/* Tabs nav */}
         <div className="flex items-center gap-1 flex-wrap mb-8 border-b border-border pb-0">
-          {TABS.map((t) => (
+          {visibleTabs.map((t) => (
             <Link
               key={t.key}
               href={`/staff/admin/contenu?tab=${t.key}`}
@@ -98,13 +110,19 @@ export default async function ContenuPage({
 
         {/* Editor */}
         <div className="max-w-3xl">
-          {activeTab === "home" && <HomeEditor initialContent={homeContent} />}
-          {activeTab === "corporation" && <CorporationEditor initialContent={corpContent} />}
-          {activeTab === "recruitment" && <RecruitmentEditor initialContent={recruitContent} />}
-          {activeTab === "faq" && <FaqEditor initialContent={faqContent} />}
-          {activeTab === "activities" && <ActivitiesEditor initialContent={activitiesContent} />}
-          {activeTab === "contact" && <ContactEditor initialContent={contactContent} />}
-          {activeTab === "discord" && <DiscordEditor initialContent={discordContent} />}
+          {activeTab === "home" && isDirector && <HomeEditor initialContent={homeContent} />}
+          {activeTab === "corporation" && isDirector && <CorporationEditor initialContent={corpContent} />}
+          {activeTab === "recruitment" && isDirector && <RecruitmentEditor initialContent={recruitContent} />}
+          {activeTab === "faq" && isDirector && <FaqEditor initialContent={faqContent} />}
+          {activeTab === "activities" && (
+            <ActivitiesEditor
+              initialContent={activitiesContent}
+              userRole={role}
+              userDomains={domains}
+            />
+          )}
+          {activeTab === "contact" && isDirector && <ContactEditor initialContent={contactContent} />}
+          {activeTab === "discord" && isDirector && <DiscordEditor initialContent={discordContent} />}
         </div>
       </Container>
     </div>

@@ -1,12 +1,16 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSession } from "next-auth/react";
 import { createGuide } from "@/lib/actions/content";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Separator } from "@/components/ui/Separator";
+import { getAllowedGuideCategories, parseSpecialties } from "@/types/roles";
+import { CATEGORY_LABELS } from "@/lib/constants/labels";
+import type { UserRole } from "@/types/roles";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -17,16 +21,13 @@ const inputClass = [
   "transition-colors duration-150",
 ].join(" ");
 
-const CATEGORIES = [
-  { value: "general",   label: "Général" },
-  { value: "pvp",       label: "PvP" },
-  { value: "logistics", label: "Logistique" },
-  { value: "fits",      label: "Fits" },
-  { value: "other",     label: "Autre" },
-];
-
 export default function NewGuidePage() {
   const [state, action, pending] = useActionState(createGuide, {});
+  const { data: session } = useSession();
+
+  const role = (session?.user?.role ?? "candidate") as UserRole;
+  const domains = parseSpecialties(session?.user?.specialties);
+  const allowedCategories = getAllowedGuideCategories(role, domains);
 
   return (
     <div className="py-10 sm:py-14">
@@ -43,7 +44,7 @@ export default function NewGuidePage() {
 
         <div className="mb-8">
           <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-2">
-            Zone recrutement
+            Zone staff
           </p>
           <h1 className="font-display font-bold text-3xl text-text-primary">
             Nouveau guide
@@ -77,9 +78,9 @@ export default function NewGuidePage() {
                   <label className="block text-text-secondary text-sm font-medium">
                     Catégorie
                   </label>
-                  <select name="category" defaultValue="general" className={inputClass}>
-                    {CATEGORIES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
+                  <select name="category" defaultValue={allowedCategories[0] ?? "general"} className={inputClass}>
+                    {allowedCategories.map((c) => (
+                      <option key={c} value={c}>{CATEGORY_LABELS[c] ?? c}</option>
                     ))}
                   </select>
                 </div>

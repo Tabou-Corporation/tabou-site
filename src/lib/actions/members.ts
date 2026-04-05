@@ -2,32 +2,31 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { hasMinRole, ROLE_LEVEL } from "@/types/roles";
-import type { UserRole } from "@/types/roles";
+import { hasMinRole, ROLE_LEVEL, ALL_DOMAINS } from "@/types/roles";
+import type { UserRole, OfficerDomain } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { writeAuditLog } from "@/lib/audit";
 
 const ALLOWED_ROLES: UserRole[] = ["candidate", "member_uz", "member", "officer", "director", "ceo", "admin"];
 
-const VALID_SPECIALTIES = ["", "recruitment", "logistics", "diplomacy", "military"];
-
 /** Utilisée avec useActionState depuis le client */
 export async function changeUserRoleAction(
   _prev: { error?: string; success?: boolean },
   formData: FormData
 ): Promise<{ error?: string; success?: boolean }> {
-  const targetUserId = formData.get("userId") as string;
-  const newRole      = formData.get("role")   as string;
-  const specialty    = (formData.get("specialty") as string | null) ?? "";
-  if (!VALID_SPECIALTIES.includes(specialty)) return { error: "Spécialité invalide." };
-  return changeUserRole(targetUserId, newRole, specialty || null);
+  const targetUserId  = formData.get("userId") as string;
+  const newRole       = formData.get("role")   as string;
+  // Domaines : checkboxes multiples
+  const rawDomains = formData.getAll("domains") as string[];
+  const domains = rawDomains.filter((d) => ALL_DOMAINS.includes(d as OfficerDomain));
+  return changeUserRole(targetUserId, newRole, domains);
 }
 
 export async function changeUserRole(
   targetUserId: string,
   newRole: string,
-  specialty: string | null = null,
+  domains: string[] = [],
 ): Promise<{ error?: string; success?: boolean }> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -60,10 +59,10 @@ export async function changeUserRole(
     where: { id: targetUserId },
     data: {
       role: newRole,
-      // Spécialité : on la réinitialise si le nouveau rôle n'est pas officier
-      ...(newRole === "officer"
-        ? { specialty: specialty }
-        : { specialty: null }),
+      // Domaines : on les conserve pour officer, on les efface pour les autres rôles
+      specialties: newRole === "officer" && domains.length > 0
+        ? JSON.stringify(domains)
+        : null,
     },
   });
 
@@ -76,6 +75,7 @@ export async function changeUserRole(
       targetName: target.name,
       from: targetRole,
       to:   newRole,
+      ...(domains.length > 0 ? { domains } : {}),
     },
   });
 

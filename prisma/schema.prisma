@@ -6,6 +6,7 @@
 // V5 : + AuditLog (actif), Permission (à venir)
 // V6 : + Character (ESI), Kill (zKillboard)
 // V7 : + securityStatus + profileExtra on User ; assignedToId on Application
+// V8 : specialty → specialties (JSON array), domain on Announcement/CalendarEvent
 
 generator client {
   provider = "prisma-client-js"
@@ -72,8 +73,8 @@ model User {
   image         String?
   /// Rôle dans la corporation — valeurs : candidate | member_uz | member | officer | director | ceo | admin
   role          String    @default("candidate")
-  /// Spécialité officer — pvp | pve | industry | exploration | communication | recruitment
-  specialty     String?
+  /// Domaines officier — JSON array : ["pvp","pve","industry","exploration","diplomacy","recruitment"]
+  specialties   String?
   /// Présentation personnelle (max 160 caractères)
   bio           String?   @db.VarChar(160)
   /// ID de la corporation EVE actuelle (issu de l'ESI au login)
@@ -144,6 +145,8 @@ model Announcement {
   id        String   @id @default(cuid())
   title     String
   content   String   @db.Text
+  /// Domaine : pvp | pve | industry | exploration | diplomacy | general
+  domain    String   @default("general")
   /// Épinglée sur le dashboard membre
   pinned    Boolean  @default(false)
   authorId  String
@@ -183,6 +186,8 @@ model CalendarEvent {
   endAt       DateTime?
   /// Type : op | training | social | other
   type              String    @default("op")
+  /// Domaine : pvp | pve | industry | exploration | diplomacy | general
+  domain            String    @default("general")
   /// Récurrence : none | weekly | biweekly | monthly
   recurrence        String    @default("none")
   /// Date de fin de récurrence (null = pas de récurrence)

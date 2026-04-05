@@ -24,7 +24,7 @@ export default async function PilotesPage() {
       name:          true,
       image:         true,
       role:          true,
-      specialty:     true,
+      specialties:   true,
       bio:           true,
       corporationId: true,
       createdAt:     true,

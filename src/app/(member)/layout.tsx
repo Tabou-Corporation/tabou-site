@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { hasMinRole, canManageRecruitment } from "@/types/roles";
+import { hasMinRole, canManageRecruitment, parseSpecialties } from "@/types/roles";
 import { MainNav } from "@/components/navigation/MainNav";
 import { Footer } from "@/components/layout/Footer";
 import { MemberSidebar, MemberMobileNav } from "@/components/navigation/MemberSidebar";
@@ -20,8 +20,8 @@ export default async function MemberLayout({ children }: { children: React.React
   if (session.user.role === "suspended") redirect("/login?error=suspended");
 
   const role      = (session.user.role ?? "candidate") as UserRole;
-  const specialty = session.user.specialty ?? null;
-  const hasRecruitment = canManageRecruitment(role, specialty);
+  const specialties = session.user.specialties ?? null;
+  const hasRecruitment = canManageRecruitment(role, parseSpecialties(specialties));
 
   const pendingCount = hasMinRole(role, "officer") && hasRecruitment
     ? await prisma.application.count({ where: { status: "PENDING" } })

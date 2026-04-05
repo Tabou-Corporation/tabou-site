@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { canManageRecruitment } from "@/types/roles";
+import { canManageRecruitment, parseSpecialties } from "@/types/roles";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -34,7 +34,7 @@ export default async function CandidatureDetailPage({
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
+  if (!canManageRecruitment(role, parseSpecialties(session.user.specialties))) redirect("/membre");
 
   const canReassign = hasMinRole(role, "director");
 

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils/cn";
 import { useRefreshOnSuccess } from "@/lib/hooks/useRefreshOnSuccess";
+import { ALL_DOMAINS } from "@/types/roles";
+import { DOMAIN_LABELS } from "@/lib/constants/labels";
 
 const ROLES = [
   { value: "candidate",  label: "Candidat" },
@@ -17,25 +19,19 @@ const ROLES = [
   { value: "admin",      label: "Administrateur" },
 ];
 
-const SPECIALTIES = [
-  { value: "",            label: "— Aucune spécialité —" },
-  { value: "recruitment", label: "Recrutement" },
-  { value: "logistics",   label: "Logistique" },
-  { value: "diplomacy",   label: "Diplomatie" },
-  { value: "military",    label: "Militaire" },
-];
-
 interface Props {
-  userId:          string;
-  currentRole:     string;
-  currentSpecialty?: string | null;
-  actorRole:       string;
+  userId:             string;
+  currentRole:        string;
+  currentDomains:     string[];
+  actorRole:          string;
 }
 
-export function RoleForm({ userId, currentRole, currentSpecialty, actorRole }: Props) {
+export function RoleForm({ userId, currentRole, currentDomains, actorRole }: Props) {
   const [state, dispatch, pending] = useActionState(changeUserRoleAction, {});
   const [selectedRole, setSelectedRole] = useState(currentRole);
-  const [selectedSpecialty, setSelectedSpecialty] = useState(currentSpecialty ?? "");
+  const [selectedDomains, setSelectedDomains] = useState<Set<string>>(
+    () => new Set(currentDomains)
+  );
   useRefreshOnSuccess(state.success);
 
   // Rôles disponibles selon l'acteur
@@ -45,7 +41,16 @@ export function RoleForm({ userId, currentRole, currentSpecialty, actorRole }: P
     ? ROLES.filter((r) => ["candidate", "member_uz", "member", "officer", "director"].includes(r.value))
     : ROLES.filter((r) => ["candidate", "member_uz", "member", "officer"].includes(r.value));
 
-  const showSpecialty = selectedRole === "officer";
+  const showDomains = selectedRole === "officer";
+
+  function toggleDomain(domain: string) {
+    setSelectedDomains((prev) => {
+      const next = new Set(prev);
+      if (next.has(domain)) next.delete(domain);
+      else next.add(domain);
+      return next;
+    });
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -81,26 +86,45 @@ export function RoleForm({ userId, currentRole, currentSpecialty, actorRole }: P
         </div>
       </div>
 
-      {/* Spécialité — visible uniquement pour le rôle Officier */}
-      {showSpecialty && (
-        <div className="space-y-1.5">
+      {/* Domaines — visible uniquement pour le rôle Officier */}
+      {showDomains && (
+        <div className="space-y-2">
           <label className="block text-text-muted text-xs uppercase tracking-wide font-semibold">
-            Spécialité officier
+            Domaines (cumulables)
           </label>
-          <select
-            name="specialty"
-            value={selectedSpecialty}
-            onChange={(e) => setSelectedSpecialty(e.target.value)}
-            className={cn(
-              "w-full bg-bg-elevated border rounded px-3 py-2",
-              "text-text-primary text-sm border-border",
-              "focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40"
-            )}
-          >
-            {SPECIALTIES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
+          <div className="grid grid-cols-2 gap-2">
+            {ALL_DOMAINS.map((domain) => {
+              const checked = selectedDomains.has(domain);
+              return (
+                <label
+                  key={domain}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded border cursor-pointer select-none transition-colors",
+                    checked
+                      ? "border-gold/40 bg-gold/5 text-text-primary"
+                      : "border-border bg-bg-elevated text-text-muted hover:border-border-subtle"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    name="domains"
+                    value={domain}
+                    checked={checked}
+                    onChange={() => toggleDomain(domain)}
+                    className="w-3.5 h-3.5 rounded accent-[#c9a227] cursor-pointer"
+                  />
+                  <span className="text-sm font-medium">
+                    {DOMAIN_LABELS[domain] ?? domain}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {selectedDomains.size === 0 && (
+            <p className="text-amber-400/80 text-xs">
+              Aucun domaine sélectionné — l&apos;officier n&apos;aura aucune permission spécifique.
+            </p>
+          )}
         </div>
       )}
 

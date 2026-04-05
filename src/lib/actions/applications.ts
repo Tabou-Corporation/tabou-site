@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { canManageRecruitment } from "@/types/roles";
+import { canManageRecruitment, parseSpecialties } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -98,7 +98,7 @@ export async function updateApplicationStatus(
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
+  if (!canManageRecruitment(role, parseSpecialties(session.user.specialties))) redirect("/membre");
 
   const VALID_STATUSES = ["PENDING", "INTERVIEW", "ACCEPTED", "REJECTED"] as const;
   if (!VALID_STATUSES.includes(status)) {
@@ -171,7 +171,7 @@ export async function takeChargeApplication(
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
+  if (!canManageRecruitment(role, parseSpecialties(session.user.specialties))) redirect("/membre");
 
   const interviewAtRaw = (formData.get("interviewAt") as string | null)?.trim();
   const interviewAt    = interviewAtRaw ? new Date(interviewAtRaw) : null;
@@ -254,7 +254,7 @@ export async function assignApplication(
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
+  if (!canManageRecruitment(role, parseSpecialties(session.user.specialties))) redirect("/membre");
 
   // Vérifier que la cible a bien un rôle recruteur (officer+) — évite l'assignation à un simple membre/candidat
   if (assignedToId !== null) {
@@ -291,7 +291,7 @@ export async function saveApplicationNotes(
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
+  if (!canManageRecruitment(role, parseSpecialties(session.user.specialties))) redirect("/membre");
 
   const trimmed = notes.trim();
   if (trimmed.length > LIMITS.notes) {

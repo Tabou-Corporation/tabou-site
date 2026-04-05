@@ -64,25 +64,45 @@ export const ROLE_ORDER: Record<string, number> = {
   admin: 0, ceo: 1, director: 2, officer: 3, member: 4, member_uz: 5, candidate: 6, suspended: 7,
 };
 
-// ─── Spécialités officer ───────────────────────────────────────────────────────
+// ─── Domaines officier ────────────────────────────────────────────────────────
 
-export const SPECIALTY_LABELS: Record<string, string> = {
-  pvp:           "PvP",
-  pve:           "PvE",
-  industry:      "Industrie",
-  exploration:   "Exploration",
-  communication: "Communication",
-  recruitment:   "Recrutement",
+export const DOMAIN_LABELS: Record<string, string> = {
+  pvp:         "PVP",
+  pve:         "PVE",
+  industry:    "Industrie",
+  exploration: "Exploration",
+  diplomacy:   "Diplomatie",
+  recruitment: "Recrutement",
+};
+
+/** @deprecated — utiliser DOMAIN_LABELS */
+export const SPECIALTY_LABELS = DOMAIN_LABELS;
+
+// ─── Domaines de contenu (annonces / événements) ─────────────────────────────
+
+export const CONTENT_DOMAIN_LABELS: Record<string, string> = {
+  general:     "Général",
+  pvp:         "PVP",
+  pve:         "PVE",
+  industry:    "Industrie",
+  exploration: "Exploration",
+  diplomacy:   "Diplomatie",
 };
 
 // ─── Catégories de guides ─────────────────────────────────────────────────────
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  general:   "Général",
-  pvp:       "PvP",
-  logistics: "Logistique",
-  fits:      "Fits",
-  other:     "Autre",
+  general:     "Général",
+  pvp:         "PVP",
+  pve:         "PVE",
+  fits:        "Fits",
+  logistics:   "Logistique",
+  industry:    "Industrie",
+  exploration: "Exploration",
+  diplomacy:   "Diplomatie",
+  other:       "Autre",
 };
 
-export const CATEGORY_ORDER = ["general", "pvp", "logistics", "fits", "other"] as const;
+export const CATEGORY_ORDER = [
+  "general", "pvp", "pve", "fits", "logistics", "industry", "exploration", "diplomacy", "other",
+] as const;

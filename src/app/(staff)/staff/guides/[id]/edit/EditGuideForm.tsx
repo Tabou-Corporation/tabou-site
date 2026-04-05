@@ -1,8 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSession } from "next-auth/react";
 import { updateGuide } from "@/lib/actions/content";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
+import { getAllowedGuideCategories, parseSpecialties } from "@/types/roles";
+import { CATEGORY_LABELS } from "@/lib/constants/labels";
+import type { UserRole } from "@/types/roles";
 
 const inputClass = [
   "w-full bg-bg-elevated border rounded px-3 py-2.5",
@@ -10,14 +15,6 @@ const inputClass = [
   "border-border focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40",
   "transition-colors duration-150",
 ].join(" ");
-
-const CATEGORIES = [
-  { value: "general",   label: "Général" },
-  { value: "pvp",       label: "PvP" },
-  { value: "logistics", label: "Logistique" },
-  { value: "fits",      label: "Fits" },
-  { value: "other",     label: "Autre" },
-];
 
 interface Props {
   id: string;
@@ -29,32 +26,49 @@ interface Props {
 export function EditGuideForm({ id, defaultTitle, defaultCategory, defaultContent }: Props) {
   const boundAction = updateGuide.bind(null, id);
   const [state, action, pending] = useActionState(boundAction, {});
+  const { data: session } = useSession();
+
+  const role = (session?.user?.role ?? "candidate") as UserRole;
+  const domains = parseSpecialties(session?.user?.specialties);
+  const allowedCategories = getAllowedGuideCategories(role, domains);
+
+  // Ensure the current category is included even if not in the allowed list
+  const categories = allowedCategories.includes(defaultCategory)
+    ? allowedCategories
+    : [defaultCategory, ...allowedCategories];
 
   return (
     <form action={action} className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="block text-text-secondary text-sm font-medium">Titre</label>
+          <label className="block text-text-secondary text-sm font-medium">
+            Titre <span className="text-red-400 text-xs">*</span>
+          </label>
           <input
             name="title"
             type="text"
             required
             defaultValue={defaultTitle}
+            placeholder="Titre du guide"
             className={inputClass}
           />
         </div>
         <div className="space-y-1.5">
-          <label className="block text-text-secondary text-sm font-medium">Catégorie</label>
+          <label className="block text-text-secondary text-sm font-medium">
+            Catégorie
+          </label>
           <select name="category" defaultValue={defaultCategory} className={inputClass}>
-            {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>{CATEGORY_LABELS[c] ?? c}</option>
             ))}
           </select>
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-text-secondary text-sm font-medium">Contenu</label>
+        <label className="block text-text-secondary text-sm font-medium">
+          Contenu <span className="text-red-400 text-xs">*</span>
+        </label>
         <textarea
           name="content"
           required
@@ -71,7 +85,7 @@ export function EditGuideForm({ id, defaultTitle, defaultCategory, defaultConten
       )}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Sauvegarde…" : "Sauvegarder"}
+        {pending ? <><Spinner />Sauvegarde…</> : "Sauvegarder"}
       </Button>
     </form>
   );
