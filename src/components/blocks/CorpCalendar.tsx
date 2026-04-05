@@ -109,6 +109,7 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
             today: "Aujourd'hui", next: "›", previous: "‹",
             showMore: (n) => `+${n} de plus`,
             noEventsInRange: "Aucun événement sur cette période.",
+            date: "Date", time: "Horaire", event: "Événement",
           }}
           popup
         />
