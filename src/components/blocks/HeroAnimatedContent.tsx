@@ -16,9 +16,9 @@ interface HeroAnimatedContentProps {
 
 // Animation CSS avec fill-mode "both" : l'élément est invisible pendant le délai,
 // puis remonte en fondu. 100 % CSS, aucun JS requis.
-function fadeIn(delay: string): CSSProperties {
+function fadeIn(delay: string, duration = "0.8s"): CSSProperties {
   return {
-    animation: `fade-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${delay} both`,
+    animation: `fade-in ${duration} cubic-bezier(0.22, 1, 0.36, 1) ${delay} both`,
   };
 }
 
@@ -42,7 +42,7 @@ function LogoDisplay({
         alt="Tabou"
         width={220}
         height={220}
-        style={fadeIn("1.6s")}
+        style={fadeIn("4.5s", "1.5s")}
         className="w-36 h-36 sm:w-44 sm:h-44 lg:w-[220px] lg:h-[220px] drop-shadow-[0_0_48px_rgba(240,176,48,0.25)] animate-glitch-logo"
       />
 
@@ -58,7 +58,7 @@ function LogoDisplay({
         {"TABOU".split("").map((letter, i) => (
           <span
             key={i}
-            style={fadeIn(`${0.3 + i * 0.2}s`)}
+            style={fadeIn(`${0.8 + i * 0.65}s`, "1.2s")}
             className="inline-block"
           >
             {letter}
@@ -68,7 +68,7 @@ function LogoDisplay({
 
       {/* CTAs */}
       {(primaryCTA ?? secondaryCTA) && (
-        <div style={fadeIn("2.0s")} className="flex flex-wrap justify-center gap-4 mt-2">
+        <div style={fadeIn("6.5s", "1s")} className="flex flex-wrap justify-center gap-4 mt-2">
           {primaryCTA && (
             <Button
               as="a"
