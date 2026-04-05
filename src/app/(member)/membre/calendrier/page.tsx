@@ -5,19 +5,7 @@ import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
 import { Container } from "@/components/layout/Container";
 import { Separator } from "@/components/ui/Separator";
-import nextDynamic from "next/dynamic";
-
-// Lazy load : react-big-calendar + moment (~120 KB gzippé) ne sont téléchargés
-// que quand l'utilisateur arrive sur cette page, pas dans le bundle initial.
-const CorpCalendar = nextDynamic(
-  () => import("@/components/blocks/CorpCalendar").then((m) => m.CorpCalendar),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[600px] rounded border border-border bg-bg-elevated animate-pulse" />
-    ),
-  }
-);
+import { CorpCalendarLazy as CorpCalendar } from "@/components/blocks/CorpCalendarLazy";
 import { expandRecurringEvents } from "@/lib/utils/recurrence";
 import { Plus } from "lucide-react";
 import type { UserRole } from "@/types/roles";
