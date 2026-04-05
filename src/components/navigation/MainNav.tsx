@@ -181,7 +181,7 @@ export function MainNav() {
             {session ? (
               <Button
                 as="a"
-                href="/membre"
+                href={session.user?.role === "candidate" ? "/membre" : "/membre/annuaire"}
                 variant="primary"
                 size="md"
                 className="w-full"

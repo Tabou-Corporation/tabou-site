@@ -78,7 +78,7 @@ export function UserMenu() {
           </div>
           <div className="py-1">
             <Link
-              href="/membre"
+              href={session.user?.role === "candidate" ? "/membre" : "/membre/annuaire"}
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-overlay transition-colors"
             >
