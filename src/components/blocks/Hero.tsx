@@ -109,7 +109,7 @@ export function Hero({
       {/* Les fetches zkillboard sont isolés : le hero s'affiche immédiatement,  */}
       {/* les widgets apparaissent dès que l'API répond (ou timeout 5 s).        */}
       {showKillFeed && (
-        <div className="absolute left-0 top-[28%] z-20 hidden lg:flex flex-col gap-2">
+        <div className="absolute left-4 top-[28%] z-20 hidden lg:flex flex-col gap-3">
           <EveTimeTerminal />
           <Suspense fallback={null}>
             <TopPilotServer />

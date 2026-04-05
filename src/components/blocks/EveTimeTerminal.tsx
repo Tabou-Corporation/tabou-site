@@ -147,7 +147,7 @@ export function EveTimeTerminal() {
       />
 
       {/* Header */}
-      <div className="px-3 pb-1">
+      <div className="px-4 pb-1.5">
         <div className="flex items-center gap-1.5">
           <span
             className={cn(
@@ -162,7 +162,7 @@ export function EveTimeTerminal() {
       </div>
 
       {/* Horloge */}
-      <div className="px-3 pb-1.5">
+      <div className="px-4 pb-1.5">
         <div
           className={cn(
             "font-mono text-3xl font-bold tracking-[0.1em] tabular-nums transition-colors duration-300",
@@ -174,7 +174,7 @@ export function EveTimeTerminal() {
       </div>
 
       {/* Message d'ambiance */}
-      <div className="px-3 pb-4 min-h-[40px]">
+      <div className="px-4 pb-4 min-h-[40px]">
         <p className="font-mono text-xs text-gold/55 leading-tight tracking-wide uppercase">
           {statusTyped}
           {statusTyped.length < `> ${phase.label}`.length && isLive && (
