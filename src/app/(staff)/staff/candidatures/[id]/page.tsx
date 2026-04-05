@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { ArrowLeft, MessageSquare, Building2 } from "lucide-react";
+import { CORPORATIONS } from "@/lib/constants/corporations";
 import { takeChargeApplication } from "@/lib/actions/applications";
 import { STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
 import { CandidatureDecisionButtons } from "./CandidatureDecisionButtons";
@@ -43,9 +44,11 @@ export default async function CandidatureDetailPage({
       include: {
         user: {
           select: {
-            name: true,
-            image: true,
+            name:           true,
+            image:          true,
+            bio:            true,
             securityStatus: true,
+            corporationId:  true,
             profileExtra:   true,
             // On ne charge que le compte EVE Online (providerAccountId = characterId)
             accounts: {
@@ -152,6 +155,49 @@ export default async function CandidatureDetailPage({
                   <p className="text-text-muted text-xs italic">
                     Aucun pseudo Discord renseigné.
                   </p>
+                )}
+
+                {/* Corporation actuelle */}
+                {(() => {
+                  const corpId = application.user.corporationId;
+                  const isTabou = corpId === CORPORATIONS.tabou.id;
+                  const isUZ    = corpId === CORPORATIONS.urbanZone.id;
+                  const label   = isTabou ? "Tabou Corporation"
+                                : isUZ    ? "Urban Zone"
+                                : corpId  ? "Corporation externe"
+                                :           null;
+                  if (!label) return null;
+                  return (
+                    <div className="flex items-center gap-2.5 p-2.5 bg-bg-elevated border border-border rounded">
+                      <Building2 size={14} className={cn(
+                        "flex-shrink-0",
+                        isTabou || isUZ ? "text-gold/70" : "text-text-muted"
+                      )} />
+                      <div className="min-w-0">
+                        <p className="text-text-muted text-[10px] uppercase tracking-wide font-semibold mb-0.5">
+                          Corporation actuelle
+                        </p>
+                        <p className={cn(
+                          "text-sm font-semibold",
+                          isTabou || isUZ ? "text-gold" : "text-text-secondary"
+                        )}>
+                          {label}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Bio du pilote */}
+                {application.user.bio && (
+                  <div>
+                    <p className="text-text-muted text-xs uppercase tracking-wide font-semibold mb-1">
+                      Présentation
+                    </p>
+                    <p className="text-text-secondary text-sm italic leading-relaxed border-l-2 border-gold/20 pl-3">
+                      {application.user.bio}
+                    </p>
+                  </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
