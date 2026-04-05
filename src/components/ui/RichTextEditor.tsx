@@ -3,7 +3,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
@@ -54,11 +54,13 @@ function ToolbarButton({
 }
 
 export function RichTextEditor({ name, defaultValue = "", placeholder, minHeight = 180, onChange }: Props) {
+  const [html, setHtml] = useState(defaultValue || "");
+  const [empty, setEmpty] = useState(!defaultValue);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },
-        // Désactiver code block (on garde juste inline code)
         codeBlock: false,
       }),
       Underline,
@@ -70,24 +72,28 @@ export function RichTextEditor({ name, defaultValue = "", placeholder, minHeight
         "data-placeholder": placeholder ?? "",
       },
     },
-    onUpdate({ editor }) {
-      onChange?.(editor.getHTML());
+    onUpdate({ editor: e }) {
+      const newHtml = e.getHTML();
+      setHtml(newHtml);
+      setEmpty(e.isEmpty);
+      onChange?.(newHtml);
     },
     immediatelyRender: false,
   });
 
-  // Sync si defaultValue change (ex: après refresh parent)
+  // Sync si defaultValue change (ex: après fetch async dans un edit page)
   useEffect(() => {
-    if (editor && defaultValue !== undefined) {
+    if (editor && defaultValue) {
       const current = editor.getHTML();
-      if (current !== defaultValue && defaultValue !== "") {
+      if (current !== defaultValue) {
         editor.commands.setContent(defaultValue, { emitUpdate: false });
+        setHtml(defaultValue);
+        setEmpty(false);
       }
     }
   }, [defaultValue, editor]);
 
-  const isEmpty = !editor || editor.isEmpty;
-  const html = editor?.getHTML() ?? "";
+  const isEmpty = !editor || empty;
 
   if (!editor) return null;
 
