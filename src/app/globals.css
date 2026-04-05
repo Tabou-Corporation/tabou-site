@@ -249,6 +249,14 @@
   font-family: 'Courier New', monospace;
 }
 
+/* ─── Letter reveal — hero wordmark TABOU ────────────────────────────────── */
+/* Scale + blur → overshoot → settle                                          */
+@keyframes letter-reveal {
+  0%   { opacity: 0; transform: translateY(40px) scale(0.7); filter: blur(8px); }
+  55%  { opacity: 1; transform: translateY(-4px) scale(1.03); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
 /* ─── Glitch cinématique (logo hero) ─────────────────────────────────────── */
 /* Rafales de parasites toutes les ~8 s, façon transmission corrompue         */
 @keyframes glitch-logo {
