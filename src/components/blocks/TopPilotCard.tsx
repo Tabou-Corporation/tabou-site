@@ -5,9 +5,11 @@ import type { TopPilot } from "@/lib/zkillboard/top-pilot";
 
 interface TopPilotCardProps {
   pilot: TopPilot;
+  sectionLabel?: string;
+  periodLabel?: string;
 }
 
-export function TopPilotCard({ pilot }: TopPilotCardProps) {
+export function TopPilotCard({ pilot, sectionLabel = "Focus", periodLabel = "All-time" }: TopPilotCardProps) {
   return (
     <Link
       href={pilot.zkillUrl}
@@ -23,7 +25,7 @@ export function TopPilotCard({ pilot }: TopPilotCardProps) {
       {/* ── Header ── */}
       <div className="px-4 pb-2">
         <span className="text-gold/50 text-xs font-bold tracking-extra-wide uppercase">
-          Focus
+          {sectionLabel}
         </span>
       </div>
 
@@ -55,7 +57,7 @@ export function TopPilotCard({ pilot }: TopPilotCardProps) {
           <p className="text-gold text-xs font-bold mt-0.5">
             ◆ {pilot.kills.toLocaleString("fr-FR")} kills
           </p>
-          <p className="text-text-muted text-xs">All‑time</p>
+          <p className="text-text-muted text-xs">{periodLabel}</p>
         </div>
       </div>
     </Link>
