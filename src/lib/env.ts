@@ -21,4 +21,13 @@ if (typeof window === "undefined") {
         .join("\n")}\n\nCopie .env.example → .env.local et renseigne ces valeurs.`
     );
   }
+
+  // AUTH_SECRET doit faire au moins 32 caractères pour être cryptographiquement sûr
+  const secret = process.env.AUTH_SECRET ?? "";
+  if (secret.length < 32) {
+    throw new Error(
+      `[env] AUTH_SECRET trop court (${secret.length} caractères, minimum 32).\n` +
+      `Génère une valeur sûre avec : openssl rand -base64 32`
+    );
+  }
 }

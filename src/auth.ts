@@ -107,7 +107,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             const esiData = await esiRes.json() as { corporation_id?: number };
             if (esiData.corporation_id) corporationId = esiData.corporation_id;
           }
-        } catch { /* ESI indisponible — on ignore */ }
+        } catch (err) {
+          console.error("[auth] ESI indisponible lors du login de", characterId, err);
+        }
       }
 
       // Détermine le rôle automatique selon la corporation ESI

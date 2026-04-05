@@ -28,7 +28,10 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "img-src 'self' https: data:",
+              // Domaines images explicitement whitelistés (EVE CDN + hébergements utilisés)
+              "img-src 'self' https://images.evetech.net https://i.imgur.com https://imgur.com https://*.githubusercontent.com https://*.discord.com https://cdn.discordapp.com data:",
+              // unsafe-inline requis par Next.js (hydration) et Framer Motion (styles inline)
+              // TODO : migrer vers nonces CSP (next.config + middleware) pour supprimer unsafe-inline
               "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self'",

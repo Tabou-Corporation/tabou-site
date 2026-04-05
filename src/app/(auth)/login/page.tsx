@@ -15,7 +15,14 @@ interface LoginPageProps {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
-  const callbackUrl = params.callbackUrl ?? "/membre";
+  // Validation anti open-redirect : n'accepter que les chemins internes
+  const rawCallback = params.callbackUrl ?? "";
+  const callbackUrl =
+    rawCallback.startsWith("/") &&
+    !rawCallback.startsWith("//") &&
+    !rawCallback.includes("://")
+      ? rawCallback
+      : "/membre";
   const error = params.error;
 
   return (
