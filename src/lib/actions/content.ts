@@ -311,3 +311,80 @@ export async function deleteCalendarEvent(id: string): Promise<ActionResult> {
     return { success: false, error: "Erreur lors de la suppression de l'événement." };
   }
 }
+
+// ─── Assemblées ──────────────────────────────────────────────────────────────
+
+const VALID_ASSEMBLY_TYPES = ["monthly", "extraordinary"];
+
+export async function createAssembly(
+  _prev: ContentFormState,
+  formData: FormData
+): Promise<ContentFormState> {
+  const user = await requireOfficer();
+  const title    = (formData.get("title")    as string | null)?.trim() ?? "";
+  const content  = (formData.get("content")  as string | null)?.trim() ?? "";
+  const videoUrl = (formData.get("videoUrl") as string | null)?.trim() || null;
+  const type     = (formData.get("type")     as string | null) ?? "monthly";
+  const heldAtRaw = formData.get("heldAt")   as string | null;
+
+  if (!title) return { error: "Le titre est requis." };
+  if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
+  if (!content) return { error: "Le contenu est requis." };
+  if (content.length > LIMITS.content) return { error: `Le contenu ne peut pas dépasser ${LIMITS.content} caractères.` };
+  if (!VALID_ASSEMBLY_TYPES.includes(type)) return { error: "Type invalide." };
+  if (!heldAtRaw) return { error: "La date de réunion est requise." };
+
+  const heldAt = new Date(heldAtRaw);
+  if (isNaN(heldAt.getTime())) return { error: "Date de réunion invalide." };
+
+  const assembly = await prisma.assembly.create({
+    data: { title, content, videoUrl, type, heldAt, authorId: user.id! },
+  });
+
+  revalidatePath("/membre/assemblees");
+  redirect(`/membre/assemblees/${assembly.id}`);
+}
+
+export async function updateAssembly(
+  _prev: ContentFormState,
+  formData: FormData
+): Promise<ContentFormState> {
+  await requireOfficer();
+  const id       = formData.get("id") as string | null;
+  const title    = (formData.get("title")    as string | null)?.trim() ?? "";
+  const content  = (formData.get("content")  as string | null)?.trim() ?? "";
+  const videoUrl = (formData.get("videoUrl") as string | null)?.trim() || null;
+  const type     = (formData.get("type")     as string | null) ?? "monthly";
+  const heldAtRaw = formData.get("heldAt")   as string | null;
+
+  if (!id) return { error: "Assemblée introuvable." };
+  if (!title) return { error: "Le titre est requis." };
+  if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
+  if (!content) return { error: "Le contenu est requis." };
+  if (content.length > LIMITS.content) return { error: `Le contenu ne peut pas dépasser ${LIMITS.content} caractères.` };
+  if (!VALID_ASSEMBLY_TYPES.includes(type)) return { error: "Type invalide." };
+  if (!heldAtRaw) return { error: "La date de réunion est requise." };
+
+  const heldAt = new Date(heldAtRaw);
+  if (isNaN(heldAt.getTime())) return { error: "Date de réunion invalide." };
+
+  await prisma.assembly.update({
+    where: { id },
+    data: { title, content, videoUrl, type, heldAt },
+  });
+
+  revalidatePath("/membre/assemblees");
+  revalidatePath(`/membre/assemblees/${id}`);
+  redirect(`/membre/assemblees/${id}`);
+}
+
+export async function deleteAssembly(id: string): Promise<ActionResult> {
+  await requireOfficer();
+  try {
+    await prisma.assembly.delete({ where: { id } });
+    revalidatePath("/membre/assemblees");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de la suppression de l'assemblée." };
+  }
+}

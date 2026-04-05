@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Megaphone, Calendar, BookOpen, Users,
-  User, FileText, MessageSquare, ExternalLink,
+  User, FileText, MessageSquare, ExternalLink, Scroll,
   ClipboardList, Megaphone as MegaphoneIcon, BookPlus, CalendarPlus,
   UsersRound, LayoutGrid, PanelLeft, Shield,
 } from "lucide-react";
@@ -145,7 +145,8 @@ export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
           <>
             <NavItem href="/membre/annonces"   icon={Megaphone}   label="Annonces" />
             <NavItem href="/membre/calendrier" icon={Calendar}    label="Calendrier" />
-            <NavItem href="/membre/guides"     icon={BookOpen}    label="Guides" />
+            <NavItem href="/membre/guides"      icon={BookOpen}    label="Guides" />
+            <NavItem href="/membre/assemblees" icon={Scroll}      label="Assemblées" />
             <NavItem href="/membre/annuaire"   icon={Users}       label="Annuaire" />
           </>
         )}
@@ -174,9 +175,10 @@ export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
             )}
 
             {/* Gestion de contenu */}
-            <NavItem href="/staff/annonces"   icon={MegaphoneIcon} label="Annonces"     />
-            <NavItem href="/staff/guides"     icon={BookPlus}      label="Guides"       />
-            <NavItem href="/staff/calendrier" icon={CalendarPlus}  label="Événements"   />
+            <NavItem href="/staff/annonces"    icon={MegaphoneIcon} label="Annonces"     />
+            <NavItem href="/staff/guides"      icon={BookPlus}      label="Guides"       />
+            <NavItem href="/staff/calendrier"  icon={CalendarPlus}  label="Événements"   />
+            <NavItem href="/staff/assemblees"  icon={Scroll}        label="Assemblées"   />
           </div>
         )}
 
@@ -262,7 +264,8 @@ export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
           <>
             <MobileNavItem href="/membre/annonces"   icon={Megaphone} label="Annonces" />
             <MobileNavItem href="/membre/calendrier" icon={Calendar}  label="Calendrier" />
-            <MobileNavItem href="/membre/guides"     icon={BookOpen}  label="Guides" />
+            <MobileNavItem href="/membre/guides"      icon={BookOpen}  label="Guides" />
+            <MobileNavItem href="/membre/assemblees" icon={Scroll}    label="Assemblées" />
             <MobileNavItem href="/membre/annuaire"   icon={Users}     label="Annuaire" />
           </>
         )}

@@ -94,6 +94,7 @@ model User {
   guides               Guide[]
   events               CalendarEvent[]
   eventParticipations  EventParticipation[]
+  assemblies           Assembly[]
 
   @@index([role])
   @@map("users")
@@ -225,6 +226,28 @@ enum ParticipationStatus {
   GOING
   MAYBE
   NOT_GOING
+}
+
+// ─── V7 : Assemblées (comptes rendus de réunion) ─────────────────────────────
+
+model Assembly {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  /// URL vers l'enregistrement vidéo (YouTube, Twitch, etc.) — optionnel
+  videoUrl  String?
+  /// Type : monthly | extraordinary
+  type      String   @default("monthly")
+  /// Date à laquelle la réunion a eu lieu
+  heldAt    DateTime
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([heldAt])
+  @@map("assemblies")
 }
 
 // ─── V5 : Audit Log ───────────────────────────────────────────────────────────

@@ -1,13 +1,12 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { deleteAnnouncement } from "@/lib/actions/content";
-import { deleteGuide, deleteCalendarEvent } from "@/lib/actions/content";
+import { deleteAnnouncement, deleteGuide, deleteCalendarEvent, deleteAssembly } from "@/lib/actions/content";
 import { useRouter } from "next/navigation";
 
 interface Props {
   id: string;
-  type: "announcement" | "guide" | "event";
+  type: "announcement" | "guide" | "event" | "assembly";
   title: string;
 }
 
@@ -15,6 +14,7 @@ const deleteFns = {
   announcement: deleteAnnouncement,
   guide: deleteGuide,
   event: deleteCalendarEvent,
+  assembly: deleteAssembly,
 } as const;
 
 export function DeleteContentButton({ id, type, title }: Props) {
