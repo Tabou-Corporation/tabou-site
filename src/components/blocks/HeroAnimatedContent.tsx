@@ -22,6 +22,13 @@ function fadeIn(delay: string, duration = "0.8s"): CSSProperties {
   };
 }
 
+/** Reveal de lettre — scale + blur → overshoot → settle */
+function letterReveal(delay: string): CSSProperties {
+  return {
+    animation: `letter-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) ${delay} both`,
+  };
+}
+
 // ─── Mode logo : emblème + wordmark ────────────────────────────────────────────
 
 function LogoDisplay({
@@ -45,7 +52,7 @@ function LogoDisplay({
         className="flex items-center justify-center font-display font-black text-7xl sm:text-8xl lg:text-9xl xl:text-[11rem] text-text-primary leading-none"
       >
         {/* T — le logo est ancré ici, centré dans le gap T-A */}
-        <span className="relative" style={fadeIn("0.8s", "1.2s")}>
+        <span className="relative" style={letterReveal("0.3s")}>
           T
           {/* Logo au-dessus, centré entre T et A :
               left:100% = bord droit du T
@@ -55,7 +62,7 @@ function LogoDisplay({
             src={logoUrl}
             alt="Tabou"
             style={{
-              ...fadeIn("4.5s", "1.5s"),
+              ...fadeIn("2.2s", "1.2s"),
               position: "absolute",
               bottom: "calc(100% + 1rem)",
               left: "100%",
@@ -66,7 +73,7 @@ function LogoDisplay({
         </span>
 
         {["A", "B", "O", "U"].map((letter, i) => (
-          <span key={letter} style={fadeIn(`${0.8 + (i + 1) * 0.65}s`, "1.2s")}>
+          <span key={letter} style={letterReveal(`${0.55 + i * 0.25}s`)}>
             {letter}
           </span>
         ))}
@@ -74,7 +81,7 @@ function LogoDisplay({
 
       {/* CTAs */}
       {(primaryCTA ?? secondaryCTA) && (
-        <div style={fadeIn("6.5s", "1s")} className="flex flex-wrap justify-center gap-4 mt-2">
+        <div style={fadeIn("3.5s", "0.8s")} className="flex flex-wrap justify-center gap-4 mt-2">
           {primaryCTA && (
             <Button
               as="a"

@@ -124,6 +124,12 @@ const config: Config = {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
         },
+        /* Hero wordmark — scale-up + blur → overshoot → settle */
+        "letter-reveal": {
+          "0%":   { opacity: "0", transform: "translateY(40px) scale(0.7)", filter: "blur(8px)" },
+          "55%":  { opacity: "1", transform: "translateY(-4px) scale(1.03)", filter: "blur(0)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)", filter: "blur(0)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.4s ease-out forwards",
