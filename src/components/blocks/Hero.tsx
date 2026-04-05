@@ -143,6 +143,7 @@ export function Hero({
             <div
               className={cn(
                 "grid divide-x divide-gold/15",
+                showKillFeed && "lg:pl-[260px]",
                 stats.length === 3 && "grid-cols-3",
                 stats.length === 4 && "grid-cols-2 sm:grid-cols-4",
                 stats.length >= 5 && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
@@ -167,7 +168,7 @@ export function Hero({
       )}
 
       {/* ── Scroll indicator — après la stats bar dans le flux ──────── */}
-      <div className="relative z-10 flex justify-center py-6">
+      <div className={cn("relative z-10 flex justify-center py-6", showKillFeed && "lg:pl-[260px]")}>
         <div className="animate-bounce-slow flex flex-col items-center gap-2">
           <span className="text-gold animate-pulse text-sm font-semibold tracking-extra-wide uppercase">Découvrir</span>
           <svg
