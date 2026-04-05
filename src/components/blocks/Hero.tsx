@@ -5,6 +5,7 @@ import { TopPilotServer } from "@/components/blocks/TopPilotServer";
 import { HeroBackground } from "@/components/blocks/HeroBackground";
 import { HeroAnimatedContent } from "@/components/blocks/HeroAnimatedContent";
 import { AmbientAudio } from "@/components/blocks/AmbientAudio";
+import { EveTimeTerminal } from "@/components/blocks/EveTimeTerminal";
 import { cn } from "@/lib/utils/cn";
 import type { CTAConfig } from "@/types/content";
 
@@ -108,7 +109,8 @@ export function Hero({
       {/* Les fetches zkillboard sont isolés : le hero s'affiche immédiatement,  */}
       {/* les widgets apparaissent dès que l'API répond (ou timeout 5 s).        */}
       {showKillFeed && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2">
+        <div className="absolute left-0 top-[28%] z-20 hidden lg:flex flex-col gap-2">
+          <EveTimeTerminal />
           <Suspense fallback={null}>
             <TopPilotServer />
           </Suspense>
