@@ -176,7 +176,7 @@ export default async function CandidaturePage() {
                 {/* Retrait — uniquement si pas encore accepté */}
                 {(application.status === "PENDING" || application.status === "INTERVIEW") && (
                   <div className="border-t border-border pt-4">
-                    <form action={withdrawApplication}>
+                    <form action={withdrawApplication as unknown as () => Promise<void>}>
                       <button
                         type="submit"
                         className="text-text-muted text-xs hover:text-red-400 transition-colors underline underline-offset-2"

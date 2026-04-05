@@ -38,13 +38,21 @@ export default async function MembresPage({
 }: {
   searchParams: Promise<{ filter?: string }>;
 }) {
-  const { filter } = await searchParams;
+  const { filter: rawFilter } = await searchParams;
 
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "director")) redirect("/membre");
+
+  // Whitelist — seules ces valeurs sont acceptées en searchParam
+  const VALID_FILTERS = ["all", "candidate", "member_uz", "member", "officer", "director", "ceo", "admin"] as const;
+  type ValidFilter = typeof VALID_FILTERS[number];
+  const filter: ValidFilter | undefined =
+    rawFilter && (VALID_FILTERS as readonly string[]).includes(rawFilter)
+      ? (rawFilter as ValidFilter)
+      : undefined;
 
   const whereRole = filter && filter !== "all"
     ? { role: filter }

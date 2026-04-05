@@ -6,6 +6,15 @@ import { canManageRecruitment } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { ActionResult } from "@/types/actions";
+
+// ─── Limites de longueur ──────────────────────────────────────────────────────
+const LIMITS = {
+  discordHandle: 100,
+  availability:  200,
+  motivation:   2000,
+  notes:        2000,
+} as const;
 
 export type ApplicationFormState = {
   error?: string;
@@ -27,7 +36,13 @@ export async function submitApplication(
   const spCountRaw    =  formData.get("spCount") as string | null;
 
   if (!discordHandle) return { error: "Le pseudo Discord est requis." };
-  if (!motivation)    return { error: "La motivation est requise." };
+  if (discordHandle.length > LIMITS.discordHandle)
+    return { error: `Le pseudo Discord ne peut pas dépasser ${LIMITS.discordHandle} caractères.` };
+  if (!motivation) return { error: "La motivation est requise." };
+  if (motivation.length > LIMITS.motivation)
+    return { error: `La motivation ne peut pas dépasser ${LIMITS.motivation} caractères.` };
+  if (availability && availability.length > LIMITS.availability)
+    return { error: `Les disponibilités ne peuvent pas dépasser ${LIMITS.availability} caractères.` };
 
   const spCount = spCountRaw ? parseInt(spCountRaw, 10) : null;
   if (spCountRaw && (isNaN(spCount!) || spCount! < 0)) {
@@ -62,36 +77,46 @@ export async function submitApplication(
 export async function updateApplicationStatus(
   id: string,
   status: "PENDING" | "INTERVIEW" | "ACCEPTED" | "REJECTED"
-): Promise<void> {
+): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
-  const application = await prisma.application.findUnique({ where: { id } });
-  if (!application) return;
-
-  await prisma.application.update({
-    where: { id },
-    data: {
-      status,
-      reviewedAt: new Date(),
-      reviewedBy: session.user.name ?? session.user.id,
-    },
-  });
-
-  // Accepté → promouvoir le candidat en membre
-  if (status === "ACCEPTED") {
-    await prisma.user.update({
-      where: { id: application.userId },
-      data:  { role: "member" },
-    });
+  const VALID_STATUSES = ["PENDING", "INTERVIEW", "ACCEPTED", "REJECTED"] as const;
+  if (!VALID_STATUSES.includes(status)) {
+    return { success: false, error: "Statut invalide." };
   }
 
-  revalidatePath("/staff/candidatures");
-  revalidatePath(`/staff/candidatures/${id}`);
-  revalidatePath("/membre");
+  try {
+    const application = await prisma.application.findUnique({ where: { id } });
+    if (!application) return { success: false, error: "Candidature introuvable." };
+
+    await prisma.application.update({
+      where: { id },
+      data: {
+        status,
+        reviewedAt: new Date(),
+        reviewedBy: session.user.name ?? session.user.id,
+      },
+    });
+
+    // Accepté → promouvoir le candidat en membre
+    if (status === "ACCEPTED") {
+      await prisma.user.update({
+        where: { id: application.userId },
+        data:  { role: "member" },
+      });
+    }
+
+    revalidatePath("/staff/candidatures");
+    revalidatePath(`/staff/candidatures/${id}`);
+    revalidatePath("/membre");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de la mise à jour du statut." };
+  }
 }
 
 // ─── Recruteur : prendre en charge + planifier entretien ──────────────────────
@@ -99,7 +124,7 @@ export async function updateApplicationStatus(
 export async function takeChargeApplication(
   id: string,
   formData: FormData
-): Promise<void> {
+): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -109,38 +134,52 @@ export async function takeChargeApplication(
   const interviewAtRaw = (formData.get("interviewAt") as string | null)?.trim();
   const interviewAt    = interviewAtRaw ? new Date(interviewAtRaw) : null;
 
-  await prisma.application.update({
-    where: { id },
-    data: {
-      status:      "INTERVIEW",
-      interviewAt: interviewAt ?? null,
-      reviewedAt:  new Date(),
-      reviewedBy:  session.user.name ?? session.user.id,
-    },
-  });
+  if (interviewAt && isNaN(interviewAt.getTime())) {
+    return { success: false, error: "Date d'entretien invalide." };
+  }
 
-  revalidatePath("/staff/candidatures");
-  revalidatePath(`/staff/candidatures/${id}`);
-  revalidatePath("/membre/candidature");
+  try {
+    await prisma.application.update({
+      where: { id },
+      data: {
+        status:      "INTERVIEW",
+        interviewAt: interviewAt ?? null,
+        reviewedAt:  new Date(),
+        reviewedBy:  session.user.name ?? session.user.id,
+      },
+    });
+
+    revalidatePath("/staff/candidatures");
+    revalidatePath(`/staff/candidatures/${id}`);
+    revalidatePath("/membre/candidature");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de la prise en charge." };
+  }
 }
 
 // ─── Candidat : retirer sa candidature ───────────────────────────────────────
 
-export async function withdrawApplication(): Promise<void> {
+export async function withdrawApplication(): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  // Ne supprimer que si en attente ou en entretien (pas si accepté)
-  await prisma.application.deleteMany({
-    where: {
-      userId: session.user.id,
-      status: { in: ["PENDING", "INTERVIEW"] },
-    },
-  });
+  try {
+    // Ne supprimer que si en attente ou en entretien (pas si accepté)
+    await prisma.application.deleteMany({
+      where: {
+        userId: session.user.id,
+        status: { in: ["PENDING", "INTERVIEW"] },
+      },
+    });
 
-  revalidatePath("/membre");
-  revalidatePath("/membre/candidature");
-  revalidatePath("/staff/candidatures");
+    revalidatePath("/membre");
+    revalidatePath("/membre/candidature");
+    revalidatePath("/staff/candidatures");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors du retrait de la candidature." };
+  }
 }
 
 // ─── Recruteur : sauvegarder les notes internes ───────────────────────────────
@@ -148,17 +187,27 @@ export async function withdrawApplication(): Promise<void> {
 export async function saveApplicationNotes(
   id: string,
   notes: string
-): Promise<void> {
+): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!canManageRecruitment(role, session.user.specialty)) redirect("/membre");
 
-  await prisma.application.update({
-    where: { id },
-    data:  { notes: notes.trim() || null },
-  });
+  const trimmed = notes.trim();
+  if (trimmed.length > LIMITS.notes) {
+    return { success: false, error: `Les notes ne peuvent pas dépasser ${LIMITS.notes} caractères.` };
+  }
 
-  revalidatePath(`/staff/candidatures/${id}`);
+  try {
+    await prisma.application.update({
+      where: { id },
+      data:  { notes: trimmed || null },
+    });
+
+    revalidatePath(`/staff/candidatures/${id}`);
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de la sauvegarde des notes." };
+  }
 }

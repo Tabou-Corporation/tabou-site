@@ -6,34 +6,51 @@ import { hasMinRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@/types/roles";
+import type { ActionResult } from "@/types/actions";
 
 export type RsvpStatus = "GOING" | "MAYBE" | "NOT_GOING";
 
-export async function rsvpEvent(eventId: string, status: RsvpStatus): Promise<void> {
+const VALID_RSVP_STATUSES: RsvpStatus[] = ["GOING", "MAYBE", "NOT_GOING"];
+
+export async function rsvpEvent(eventId: string, status: RsvpStatus): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
-  await prisma.eventParticipation.upsert({
-    where: { userId_eventId: { userId: session.user.id, eventId } },
-    update: { status },
-    create: { userId: session.user.id, eventId, status },
-  });
+  if (!VALID_RSVP_STATUSES.includes(status)) {
+    return { success: false, error: "Statut de participation invalide." };
+  }
 
-  revalidatePath("/membre/calendrier");
+  try {
+    await prisma.eventParticipation.upsert({
+      where: { userId_eventId: { userId: session.user.id, eventId } },
+      update: { status },
+      create: { userId: session.user.id, eventId, status },
+    });
+
+    revalidatePath("/membre/calendrier");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de l'enregistrement de votre participation." };
+  }
 }
 
-export async function cancelRsvp(eventId: string): Promise<void> {
+export async function cancelRsvp(eventId: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  await prisma.eventParticipation.deleteMany({
-    where: { userId: session.user.id, eventId },
-  });
+  try {
+    await prisma.eventParticipation.deleteMany({
+      where: { userId: session.user.id, eventId },
+    });
 
-  revalidatePath("/membre/calendrier");
+    revalidatePath("/membre/calendrier");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de l'annulation de la participation." };
+  }
 }
 
 /**

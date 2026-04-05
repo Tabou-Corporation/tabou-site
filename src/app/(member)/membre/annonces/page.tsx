@@ -68,7 +68,7 @@ export default async function AnnoncesPage() {
                       </h2>
                     </div>
                     {isOfficer && (
-                      <form action={deleteAnnouncement.bind(null, a.id)}>
+                      <form action={deleteAnnouncement.bind(null, a.id) as unknown as (fd: FormData) => Promise<void>}>
                         <button
                           type="submit"
                           className="text-text-muted text-xs hover:text-red-400 transition-colors flex-shrink-0"

@@ -6,6 +6,14 @@ import { hasMinRole, canCreateGuideCategory } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { ActionResult } from "@/types/actions";
+
+// ─── Limites de longueur ──────────────────────────────────────────────────────
+const LIMITS = {
+  title:       200,
+  content:   10000,
+  description: 500,
+} as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,7 +50,9 @@ export async function createAnnouncement(
   const pinned = formData.get("pinned") === "on";
 
   if (!title) return { error: "Le titre est requis." };
+  if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
   if (!content) return { error: "Le contenu est requis." };
+  if (content.length > LIMITS.content) return { error: `Le contenu ne peut pas dépasser ${LIMITS.content} caractères.` };
 
   await prisma.announcement.create({
     data: { title, content, pinned, authorId: user.id! },
@@ -53,11 +63,16 @@ export async function createAnnouncement(
   redirect("/membre/annonces");
 }
 
-export async function deleteAnnouncement(id: string): Promise<void> {
+export async function deleteAnnouncement(id: string): Promise<ActionResult> {
   await requireContentCreator();
-  await prisma.announcement.delete({ where: { id } });
-  revalidatePath("/membre");
-  revalidatePath("/membre/annonces");
+  try {
+    await prisma.announcement.delete({ where: { id } });
+    revalidatePath("/membre");
+    revalidatePath("/membre/annonces");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de la suppression de l'annonce." };
+  }
 }
 
 // ─── Guides ───────────────────────────────────────────────────────────────────
@@ -72,7 +87,9 @@ export async function createGuide(
   const content = (formData.get("content") as string | null)?.trim() ?? "";
 
   if (!title) return { error: "Le titre est requis." };
+  if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
   if (!content) return { error: "Le contenu est requis." };
+  if (content.length > LIMITS.content) return { error: `Le contenu ne peut pas dépasser ${LIMITS.content} caractères.` };
 
   const guide = await prisma.guide.create({
     data: { title, category, content, authorId: user.id! },
@@ -93,7 +110,9 @@ export async function updateGuide(
   const content = (formData.get("content") as string | null)?.trim() ?? "";
 
   if (!title) return { error: "Le titre est requis." };
+  if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
   if (!content) return { error: "Le contenu est requis." };
+  if (content.length > LIMITS.content) return { error: `Le contenu ne peut pas dépasser ${LIMITS.content} caractères.` };
 
   await prisma.guide.update({
     where: { id },
@@ -105,13 +124,17 @@ export async function updateGuide(
   redirect(`/membre/guides/${id}`);
 }
 
-export async function deleteGuide(id: string): Promise<void> {
+export async function deleteGuide(id: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "officer")) redirect("/membre");
-  await prisma.guide.delete({ where: { id } });
-  revalidatePath("/membre/guides");
+  try {
+    await prisma.guide.delete({ where: { id } });
+    revalidatePath("/membre/guides");
+  } catch {
+    return { success: false, error: "Erreur lors de la suppression du guide." };
+  }
   redirect("/membre/guides");
 }
 
@@ -132,6 +155,9 @@ export async function createCalendarEvent(
   const recurrenceEndAtRaw = formData.get("recurrenceEndAt") as string | null;
 
   if (!title) return { error: "Le titre est requis." };
+  if (title.length > LIMITS.title) return { error: `Le titre ne peut pas dépasser ${LIMITS.title} caractères.` };
+  if (description && description.length > LIMITS.description)
+    return { error: `La description ne peut pas dépasser ${LIMITS.description} caractères.` };
   if (!startAtRaw) return { error: "La date de début est requise." };
 
   const startAt = new Date(startAtRaw);
@@ -165,8 +191,13 @@ export async function createCalendarEvent(
   redirect("/membre/calendrier");
 }
 
-export async function deleteCalendarEvent(id: string): Promise<void> {
+export async function deleteCalendarEvent(id: string): Promise<ActionResult> {
   await requireContentCreator();
-  await prisma.calendarEvent.delete({ where: { id } });
-  revalidatePath("/membre/calendrier");
+  try {
+    await prisma.calendarEvent.delete({ where: { id } });
+    revalidatePath("/membre/calendrier");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de la suppression de l'événement." };
+  }
 }

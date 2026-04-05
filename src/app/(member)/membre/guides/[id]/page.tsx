@@ -57,7 +57,7 @@ export default async function GuideDetailPage({
                 <Pencil size={13} />
                 Modifier
               </Link>
-              <form action={deleteGuide.bind(null, id)}>
+              <form action={deleteGuide.bind(null, id) as unknown as (fd: FormData) => Promise<void>}>
                 <button
                   type="submit"
                   className="text-text-muted text-xs hover:text-red-400 transition-colors"
