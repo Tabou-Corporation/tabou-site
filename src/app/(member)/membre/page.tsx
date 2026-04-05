@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/Separator";
 import {
   MessageSquare, Shield, Calendar, Megaphone, Scroll,
   CheckCircle, Clock, XCircle, Pin,
-  HelpCircle, ArrowRight, RefreshCw, Video, Crosshair,
+  HelpCircle, ArrowRight, RefreshCw, Video,
 } from "lucide-react";
 import { SITE_CONFIG } from "@/config/site";
 import { hasMinRole } from "@/types/roles";
@@ -49,11 +49,6 @@ const EVENT_TYPE_COLOR: Record<string, string> = {
   training: "text-blue-400",
   social:   "text-purple-400",
   other:    "text-text-muted",
-};
-
-const ASSEMBLY_TYPE_LABELS: Record<string, string> = {
-  monthly: "Mensuelle",
-  extraordinary: "Exceptionnelle",
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -312,19 +307,37 @@ export default async function MemberDashboardPage() {
                 </Card>
               </Link>
 
-              {/* Top killer du mois */}
-              <Link href={SITE_CONFIG.links.zkillboard} target="_blank" rel="noopener noreferrer">
+              {/* Dernière assemblée */}
+              <Link href={lastAssembly ? `/membre/assemblees/${lastAssembly.id}` : "/membre/assemblees"}>
                 <Card interactive className="h-full">
                   <CardBody className="py-4 px-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Crosshair size={14} className="text-gold/60" />
+                      <Scroll size={14} className="text-gold/60" />
                       <span className="text-[10px] font-semibold uppercase tracking-extra-wide text-text-muted">
-                        Killboard
+                        Dernière assemblée
                       </span>
                     </div>
-                    <p className="text-text-muted text-sm italic">
-                      {upcomingEvents.length} événement{upcomingEvents.length !== 1 ? "s" : ""} à venir
-                    </p>
+                    {lastAssembly ? (
+                      <>
+                        <p className="text-text-primary text-sm font-display font-semibold truncate">
+                          {lastAssembly.title}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-text-muted text-xs">
+                            {new Date(lastAssembly.heldAt).toLocaleDateString("fr-FR", {
+                              day: "numeric", month: "long",
+                            })}
+                          </span>
+                          {lastAssembly.videoUrl && (
+                            <span className="inline-flex items-center gap-0.5 text-text-muted text-xs">
+                              <Video size={10} />
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-text-muted text-sm italic">Aucune assemblée</p>
+                    )}
                   </CardBody>
                 </Card>
               </Link>
@@ -412,57 +425,6 @@ export default async function MemberDashboardPage() {
                     </div>
                   )}
                 </section>
-
-                {/* Dernière assemblée */}
-                {lastAssembly && (
-                  <section>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="font-display font-semibold text-lg text-text-primary">
-                        Dernière assemblée
-                      </h2>
-                      <Link
-                        href="/membre/assemblees"
-                        className="text-xs text-text-muted hover:text-gold transition-colors inline-flex items-center gap-1"
-                      >
-                        Toutes <ArrowRight size={11} />
-                      </Link>
-                    </div>
-                    <Link href={`/membre/assemblees/${lastAssembly.id}`}>
-                      <Card interactive>
-                        <CardBody className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <Scroll size={18} className="text-gold/50 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-text-primary text-sm font-display font-semibold truncate">
-                                {lastAssembly.title}
-                              </p>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-text-muted text-xs">
-                                  {new Date(lastAssembly.heldAt).toLocaleDateString("fr-FR", {
-                                    day: "numeric", month: "long", year: "numeric",
-                                  })}
-                                </span>
-                                <Badge
-                                  variant={lastAssembly.type === "extraordinary" ? "gold" : "muted"}
-                                  className="text-2xs"
-                                >
-                                  {ASSEMBLY_TYPE_LABELS[lastAssembly.type] ?? lastAssembly.type}
-                                </Badge>
-                                {lastAssembly.videoUrl && (
-                                  <span className="inline-flex items-center gap-1 text-text-muted text-xs">
-                                    <Video size={11} />
-                                    Vidéo
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <ArrowRight size={14} className="text-text-muted flex-shrink-0" />
-                          </div>
-                        </CardBody>
-                      </Card>
-                    </Link>
-                  </section>
-                )}
 
                 {/* Zone Staff */}
                 {isOfficer && (
