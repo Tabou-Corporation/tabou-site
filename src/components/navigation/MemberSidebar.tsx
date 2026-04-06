@@ -245,6 +245,17 @@ function MobileNavItem({ href, icon: Icon, label, badge, exact }: {
   );
 }
 
+function MobileSeparator({ label }: { label: string }) {
+  return (
+    <div className="flex items-center self-stretch px-1.5">
+      <div className="h-6 w-px bg-border-subtle" />
+      <span className="text-[9px] font-semibold tracking-extra-wide uppercase text-text-muted pl-2 pr-1 whitespace-nowrap">
+        {label}
+      </span>
+    </div>
+  );
+}
+
 export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
   const { data: session } = useSession();
   if (!session) return null;
@@ -256,10 +267,13 @@ export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
   const isOfficer     = hasMinRole(role, "officer");
   const isDirector    = hasMinRole(role, "director");
   const hasRecruiting = canManageRecruitment(role, domains);
+  const hasContentDomain = isDirector || domains.some((d) => d !== "recruitment");
 
   return (
     <div className="lg:hidden sticky top-16 z-30 bg-bg-deep/95 backdrop-blur border-b border-border overflow-x-auto">
       <div className="flex items-center px-2 py-1 min-w-max">
+
+        {/* ── Membre ── */}
         <MobileNavItem href="/membre" icon={LayoutDashboard} label="Accueil" exact />
         {isMember && (
           <>
@@ -273,19 +287,54 @@ export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
         {role === "candidate" && (
           <MobileNavItem href="/membre/candidature" icon={FileText} label="Candidature" />
         )}
-        <MobileNavItem href="/membre/profil"     icon={User}    label="Profil" />
+        <MobileNavItem href="/membre/profil"    icon={User}    label="Profil" />
         <MobileNavItem href="/membre/changelog" icon={History} label="Changelog" />
-        {isOfficer && hasRecruiting && (
-          <MobileNavItem
-            href="/staff/candidatures"
-            icon={ClipboardList}
-            label="Candidatures"
-            badge={pendingCount}
-          />
+
+        {/* ── Staff ── */}
+        {isOfficer && (
+          <>
+            <MobileSeparator label="Staff" />
+            {hasRecruiting && (
+              <MobileNavItem
+                href="/staff/candidatures"
+                icon={ClipboardList}
+                label="Candidatures"
+                badge={pendingCount}
+              />
+            )}
+            <MobileNavItem href="/staff/annonces"   icon={MegaphoneIcon} label="Annonces" />
+            <MobileNavItem href="/staff/guides"      icon={BookPlus}      label="Guides" />
+            <MobileNavItem href="/staff/calendrier"  icon={CalendarPlus}  label="Événements" />
+            <MobileNavItem href="/staff/assemblees"  icon={Scroll}        label="Assemblées" />
+          </>
         )}
+
+        {/* ── Administration ── */}
         {isDirector && (
-          <MobileNavItem href="/staff/admin" icon={LayoutGrid} label="Admin" exact />
+          <>
+            <MobileSeparator label="Admin" />
+            <MobileNavItem href="/staff/membres"       icon={UsersRound} label="Membres" />
+            <MobileNavItem href="/staff/admin"         icon={LayoutGrid} label="Admin" exact />
+            <MobileNavItem href="/staff/admin/contenu" icon={PanelLeft}  label="Contenu" />
+          </>
         )}
+
+        {/* Officer avec domaine contenu sans director */}
+        {isOfficer && !isDirector && hasContentDomain && (
+          <>
+            <MobileSeparator label="Admin" />
+            <MobileNavItem href="/staff/admin/contenu?tab=activities" icon={PanelLeft} label="Contenu" exact />
+          </>
+        )}
+
+        {/* Officer sans domaine contenu sans director */}
+        {isOfficer && !isDirector && !hasContentDomain && (
+          <>
+            <MobileSeparator label="Admin" />
+            <MobileNavItem href="/staff/admin" icon={Shield} label="Vue d'ensemble" exact />
+          </>
+        )}
+
       </div>
     </div>
   );
