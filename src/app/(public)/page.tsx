@@ -75,7 +75,7 @@ export default async function HomePage() {
         backgroundImage={home.hero.backgroundImage ?? "/images/hero-bg.jpg"}
         ambientAudio="/audio/ambient.mp3"
         stats={home.stats.map((s) =>
-          s.label === "Membres actifs" && memberCount !== null
+          s.label.toLowerCase().includes("membre") && memberCount !== null
             ? { ...s, value: String(memberCount) }
             : s
         )}
