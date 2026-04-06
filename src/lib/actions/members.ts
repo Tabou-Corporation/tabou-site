@@ -55,16 +55,22 @@ export async function changeUserRole(
     return { error: "Vous ne pouvez pas attribuer un rôle supérieur ou égal au vôtre." };
   }
 
-  await prisma.user.update({
-    where: { id: targetUserId },
-    data: {
-      role: newRole,
-      // Domaines : on les conserve pour officer, on les efface pour les autres rôles
-      specialties: newRole === "officer" && domains.length > 0
-        ? JSON.stringify(domains)
-        : null,
-    },
-  });
+  // Transaction : changement de rôle + invalidation de session
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        role: newRole,
+        specialties: newRole === "officer" && domains.length > 0
+          ? JSON.stringify(domains)
+          : null,
+      },
+    }),
+    // Force re-auth immédiate en supprimant les sessions actives
+    prisma.session.deleteMany({
+      where: { userId: targetUserId },
+    }),
+  ]);
 
   writeAuditLog({
     actorId:   session.user.id,

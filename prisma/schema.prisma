@@ -130,6 +130,7 @@ model Application {
 
   @@index([userId, status])
   @@index([status])
+  @@index([assignedToId])
   @@map("applications")
 }
 
@@ -219,6 +220,7 @@ model EventParticipation {
 
   @@unique([userId, eventId])
   @@index([userId])
+  @@index([eventId])
   @@map("event_participations")
 }
 

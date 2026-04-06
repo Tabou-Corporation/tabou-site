@@ -28,10 +28,31 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "2.5",
+    title: "Synchronisation & Fiabilité",
+    description: "Sync automatique des corporations, refonte admin et renforcement de la fiabilité du site.",
+    status: "current",
+    changes: [
+      { type: "feature", label: "Sync automatique quotidien des corporations via ESI (Vercel Cron)" },
+      { type: "feature", label: "Bouton de sync ESI manuel dans le dashboard admin" },
+      { type: "feature", label: "Dashboard admin repensé : alertes, tendances, timeline d'activité" },
+      { type: "fix", label: "Premier login : les membres Tabou/UZ obtiennent le bon rôle directement" },
+      { type: "fix", label: "Transition automatique member ↔ member_uz au changement de corporation" },
+      { type: "fix", label: "Logos de corporation corrects dans l'annuaire et la fiche pilote" },
+      { type: "fix", label: "Navigation mobile : toutes les sections Staff et Admin accessibles" },
+      { type: "fix", label: "Espace membre : arrivée sur le tableau de bord (plus l'annuaire) sur mobile" },
+      { type: "security", label: "Transactions atomiques pour les candidatures et changements de rôle" },
+      { type: "security", label: "Invalidation de session immédiate au changement de rôle" },
+      { type: "security", label: "ESI down : aucune donnée écrasée, arrêt anticipé après 5 échecs" },
+      { type: "improvement", label: "Index DB ajoutés pour les performances (candidatures, événements)" },
+      { type: "improvement", label: "Audit trail étendu : actions sync tracées dans les logs" },
+    ],
+  },
+  {
     version: "2.4",
     title: "Intégrations EVE Online",
     description: "Connexion aux APIs EVE pour enrichir les profils pilotes et le suivi d'activité.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "feature", label: "Statut de sécurité récupéré via ESI pour tous les membres" },
       { type: "feature", label: "Top pilotes du mois basé sur les données zKillboard" },

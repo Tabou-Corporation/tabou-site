@@ -56,21 +56,31 @@ export async function submitApplication(
     return { error: "Skillpoints invalides." };
   }
 
-  // Vérifier si candidature active déjà en cours
-  const existing = await prisma.application.findFirst({
-    where: { userId: session.user.id, status: { not: "REJECTED" } },
-  });
-  if (existing) return { error: "Vous avez déjà une candidature en cours." };
+  // Vérifier et créer dans une transaction pour éviter les doublons (race condition)
+  let application;
+  try {
+    application = await prisma.$transaction(async (tx) => {
+      const existing = await tx.application.findFirst({
+        where: { userId: session.user.id, status: { not: "REJECTED" } },
+      });
+      if (existing) throw new Error("DUPLICATE");
 
-  const application = await prisma.application.create({
-    data: {
-      userId: session.user.id,
-      discordHandle,
-      availability,
-      motivation,
-      spCount,
-    },
-  });
+      return tx.application.create({
+        data: {
+          userId: session.user.id,
+          discordHandle,
+          availability,
+          motivation,
+          spCount,
+        },
+      });
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === "DUPLICATE") {
+      return { error: "Vous avez déjà une candidature en cours." };
+    }
+    return { error: "Erreur lors de la soumission." };
+  }
 
   notifyNewApplication({
     applicationId: application.id,
@@ -112,21 +122,27 @@ export async function updateApplicationStatus(
     });
     if (!application) return { success: false, error: "Candidature introuvable." };
 
-    await prisma.application.update({
-      where: { id },
-      data: {
-        status,
-        reviewedAt: new Date(),
-        reviewedBy: session.user.name ?? session.user.id,
-      },
+    // Transaction atomique : mise à jour candidature + promotion si acceptée
+    await prisma.$transaction(async (tx) => {
+      await tx.application.update({
+        where: { id },
+        data: {
+          status,
+          reviewedAt: new Date(),
+          reviewedBy: session.user.name ?? session.user.id,
+        },
+      });
+
+      if (status === "ACCEPTED") {
+        await tx.user.update({
+          where: { id: application.userId },
+          data:  { role: "member" },
+        });
+      }
     });
 
-    // Accepté → promouvoir le candidat en membre
+    // Notifications Discord (fire-and-forget, hors transaction)
     if (status === "ACCEPTED") {
-      await prisma.user.update({
-        where: { id: application.userId },
-        data:  { role: "member" },
-      });
       notifyApplicationAccepted({
         applicationId: id,
         candidateName: application.user.name ?? null,
