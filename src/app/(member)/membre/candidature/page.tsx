@@ -9,6 +9,180 @@ import { ApplicationForm } from "./ApplicationForm";
 import { withdrawApplication } from "@/lib/actions/applications";
 import { STATUS_LABELS, STATUS_BADGE } from "@/lib/constants/labels";
 import type { UserRole } from "@/types/roles";
+import {
+  Send,
+  UserSearch,
+  MessageSquareText,
+  Rocket,
+  Check,
+  Clock,
+} from "lucide-react";
+
+// ── Timeline Step Types ──────────────────────────────────────────────────────
+
+type StepStatus = "done" | "active" | "upcoming";
+
+interface TimelineStep {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  status: StepStatus;
+  detail?: string;
+  date?: string;
+}
+
+function buildTimeline(application: {
+  status: string;
+  createdAt: Date;
+  reviewedAt: Date | null;
+  interviewAt: Date | null;
+  reviewedBy: string | null;
+}): TimelineStep[] {
+  const status = application.status;
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const fmtTime = (d: Date) =>
+    d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) +
+    " à " +
+    d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+  const steps: TimelineStep[] = [
+    {
+      icon: <Send size={16} />,
+      title: "Candidature soumise",
+      description: "Votre dossier a été reçu et est dans la file d'attente.",
+      status: "done",
+      date: fmt(application.createdAt),
+    },
+    {
+      icon: <UserSearch size={16} />,
+      title: "Prise en charge",
+      description: "Un recruteur examine votre profil et prépare l'entretien.",
+      status:
+        status === "PENDING" ? "upcoming" :
+        "done",
+      ...(status !== "PENDING" && application.reviewedBy
+        ? { detail: `Recruteur : ${application.reviewedBy}` }
+        : {}),
+    },
+    {
+      icon: <MessageSquareText size={16} />,
+      title: "Entretien Discord",
+      description: "Échange vocal avec un recruteur pour faire connaissance.",
+      status:
+        status === "PENDING" ? "upcoming" :
+        status === "INTERVIEW" ? "active" :
+        status === "ACCEPTED" ? "done" :
+        "upcoming",
+      ...(application.interviewAt
+        ? { detail: fmtTime(application.interviewAt) }
+        : status === "INTERVIEW"
+          ? { detail: "Date à confirmer — restez disponible sur Discord" }
+          : {}),
+    },
+    {
+      icon: <Rocket size={16} />,
+      title: "Intégration en jeu",
+      description: "Invitation dans la corporation EVE Online par un directeur.",
+      status:
+        status === "ACCEPTED" ? "done" :
+        ["INTERVIEW"].includes(status) ? "upcoming" :
+        "upcoming",
+    },
+    {
+      icon: <Check size={16} />,
+      title: "Bienvenue chez Tabou",
+      description: "Accès complet à l'espace membre, aux opérations et aux ressources.",
+      status: status === "ACCEPTED" ? "done" : "upcoming",
+      ...(status === "ACCEPTED" && application.reviewedAt
+        ? { date: fmt(application.reviewedAt) }
+        : {}),
+    },
+  ];
+
+  return steps;
+}
+
+// ── Timeline Component ───────────────────────────────────────────────────────
+
+function ApplicationTimeline({ steps }: { steps: TimelineStep[] }) {
+  return (
+    <div className="relative">
+      {steps.map((step, i) => {
+        const isLast = i === steps.length - 1;
+        return (
+          <div key={i} className="flex gap-4">
+            {/* Vertical line + icon */}
+            <div className="flex flex-col items-center">
+              <div
+                className={[
+                  "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors",
+                  step.status === "done"
+                    ? "bg-gold/20 border-gold text-gold"
+                    : step.status === "active"
+                      ? "bg-gold/10 border-gold/60 text-gold animate-pulse"
+                      : "bg-bg-elevated border-border text-text-muted",
+                ].join(" ")}
+              >
+                {step.status === "done" ? <Check size={16} /> : step.icon}
+              </div>
+              {!isLast && (
+                <div
+                  className={[
+                    "w-0.5 flex-1 min-h-[32px]",
+                    step.status === "done" ? "bg-gold/40" : "bg-border",
+                  ].join(" ")}
+                />
+              )}
+            </div>
+
+            {/* Content */}
+            <div className={`pb-8 ${isLast ? "pb-0" : ""}`}>
+              <div className="flex items-center gap-2 -mt-0.5">
+                <h3
+                  className={[
+                    "font-display font-semibold text-sm",
+                    step.status === "done"
+                      ? "text-text-primary"
+                      : step.status === "active"
+                        ? "text-gold"
+                        : "text-text-muted",
+                  ].join(" ")}
+                >
+                  {step.title}
+                </h3>
+                {step.status === "active" && (
+                  <span className="flex items-center gap-1 text-gold/80 text-[11px] font-medium">
+                    <Clock size={11} />
+                    En cours
+                  </span>
+                )}
+              </div>
+              <p
+                className={[
+                  "text-xs leading-relaxed mt-0.5",
+                  step.status === "upcoming" ? "text-text-muted/60" : "text-text-muted",
+                ].join(" ")}
+              >
+                {step.description}
+              </p>
+              {step.detail && (
+                <p className="text-xs text-text-secondary mt-1 font-medium">
+                  {step.detail}
+                </p>
+              )}
+              {step.date && (
+                <p className="text-xs text-text-muted mt-0.5">{step.date}</p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function CandidaturePage() {
   const session = await auth();
@@ -42,68 +216,83 @@ export default async function CandidaturePage() {
 
         <Separator gold className="mb-8" />
 
-        {/* Candidature existante */}
+        {/* Candidature existante — Timeline + récapitulatif */}
         {hasActiveApplication && application && (
           <div className="space-y-6">
+            {/* Timeline de progression */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <h2 className="font-display font-semibold text-base text-text-primary">
-                    Statut de votre candidature
+                    Suivi de votre candidature
                   </h2>
                   <Badge variant={STATUS_BADGE[application.status] ?? "muted"}>
                     {STATUS_LABELS[application.status] ?? application.status}
                   </Badge>
                 </div>
               </CardHeader>
-              <CardBody className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
-                    Soumise le
-                  </p>
-                  <p className="text-text-secondary text-sm">
-                    {application.createdAt.toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
+              <CardBody>
+                <ApplicationTimeline steps={buildTimeline(application)} />
+              </CardBody>
+            </Card>
+
+            {/* Récapitulatif du dossier */}
+            <Card>
+              <CardHeader>
+                <h2 className="font-display font-semibold text-sm text-text-muted">
+                  Récapitulatif de votre dossier
+                </h2>
+              </CardHeader>
+              <CardBody>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                  <div className="space-y-1">
+                    <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
+                      Soumise le
+                    </p>
+                    <p className="text-text-secondary text-sm">
+                      {application.createdAt.toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+
+                  {application.discordHandle && (
+                    <div className="space-y-1">
+                      <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
+                        Discord
+                      </p>
+                      <p className="text-text-secondary text-sm font-mono">
+                        {application.discordHandle}
+                      </p>
+                    </div>
+                  )}
+
+                  {application.spCount != null && (
+                    <div className="space-y-1">
+                      <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
+                        Skillpoints déclarés
+                      </p>
+                      <p className="text-text-secondary text-sm">
+                        {application.spCount.toLocaleString("fr-FR")} SP
+                      </p>
+                    </div>
+                  )}
+
+                  {application.availability && (
+                    <div className="space-y-1">
+                      <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
+                        Disponibilités
+                      </p>
+                      <p className="text-text-secondary text-sm">
+                        {application.availability}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {application.discordHandle && (
-                  <div className="space-y-1">
-                    <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
-                      Discord
-                    </p>
-                    <p className="text-text-secondary text-sm font-mono">
-                      {application.discordHandle}
-                    </p>
-                  </div>
-                )}
-
-                {application.spCount && (
-                  <div className="space-y-1">
-                    <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
-                      Skillpoints déclarés
-                    </p>
-                    <p className="text-text-secondary text-sm">
-                      {application.spCount.toLocaleString("fr-FR")} SP
-                    </p>
-                  </div>
-                )}
-
-                {application.availability && (
-                  <div className="space-y-1">
-                    <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
-                      Disponibilités
-                    </p>
-                    <p className="text-text-secondary text-sm">
-                      {application.availability}
-                    </p>
-                  </div>
-                )}
-
-                <div className="space-y-1">
+                <div className="mt-5 pt-4 border-t border-border space-y-1">
                   <p className="text-text-muted text-xs uppercase tracking-wide font-semibold">
                     Motivation
                   </p>
@@ -111,73 +300,65 @@ export default async function CandidaturePage() {
                     {application.motivation}
                   </p>
                 </div>
-
-                {application.status === "PENDING" && (
-                  <p className="text-text-muted text-xs leading-relaxed border-t border-border pt-4">
-                    Votre candidature est en attente de traitement. Un recruteur vous
-                    contactera sur Discord sous 48h.
-                  </p>
-                )}
-
-                {application.status === "INTERVIEW" && (
-                  <div className="border-t border-border pt-4 space-y-2">
-                    <p className="text-gold/80 text-sm font-semibold">
-                      Un recruteur a pris en charge votre candidature.
-                    </p>
-                    {application.interviewAt ? (
-                      <div className="bg-gold/5 border border-gold/20 rounded px-3 py-2.5">
-                        <p className="text-text-muted text-xs font-semibold uppercase tracking-wide mb-1">
-                          Entretien Discord prévu
-                        </p>
-                        <p className="text-text-primary text-sm font-medium">
-                          {application.interviewAt.toLocaleDateString("fr-FR", {
-                            weekday: "long",
-                            day: "numeric",
-                            month: "long",
-                          })}{" "}
-                          à{" "}
-                          {application.interviewAt.toLocaleTimeString("fr-FR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                        <p className="text-text-muted text-xs mt-0.5">
-                          Heure locale — vérifiez avec le recruteur si besoin.
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-text-secondary text-xs">
-                        Restez disponible sur Discord, le recruteur reviendra vers vous.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {application.status === "ACCEPTED" && (
-                  <p className="text-gold text-sm font-semibold border-t border-border pt-4">
-                    Félicitations ! Votre candidature a été acceptée.
-                    Bienvenue dans Tabou — rafraîchissez la page pour voir votre nouveau statut.
-                  </p>
-                )}
-
-                {/* Retrait — uniquement si pas encore accepté */}
-                {(application.status === "PENDING" || application.status === "INTERVIEW") && (
-                  <div className="border-t border-border pt-4">
-                    <form action={withdrawApplication as unknown as () => Promise<void>}>
-                      <button
-                        type="submit"
-                        className="text-text-muted text-xs hover:text-red-400 transition-colors underline underline-offset-2"
-                      >
-                        Retirer ma candidature
-                      </button>
-                    </form>
-                    <p className="text-text-muted text-[11px] mt-1">
-                      Tu pourras re-postuler à tout moment.
-                    </p>
-                  </div>
-                )}
               </CardBody>
             </Card>
+
+            {/* Message spécifique au statut */}
+            {application.status === "INTERVIEW" && application.interviewAt && (
+              <div className="flex items-start gap-3 bg-gold/5 border border-gold/20 rounded-md px-4 py-3">
+                <MessageSquareText size={16} className="text-gold shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-text-primary text-sm font-semibold">
+                    Entretien prévu le{" "}
+                    {application.interviewAt.toLocaleDateString("fr-FR", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })}{" "}
+                    à{" "}
+                    {application.interviewAt.toLocaleTimeString("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                  <p className="text-text-muted text-xs mt-0.5">
+                    Heure locale — contactez le recruteur sur Discord si besoin de décaler.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {application.status === "ACCEPTED" && (
+              <div className="flex items-start gap-3 bg-gold/5 border border-gold/20 rounded-md px-4 py-3">
+                <Rocket size={16} className="text-gold shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-gold text-sm font-semibold">
+                    Bienvenue dans Tabou !
+                  </p>
+                  <p className="text-text-muted text-xs mt-0.5">
+                    Votre accès membre sera activé à votre prochaine connexion.
+                    Rafraîchissez la page ou reconnectez-vous.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Retrait — uniquement si pas encore accepté */}
+            {(application.status === "PENDING" || application.status === "INTERVIEW") && (
+              <div className="flex items-center justify-between border border-border rounded-md px-4 py-3">
+                <p className="text-text-muted text-xs">
+                  Vous pouvez retirer votre candidature et re-postuler à tout moment.
+                </p>
+                <form action={withdrawApplication as unknown as () => Promise<void>}>
+                  <button
+                    type="submit"
+                    className="text-text-muted text-xs hover:text-red-400 transition-colors underline underline-offset-2 whitespace-nowrap ml-4"
+                  >
+                    Retirer ma candidature
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         )}
 
