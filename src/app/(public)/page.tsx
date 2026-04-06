@@ -19,6 +19,12 @@ import { SITE_CONFIG } from "@/config/site";
 export const metadata: Metadata = {
   title: `${SITE_CONFIG.fullName} — ${SITE_CONFIG.tagline}`,
   description: SITE_CONFIG.description,
+  alternates: { canonical: SITE_CONFIG.url },
+  openGraph: {
+    url: SITE_CONFIG.url,
+    title: `${SITE_CONFIG.fullName} — ${SITE_CONFIG.tagline}`,
+    description: SITE_CONFIG.description,
+  },
 };
 
 export default async function HomePage() {
@@ -39,8 +45,22 @@ export default async function HomePage() {
 
   const previewActivities = activities.slice(0, 4);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_CONFIG.fullName,
+    url: SITE_CONFIG.url,
+    logo: "https://images.evetech.net/corporations/98809880/logo?size=256",
+    description: SITE_CONFIG.description,
+    sameAs: ["https://discord.gg/tabou"],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ── Hero cinématique ─────────────────────────────────────────── */}
       <Hero
         logoUrl={CORPORATIONS.tabou.logoUrl(512)}

@@ -10,6 +10,8 @@ export const revalidate = 300; // 5 min — liste pilotes change peu
 export const metadata: Metadata = {
   title: `Pilotes — ${SITE_CONFIG.fullName}`,
   description: "Découvrez les pilotes actifs des corporations Tabou et Urban Zone.",
+  alternates: { canonical: `${SITE_CONFIG.url}/pilotes` },
+  openGraph: { url: `${SITE_CONFIG.url}/pilotes` },
 };
 
 export const dynamic = "force-dynamic";

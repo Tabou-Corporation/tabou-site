@@ -12,10 +12,13 @@ import { Card, CardBody } from "@/components/ui/Card";
 
 import { getCorporationContent } from "@/lib/site-content/loader";
 import { CORPORATION_META } from "@/content/corporation";
+import { SITE_CONFIG } from "@/config/site";
 
 export const metadata: Metadata = {
   title: CORPORATION_META.title,
   description: CORPORATION_META.description,
+  alternates: { canonical: `${SITE_CONFIG.url}/corporation` },
+  openGraph: { url: `${SITE_CONFIG.url}/corporation` },
 };
 
 export default async function CorporationPage() {

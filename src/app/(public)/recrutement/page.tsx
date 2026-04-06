@@ -20,6 +20,8 @@ import type { UserRole } from "@/types/roles";
 export const metadata: Metadata = {
   title: RECRUITMENT_META.title,
   description: RECRUITMENT_META.description,
+  alternates: { canonical: `${SITE_CONFIG.url}/recrutement` },
+  openGraph: { url: `${SITE_CONFIG.url}/recrutement` },
 };
 
 export default async function RecruitmentPage() {

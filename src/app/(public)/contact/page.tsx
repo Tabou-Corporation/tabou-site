@@ -11,10 +11,13 @@ import { Separator } from "@/components/ui/Separator";
 
 import { getContactContent } from "@/lib/site-content/loader";
 import { CONTACT_META } from "@/content/contact";
+import { SITE_CONFIG } from "@/config/site";
 
 export const metadata: Metadata = {
   title: CONTACT_META.title,
   description: CONTACT_META.description,
+  alternates: { canonical: `${SITE_CONFIG.url}/contact` },
+  openGraph: { url: `${SITE_CONFIG.url}/contact` },
 };
 
 export default async function ContactPage() {

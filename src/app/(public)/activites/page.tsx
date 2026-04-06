@@ -11,10 +11,13 @@ import { Separator } from "@/components/ui/Separator";
 import { getActivitiesContent } from "@/lib/site-content/loader";
 import { ACTIVITIES_META, ACTIVITIES_INTRO, CATEGORY_LABELS } from "@/content/activities";
 import type { ActivityCategory } from "@/types/content";
+import { SITE_CONFIG } from "@/config/site";
 
 export const metadata: Metadata = {
   title: ACTIVITIES_META.title,
   description: ACTIVITIES_META.description,
+  alternates: { canonical: `${SITE_CONFIG.url}/activites` },
+  openGraph: { url: `${SITE_CONFIG.url}/activites` },
 };
 
 const CATEGORY_ORDER: ActivityCategory[] = [

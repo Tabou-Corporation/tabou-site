@@ -9,10 +9,13 @@ import { FAQGrouped } from "@/components/blocks/FAQAccordion";
 
 import { getFaqContent } from "@/lib/site-content/loader";
 import { FAQ_META } from "@/content/faq";
+import { SITE_CONFIG } from "@/config/site";
 
 export const metadata: Metadata = {
   title: FAQ_META.title,
   description: FAQ_META.description,
+  alternates: { canonical: `${SITE_CONFIG.url}/faq` },
+  openGraph: { url: `${SITE_CONFIG.url}/faq` },
 };
 
 const CONTACT_CTA = {
