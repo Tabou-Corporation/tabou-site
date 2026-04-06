@@ -35,9 +35,9 @@ export function PilotCard({
   index: number;
   onClick?: () => void;
 }) {
-  const corp = pilot.corporationId === CORPORATIONS.urbanZone.id
-    ? CORPORATIONS.urbanZone
-    : CORPORATIONS.tabou;
+  const isUZ = pilot.corporationId === CORPORATIONS.urbanZone.id
+    || (!pilot.corporationId && pilot.role === "member_uz");
+  const corp = isUZ ? CORPORATIONS.urbanZone : CORPORATIONS.tabou;
   const highRank = isHighRank(pilot.role);
 
   return (

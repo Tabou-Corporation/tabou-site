@@ -3,6 +3,7 @@ import type { OAuthConfig } from "next-auth/providers";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import { CORPORATIONS } from "@/lib/constants/corporations";
+import { fetchCharacterInfo } from "@/lib/esi/fetch-character";
 import type { UserRole } from "@/types/roles";
 
 /**
@@ -95,24 +96,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ? `https://images.evetech.net/characters/${characterId}/portrait?size=256`
         : undefined;
 
-      // Récupère la corporation EVE actuelle via ESI public
-      let corporationId: number | undefined;
-      let securityStatus: number | undefined;
-      if (characterId) {
-        try {
-          const esiRes = await fetch(
-            `https://esi.evetech.net/latest/characters/${characterId}/`,
-            { next: { revalidate: 3600 } }
-          );
-          if (esiRes.ok) {
-            const esiData = await esiRes.json() as { corporation_id?: number; security_status?: number };
-            if (esiData.corporation_id) corporationId = esiData.corporation_id;
-            if (typeof esiData.security_status === "number") securityStatus = esiData.security_status;
-          }
-        } catch (err) {
-          console.error("[auth] ESI indisponible lors du login de", characterId, err);
-        }
-      }
+      // Récupère la corporation EVE actuelle via ESI public (null = ESI down → on ne touche à rien)
+      const esiInfo = characterId ? await fetchCharacterInfo(characterId) : null;
+      const corporationId = esiInfo?.corporationId;
+      const securityStatus = esiInfo?.securityStatus;
 
       // Détermine le rôle automatique selon la corporation ESI
       let autoRole: UserRole | undefined;
@@ -127,13 +114,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const inUZ    = corporationId === CORPORATIONS.urbanZone.id;
         const inCorp  = inTabou || inUZ;
 
-        if (inCorp && currentRole === "candidate") {
-          // Premier login corpo → promouvoir
+        if (inCorp && (currentRole === "candidate" || currentRole === "suspended")) {
+          // Premier login corpo ou retour → promouvoir
           autoRole = inUZ ? "member_uz" : "member";
+        } else if (inCorp && currentRole === "member" && inUZ) {
+          // Tabou → UZ
+          autoRole = "member_uz";
+        } else if (inCorp && currentRole === "member_uz" && inTabou) {
+          // UZ → Tabou
+          autoRole = "member";
         } else if (!inCorp && ["member_uz", "member", "officer"].includes(currentRole)) {
           // Éjecté de la corpo → suspendre
           autoRole = "suspended";
         }
+        // director/ceo/admin : jamais modifié automatiquement
+        // officer qui switch Tabou↔UZ : garde officer
       }
 
       if (name && user.id) {

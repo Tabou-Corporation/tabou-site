@@ -4,7 +4,9 @@ export type AuditAction =
   | "role_change"
   | "application_status"
   | "application_notes"
-  | "application_withdraw";
+  | "application_withdraw"
+  | "corp_sync_role_change"
+  | "corp_sync_corp_update";
 
 interface AuditParams {
   actorId: string;
