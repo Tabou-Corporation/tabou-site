@@ -12,7 +12,6 @@ import {
   notifyNewApplication,
   notifyInterviewScheduled,
   notifyApplicationAccepted,
-  notifyApplicationRejected,
 } from "@/lib/discord-recruitment";
 
 // ─── Limites de longueur ──────────────────────────────────────────────────────
@@ -141,15 +140,9 @@ export async function updateApplicationStatus(
       }
     });
 
-    // Notifications Discord (fire-and-forget, hors transaction)
+    // Notification Discord (fire-and-forget, hors transaction)
     if (status === "ACCEPTED") {
       notifyApplicationAccepted({
-        applicationId: id,
-        candidateName: application.user.name ?? null,
-        recruiterName: session.user.name ?? null,
-      });
-    } else if (status === "REJECTED") {
-      notifyApplicationRejected({
         applicationId: id,
         candidateName: application.user.name ?? null,
         recruiterName: session.user.name ?? null,

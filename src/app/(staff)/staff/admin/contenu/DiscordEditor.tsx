@@ -39,14 +39,35 @@ export function DiscordEditor({ initialContent }: Props) {
           value={content.recruitmentWebhookUrl}
           onChange={(v) => set("recruitmentWebhookUrl", v)}
           placeholder="https://discord.com/api/webhooks/…"
-          hint="Canal #recrutement (staff privé) — notifié à chaque étape de candidature"
+          hint="Canal #recrutement (staff) — candidatures, entretiens, acceptations"
         />
         <Field
           label="Calendrier — URL webhook"
           value={content.calendarWebhookUrl}
           onChange={(v) => set("calendarWebhookUrl", v)}
           placeholder="https://discord.com/api/webhooks/…"
-          hint="Canal opérations — notifié lors de la publication d'un événement"
+          hint="Canal opérations — notifié automatiquement à la création d'un événement"
+        />
+        <Field
+          label="Annonces — URL webhook"
+          value={content.announcementsWebhookUrl ?? ""}
+          onChange={(v) => set("announcementsWebhookUrl", v)}
+          placeholder="https://discord.com/api/webhooks/…"
+          hint="Canal annonces — notifié à la publication d'une annonce"
+        />
+        <Field
+          label="Guides — URL webhook"
+          value={content.guidesWebhookUrl ?? ""}
+          onChange={(v) => set("guidesWebhookUrl", v)}
+          placeholder="https://discord.com/api/webhooks/…"
+          hint="Canal guides — notifié à la publication d'un nouveau guide"
+        />
+        <Field
+          label="Assemblées — URL webhook"
+          value={content.assembliesWebhookUrl ?? ""}
+          onChange={(v) => set("assembliesWebhookUrl", v)}
+          placeholder="https://discord.com/api/webhooks/…"
+          hint="Canal assemblées — notifié à la publication d'un compte-rendu"
         />
         <div className="text-text-muted text-xs border-t border-border-subtle pt-3 space-y-1">
           <p className="font-semibold text-text-secondary">Comment créer un webhook :</p>

@@ -136,6 +136,12 @@ export interface DiscordConfig {
   recruitmentWebhookUrl: string;
   /** Webhook du canal opérations — notifications événements calendrier */
   calendarWebhookUrl: string;
+  /** Webhook du canal annonces — notifications annonces corpo */
+  announcementsWebhookUrl: string;
+  /** Webhook du canal guides — notifications nouveaux guides */
+  guidesWebhookUrl: string;
+  /** Webhook du canal assemblées — notifications comptes-rendus */
+  assembliesWebhookUrl: string;
   /** Lien d'invitation public affiché sur le site */
   inviteUrl: string;
 }

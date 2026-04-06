@@ -501,9 +501,12 @@ export const DEFAULT_CONTACT: ContactContent = {
 };
 
 export const DEFAULT_DISCORD: DiscordConfig = {
-  recruitmentWebhookUrl: "",
-  calendarWebhookUrl:    "",
-  inviteUrl:             "https://discord.gg/tabou",
+  recruitmentWebhookUrl:   "",
+  calendarWebhookUrl:      "",
+  announcementsWebhookUrl: "",
+  guidesWebhookUrl:        "",
+  assembliesWebhookUrl:    "",
+  inviteUrl:               "https://discord.gg/tabou",
 };
 
 export const DEFAULTS: ContentByPage = {

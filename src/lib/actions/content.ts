@@ -7,6 +7,12 @@ import type { UserRole } from "@/types/roles";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionResult } from "@/types/actions";
+import {
+  notifyNewAnnouncement,
+  notifyNewGuide,
+  notifyNewAssembly,
+  notifyNewCalendarEvent,
+} from "@/lib/discord-notify";
 
 // ─── Limites de longueur ──────────────────────────────────────────────────────
 const LIMITS = {
@@ -65,6 +71,8 @@ export async function createAnnouncement(
   await prisma.announcement.create({
     data: { title, content, domain, pinned, authorId: user.id! },
   });
+
+  notifyNewAnnouncement({ title, domain, authorName: user.name, content });
 
   revalidatePath("/membre");
   revalidatePath("/membre/annonces");
@@ -134,6 +142,8 @@ export async function createGuide(
   const guide = await prisma.guide.create({
     data: { title, category, content, authorId: user.id! },
   });
+
+  notifyNewGuide({ guideId: guide.id, title, category, authorName: user.name ?? null });
 
   revalidatePath("/membre/guides");
   redirect(`/membre/guides/${guide.id}`);
@@ -235,6 +245,10 @@ export async function createCalendarEvent(
       ...(recurrenceEndAt ? { recurrenceEndAt } : {}),
       authorId: user.id!,
     },
+  });
+
+  notifyNewCalendarEvent({
+    title, type, domain, startAt, endAt, authorName: user.name ?? null,
   });
 
   revalidatePath("/membre/calendrier");
@@ -339,6 +353,10 @@ export async function createAssembly(
 
   const assembly = await prisma.assembly.create({
     data: { title, content, videoUrl, type, heldAt, authorId: user.id! },
+  });
+
+  notifyNewAssembly({
+    assemblyId: assembly.id, title, type, heldAt, hasVideo: !!videoUrl,
   });
 
   revalidatePath("/membre/assemblees");
