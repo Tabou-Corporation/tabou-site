@@ -30,9 +30,15 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   // Les fetches zkillboard (kills, topPilot) sont déplacés dans des Server Components
   // wrappés par <Suspense> dans Hero — la page s'affiche sans les attendre.
-  const [home, activities] = await Promise.all([
+  const [home, activities, memberCount] = await Promise.all([
     getHomeContent().catch(() => null),
     getActivitiesContent().catch(() => []),
+    fetch(`https://esi.evetech.net/latest/corporations/${CORPORATIONS.tabou.id}/?datasource=tranquility`, {
+      next: { revalidate: 3600 },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => (d?.member_count as number) ?? null)
+      .catch(() => null),
   ]);
 
   if (!home) {
@@ -68,7 +74,11 @@ export default async function HomePage() {
         secondaryCTA={{ label: "En savoir plus", href: "/corporation", variant: "ghost" }}
         backgroundImage={home.hero.backgroundImage ?? "/images/hero-bg.jpg"}
         ambientAudio="/audio/ambient.mp3"
-        stats={home.stats}
+        stats={home.stats.map((s) =>
+          s.label === "Membres actifs" && memberCount !== null
+            ? { ...s, value: String(memberCount) }
+            : s
+        )}
         showKillFeed
       />
 

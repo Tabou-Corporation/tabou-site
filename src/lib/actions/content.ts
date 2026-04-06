@@ -72,7 +72,7 @@ export async function createAnnouncement(
     data: { title, content, domain, pinned, authorId: user.id! },
   });
 
-  notifyNewAnnouncement({ title, domain, authorName: user.name, content });
+  notifyNewAnnouncement({ title, domain, authorName: user.name ?? null, content });
 
   revalidatePath("/membre");
   revalidatePath("/membre/annonces");
