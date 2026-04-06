@@ -15,11 +15,13 @@ const ROLE_ORDER: Record<string, number> = {
 
 interface PilotGridProps {
   members: PilotData[];
+  /** Si false, les cartes ne sont pas cliquables et la modale est désactivée */
+  interactive?: boolean;
 }
 
 type Tab = "tabou" | "uz";
 
-export function PilotGrid({ members }: PilotGridProps) {
+export function PilotGrid({ members, interactive = true }: PilotGridProps) {
   const [activeTab,    setActiveTab]    = useState<Tab>("tabou");
   const [selectedPilot, setSelectedPilot] = useState<PilotData | null>(null);
   const openPilot  = useCallback((p: PilotData) => setSelectedPilot(p), []);
@@ -121,7 +123,7 @@ export function PilotGrid({ members }: PilotGridProps) {
                   key={pilot.id}
                   pilot={pilot}
                   index={i}
-                  onClick={() => openPilot(pilot)}
+                  {...(interactive ? { onClick: () => openPilot(pilot) } : {})}
                 />
               ))}
             </div>
@@ -129,8 +131,8 @@ export function PilotGrid({ members }: PilotGridProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Modale pilote */}
-      <PilotModal pilot={selectedPilot} onClose={closePilot} />
+      {/* Modale pilote (uniquement en mode interactif) */}
+      {interactive && <PilotModal pilot={selectedPilot} onClose={closePilot} />}
     </div>
   );
 }
