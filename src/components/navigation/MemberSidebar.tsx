@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Megaphone, Calendar, BookOpen, Users,
   User, FileText, MessageSquare, ExternalLink, Scroll,
   ClipboardList, Megaphone as MegaphoneIcon, BookPlus, CalendarPlus,
-  UsersRound, LayoutGrid, PanelLeft, Shield,
+  UsersRound, LayoutGrid, PanelLeft, Shield, History,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { hasMinRole, canManageRecruitment, parseSpecialties } from "@/types/roles";
@@ -157,6 +157,7 @@ export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
         {/* Profil & outils */}
         <div className="border-t border-border-subtle mt-2 pt-1 space-y-0.5">
           <NavItem href="/membre/profil"        icon={User}           label="Mon profil" />
+          <NavItem href="/membre/changelog"     icon={History}        label="Changelog" />
           <NavItem href={SITE_CONFIG.links.discord} icon={MessageSquare} label="Discord" external />
         </div>
 
@@ -272,7 +273,8 @@ export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
         {role === "candidate" && (
           <MobileNavItem href="/membre/candidature" icon={FileText} label="Candidature" />
         )}
-        <MobileNavItem href="/membre/profil" icon={User} label="Profil" />
+        <MobileNavItem href="/membre/profil"     icon={User}    label="Profil" />
+        <MobileNavItem href="/membre/changelog" icon={History} label="Changelog" />
         {isOfficer && hasRecruiting && (
           <MobileNavItem
             href="/staff/candidatures"
