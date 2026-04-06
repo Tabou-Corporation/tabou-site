@@ -169,14 +169,18 @@ export function Hero({
 
       {/* ── Scroll indicator — après la stats bar dans le flux ──────── */}
       <div className={cn("relative z-10 flex justify-center py-6", showKillFeed && "lg:pl-[260px]")}>
-        <div className="animate-bounce-slow flex flex-col items-center gap-2">
-          <span className="text-gold animate-pulse text-sm font-semibold tracking-extra-wide uppercase">Découvrir</span>
+        <button
+          onClick={() => window.scrollBy({ top: window.innerHeight * 0.85, behavior: "smooth" })}
+          className="animate-bounce-slow flex flex-col items-center gap-2 cursor-pointer group"
+          aria-label="Découvrir le site"
+        >
+          <span className="text-gold animate-pulse text-sm font-semibold tracking-extra-wide uppercase group-hover:opacity-70 transition-opacity">Découvrir</span>
           <svg
             width="28"
             height="28"
             viewBox="0 0 20 20"
             fill="none"
-            className="text-gold animate-pulse"
+            className="text-gold animate-pulse group-hover:opacity-70 transition-opacity"
           >
             <path
               d="M10 4v10m0 0l-4-4m4 4l4-4"
@@ -186,7 +190,7 @@ export function Hero({
               strokeLinejoin="round"
             />
           </svg>
-        </div>
+        </button>
       </div>
     </section>
   );
