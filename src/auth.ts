@@ -136,20 +136,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
-      if (name) {
+      if (name && user.id) {
+        const data = {
+          name,
+          ...(image ? { image } : {}),
+          ...(corporationId ? { corporationId } : {}),
+          ...(securityStatus !== undefined ? { securityStatus } : {}),
+          ...(autoRole ? { role: autoRole } : {}),
+        };
         try {
-          await prisma.user.update({
+          await prisma.user.upsert({
             where: { id: user.id },
-            data: {
-              name,
-              ...(image ? { image } : {}),
-              ...(corporationId ? { corporationId } : {}),
-              ...(securityStatus !== undefined ? { securityStatus } : {}),
-              ...(autoRole ? { role: autoRole } : {}),
+            update: data,
+            create: {
+              id: user.id,
+              ...data,
+              ...(autoRole ? {} : { role: "candidate" }),
             },
           });
-        } catch {
-          // Ignore si user pas encore créé (edge case)
+        } catch (err) {
+          console.error("[auth] upsert user failed", user.id, err);
         }
       }
 
