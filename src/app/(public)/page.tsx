@@ -12,7 +12,7 @@ import { ActivityCard } from "@/components/blocks/ActivityCard";
 import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
 
-import { getHomeContent, getActivitiesContent } from "@/lib/site-content/loader";
+import { getHomeContent, getActivitiesContent, getDiscordConfig } from "@/lib/site-content/loader";
 import { CORPORATIONS } from "@/lib/constants/corporations";
 import { SITE_CONFIG } from "@/config/site";
 
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   // Les fetches zkillboard (kills, topPilot) sont déplacés dans des Server Components
   // wrappés par <Suspense> dans Hero — la page s'affiche sans les attendre.
-  const [home, activities, memberCount] = await Promise.all([
+  const [home, activities, memberCount, discord] = await Promise.all([
     getHomeContent().catch(() => null),
     getActivitiesContent().catch(() => []),
     fetch(`https://esi.evetech.net/latest/corporations/${CORPORATIONS.tabou.id}/?datasource=tranquility`, {
@@ -39,6 +39,7 @@ export default async function HomePage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => (d?.member_count as number) ?? null)
       .catch(() => null),
+    getDiscordConfig().catch(() => null),
   ]);
 
   if (!home) {
@@ -58,7 +59,7 @@ export default async function HomePage() {
     url: SITE_CONFIG.url,
     logo: "https://images.evetech.net/corporations/98809880/logo?size=256",
     description: SITE_CONFIG.description,
-    sameAs: ["https://discord.gg/tabou"],
+    sameAs: [discord?.inviteUrl ?? "https://discord.gg/tabou"],
   };
 
   return (
@@ -174,7 +175,7 @@ export default async function HomePage() {
         headline={home.recruitmentTeaser.headline}
         description={home.recruitmentTeaser.body}
         primaryCTA={{ label: "Voir le recrutement", href: "/recrutement", variant: "primary" }}
-        secondaryCTA={{ label: "Rejoindre le Discord", href: "https://discord.gg/tabou", variant: "secondary", external: true }}
+        secondaryCTA={{ label: "Rejoindre le Discord", href: discord?.inviteUrl ?? "https://discord.gg/tabou", variant: "secondary", external: true }}
         variant="gold"
       />
     </>

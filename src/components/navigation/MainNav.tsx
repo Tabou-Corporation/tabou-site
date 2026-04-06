@@ -12,7 +12,7 @@ import { UserMenu } from "./UserMenu";
 import { NAVIGATION } from "@/config/navigation";
 import { CORPORATIONS } from "@/lib/constants/corporations";
 
-export function MainNav() {
+export function MainNav({ discordUrl }: { discordUrl?: string | undefined } = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { data: session } = useSession();
@@ -42,7 +42,10 @@ export function MainNav() {
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  const discordLink = NAVIGATION.utility.find((u) => u.label === "Discord");
+  const discordNav = NAVIGATION.utility.find((u) => u.label === "Discord");
+  const discordLink = discordNav
+    ? { ...discordNav, href: discordUrl ?? discordNav.href }
+    : null;
 
   return (
     <>

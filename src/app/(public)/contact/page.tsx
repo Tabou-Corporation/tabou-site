@@ -9,7 +9,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/Separator";
 
-import { getContactContent } from "@/lib/site-content/loader";
+import { getContactContent, getDiscordConfig } from "@/lib/site-content/loader";
 import { CONTACT_META } from "@/content/contact";
 import { SITE_CONFIG } from "@/config/site";
 
@@ -21,7 +21,11 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const contact = await getContactContent();
+  const [contact, discord] = await Promise.all([getContactContent(), getDiscordConfig()]);
+  const discordInviteUrl = discord.inviteUrl || "https://discord.gg/tabou";
+  const channels = contact.channels.map((ch) =>
+    ch.id === "discord" ? { ...ch, ctaHref: discordInviteUrl } : ch
+  );
 
   return (
     <>
@@ -48,7 +52,7 @@ export default async function ContactPage() {
 
           {/* Canaux */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {contact.channels.map((channel) => (
+            {channels.map((channel) => (
               <Card key={channel.id} className="h-full">
                 <CardBody className="space-y-3 h-full flex flex-col">
                   <h3 className="font-display font-semibold text-lg text-text-primary">
@@ -103,7 +107,7 @@ export default async function ContactPage() {
               </p>
               <Button
                 as="a"
-                href="https://discord.gg/tabou"
+                href={discordInviteUrl}
                 variant="primary"
                 size="md"
                 className="mt-6"

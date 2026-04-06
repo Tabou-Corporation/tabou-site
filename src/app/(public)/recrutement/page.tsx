@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/Separator";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-import { getRecruitmentContent } from "@/lib/site-content/loader";
+import { getRecruitmentContent, getDiscordConfig } from "@/lib/site-content/loader";
 import { RECRUITMENT_META } from "@/content/recruitment";
 import { SITE_CONFIG } from "@/config/site";
 import { auth } from "@/auth";
@@ -25,9 +25,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RecruitmentPage() {
-  const [recruitment, session] = await Promise.all([
+  const [recruitment, session, discord] = await Promise.all([
     getRecruitmentContent(),
     auth(),
+    getDiscordConfig(),
   ]);
 
   const role        = (session?.user?.role ?? null) as UserRole | null;
@@ -144,7 +145,7 @@ export default async function RecruitmentPage() {
               {/* Lien Discord secondaire — toujours visible */}
               <div className="pt-2 border-t border-border-subtle">
                 <a
-                  href={SITE_CONFIG.links.discord}
+                  href={discord.inviteUrl || SITE_CONFIG.links.discord}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-text-muted text-xs hover:text-text-secondary transition-colors"

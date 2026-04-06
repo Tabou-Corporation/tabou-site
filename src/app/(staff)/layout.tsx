@@ -5,6 +5,7 @@ import { hasMinRole, canManageRecruitment, parseSpecialties } from "@/types/role
 import { MainNav } from "@/components/navigation/MainNav";
 import { Footer } from "@/components/layout/Footer";
 import { MemberSidebar, MemberMobileNav } from "@/components/navigation/MemberSidebar";
+import { getDiscordConfig } from "@/lib/site-content/loader";
 import type { UserRole } from "@/types/roles";
 
 /**
@@ -25,13 +26,16 @@ export default async function StaffLayout({ children }: { children: React.ReactN
 
   const hasRecruitment = canManageRecruitment(role, parseSpecialties(specialties));
 
-  const pendingCount = hasRecruitment
-    ? await prisma.application.count({ where: { status: "PENDING" } })
-    : 0;
+  const [pendingCount, discord] = await Promise.all([
+    hasRecruitment
+      ? prisma.application.count({ where: { status: "PENDING" } })
+      : Promise.resolve(0),
+    getDiscordConfig(),
+  ]);
 
   return (
     <>
-      <MainNav />
+      <MainNav discordUrl={discord.inviteUrl || undefined} />
       <MemberSidebar pendingCount={pendingCount} />
       <main className="flex-1 flex flex-col pt-16 lg:pl-64">
         <MemberMobileNav pendingCount={pendingCount} />

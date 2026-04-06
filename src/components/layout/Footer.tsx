@@ -3,9 +3,11 @@ import { Container } from "./Container";
 import { Separator } from "@/components/ui/Separator";
 import { NAVIGATION } from "@/config/navigation";
 import { SITE_CONFIG } from "@/config/site";
+import { getDiscordConfig } from "@/lib/site-content/loader";
 
-export function Footer() {
+export async function Footer() {
   const currentYear = new Date().getFullYear();
+  const discord = await getDiscordConfig();
 
   return (
     <footer className="bg-bg-deep border-t border-border mt-auto">
@@ -40,27 +42,32 @@ export function Footer() {
                   </h3>
                 )}
                 <ul className="space-y-2.5">
-                  {group.items.map((item) => (
-                    <li key={item.href}>
-                      {item.external ? (
-                        <a
-                          href={item.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-text-secondary text-sm hover:text-gold transition-colors"
-                        >
-                          {item.label}
-                        </a>
-                      ) : (
-                        <Link
-                          href={item.href}
-                          className="text-text-secondary text-sm hover:text-gold transition-colors"
-                        >
-                          {item.label}
-                        </Link>
-                      )}
-                    </li>
-                  ))}
+                  {group.items.map((item) => {
+                    const href = item.external && item.label === "Discord"
+                      ? (discord.inviteUrl || item.href)
+                      : item.href;
+                    return (
+                      <li key={item.href}>
+                        {item.external ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-text-secondary text-sm hover:text-gold transition-colors"
+                          >
+                            {item.label}
+                          </a>
+                        ) : (
+                          <Link
+                            href={href}
+                            className="text-text-secondary text-sm hover:text-gold transition-colors"
+                          >
+                            {item.label}
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
