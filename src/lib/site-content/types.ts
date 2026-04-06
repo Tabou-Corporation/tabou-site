@@ -5,6 +5,8 @@
 export interface StatItem {
   label: string;
   value: string;
+  /** Si true, la valeur est remplacée en live par le member_count ESI de Tabou */
+  esiAuto?: boolean;
 }
 
 export interface InfoItem {

@@ -79,25 +79,45 @@ export function HomeEditor({ initialContent }: { initialContent: HomeContent }) 
       {/* Stats */}
       <EditorSection title="Chiffres clés">
         {content.stats.map((stat, i) => (
-          <div key={i} className="grid grid-cols-2 gap-3 pb-3 border-b border-border last:border-0 last:pb-0">
-            <Field
-              label={`Stat ${i + 1} — Valeur`}
-              value={stat.value}
-              onChange={(v) => {
-                const next = [...content.stats];
-                next[i] = { ...stat, value: v };
-                set("stats", next);
-              }}
-            />
-            <Field
-              label="Libellé"
-              value={stat.label}
-              onChange={(v) => {
-                const next = [...content.stats];
-                next[i] = { ...stat, label: v };
-                set("stats", next);
-              }}
-            />
+          <div key={i} className="space-y-2 pb-3 border-b border-border last:border-0 last:pb-0">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Field
+                  label={`Stat ${i + 1} — Valeur`}
+                  value={stat.esiAuto ? "" : stat.value}
+                  onChange={(v) => {
+                    const next = [...content.stats];
+                    next[i] = { ...stat, value: v };
+                    set("stats", next);
+                  }}
+                  {...(stat.esiAuto ? { placeholder: "Automatique (ESI)", disabled: true } : {})}
+                />
+              </div>
+              <Field
+                label="Libellé"
+                value={stat.label}
+                onChange={(v) => {
+                  const next = [...content.stats];
+                  next[i] = { ...stat, label: v };
+                  set("stats", next);
+                }}
+              />
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={stat.esiAuto ?? false}
+                onChange={(e) => {
+                  const next = [...content.stats];
+                  next[i] = { ...stat, esiAuto: e.target.checked };
+                  set("stats", next);
+                }}
+                className="accent-gold w-3.5 h-3.5"
+              />
+              <span className="text-text-muted text-xs group-hover:text-text-secondary transition-colors">
+                Valeur automatique — nombre de membres Tabou via ESI
+              </span>
+            </label>
           </div>
         ))}
       </EditorSection>

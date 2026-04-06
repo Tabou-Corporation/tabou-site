@@ -21,12 +21,14 @@ export function Field({
   onChange,
   placeholder,
   hint,
+  disabled,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   hint?: string;
+  disabled?: boolean;
 }) {
   return (
     <div>
@@ -34,10 +36,11 @@ export function Field({
       {hint && <p className="text-text-muted text-xs mb-1">{hint}</p>}
       <input
         type="text"
-        className={inputCls}
+        className={`${inputCls}${disabled ? " opacity-50 cursor-not-allowed" : ""}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        disabled={disabled}
       />
     </div>
   );
