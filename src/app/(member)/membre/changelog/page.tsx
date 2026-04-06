@@ -18,7 +18,6 @@ interface Change {
 
 interface Version {
   version: string;
-  date: string;
   title: string;
   description: string;
   status: "released" | "current" | "upcoming";
@@ -30,7 +29,6 @@ interface Version {
 const VERSIONS: Version[] = [
   {
     version: "2.4",
-    date: "Avril 2026",
     title: "Intégrations EVE Online",
     description: "Connexion aux APIs EVE pour enrichir les profils pilotes et le suivi d'activité.",
     status: "current",
@@ -44,7 +42,6 @@ const VERSIONS: Version[] = [
   },
   {
     version: "2.3",
-    date: "Mars 2026",
     title: "Backoffice Staff & Administration",
     description: "Outils de gestion complets pour les officiers et directeurs.",
     status: "released",
@@ -58,7 +55,6 @@ const VERSIONS: Version[] = [
   },
   {
     version: "2.2",
-    date: "Février 2026",
     title: "Pipeline de Recrutement",
     description: "Système complet de gestion des candidatures, de la soumission à la décision.",
     status: "released",
@@ -72,7 +68,6 @@ const VERSIONS: Version[] = [
   },
   {
     version: "2.1",
-    date: "Janvier 2026",
     title: "Profil Pilote",
     description: "Identité complète de chaque pilote, visible et éditable depuis l'espace membre.",
     status: "released",
@@ -86,7 +81,6 @@ const VERSIONS: Version[] = [
   },
   {
     version: "2.0",
-    date: "Décembre 2025",
     title: "Espace Membre",
     description: "Lancement de l'espace privatif pour les membres de la corporation.",
     status: "released",
@@ -102,7 +96,6 @@ const VERSIONS: Version[] = [
   },
   {
     version: "1.1",
-    date: "Novembre 2025",
     title: "Administration du Contenu",
     description: "Premier outil de gestion de contenu pour les pages publiques du site.",
     status: "released",
@@ -113,7 +106,6 @@ const VERSIONS: Version[] = [
   },
   {
     version: "1.0",
-    date: "Octobre 2025",
     title: "Site Public",
     description: "Mise en ligne du site vitrine de la Tabou Corporation.",
     status: "released",
@@ -205,9 +197,6 @@ export default async function ChangelogPage() {
                             {status.label}
                           </Badge>
                         </div>
-                        <span className="text-text-muted text-xs mt-1 ml-auto">
-                          {v.date}
-                        </span>
                       </div>
 
                       <h2 className="font-display font-semibold text-base text-text-primary mb-1">
