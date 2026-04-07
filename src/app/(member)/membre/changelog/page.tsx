@@ -30,14 +30,17 @@ const VERSIONS: Version[] = [
   {
     version: "2.8",
     title: "ESI-First & Robustesse Recrutement",
-    description: "L'ESI devient la seule source de vérité pour les rôles membres — suppression des conflits d'acceptation et des blocages de candidats.",
+    description: "L'ESI devient la seule source de vérité pour les rôles — plus de blocages, plus de doublons, et le processus d'acceptation guide clairement recruteur et candidat.",
     status: "current",
     changes: [
       { type: "security",    label: "Acceptation ESI-first : la promotion interroge l'ESI en temps réel au lieu du corporationId stocké en DB (potentiellement périmé)" },
       { type: "fix",         label: "Conflit signIn ↔ acceptation supprimé — plus de candidat suspendu immédiatement après avoir été accepté" },
+      { type: "fix",         label: "Grace period 24h : si une candidature a été acceptée récemment, le signIn et le cron sync ne suspendent pas même si l'ESI n'est pas encore à jour" },
       { type: "fix",         label: "Si le candidat n'est pas encore dans la corp au moment de l'acceptation, la promotion est automatiquement différée à sa prochaine connexion" },
       { type: "fix",         label: "Invalidation de session à l'acceptation — plus de tableau de bord 'candidat' bloqué après promotion" },
-      { type: "improvement", label: "L'audit log d'acceptation trace la corporation ESI et la décision prise (promotion immédiate ou différée)" },
+      { type: "security",    label: "Champ eveCharacterId unique en base — les doublons de comptes créés par double-clic au premier login sont automatiquement fusionnés" },
+      { type: "feature",     label: "Toast 'warning' (ambre) : le recruteur est informé quand la promotion est différée en attente de l'ESI" },
+      { type: "improvement", label: "Timeline candidature : étape 'Intégration en jeu' active après acceptation avec instructions claires (rejoindre la corp + délai ESI ~1h)" },
     ],
   },
   {
