@@ -25,12 +25,19 @@ export function CandidatureDecisionButtons({ applicationId, currentStatus }: Pro
       if (!result.success) {
         addToast(result.error, "error");
       } else {
-        addToast(
-          status === "ACCEPTED" ? "Candidature acceptée — membre promu." :
-          status === "REJECTED" ? "Candidature refusée." :
-          "Remise en attente.",
-          "success"
-        );
+        if (status === "ACCEPTED" && result.info === "promotion_deferred") {
+          addToast(
+            "Candidature acceptée. L'ESI n'a pas encore confirmé sa corporation — la promotion sera automatique à sa prochaine connexion.",
+            "warning"
+          );
+        } else {
+          addToast(
+            status === "ACCEPTED" ? "Candidature acceptée — membre promu." :
+            status === "REJECTED" ? "Candidature refusée." :
+            "Remise en attente.",
+            "success"
+          );
+        }
         setShowAcceptConfirm(false);
         router.refresh();
       }

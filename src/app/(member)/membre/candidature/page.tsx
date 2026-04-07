@@ -83,17 +83,19 @@ function buildTimeline(application: {
     {
       icon: <Rocket size={16} />,
       title: "Intégration en jeu",
-      description: "Invitation dans la corporation EVE Online par un directeur.",
+      description: "Rejoignez la corporation EVE Online (Tabou ou Urban Zone) et reconnectez-vous ici.",
       status:
-        status === "ACCEPTED" ? "done" :
-        ["INTERVIEW"].includes(status) ? "upcoming" :
+        status === "ACCEPTED" ? "active" :
         "upcoming",
+      ...(status === "ACCEPTED"
+        ? { detail: "Accepté — rejoignez la corporation en jeu puis reconnectez-vous" }
+        : {}),
     },
     {
       icon: <Check size={16} />,
       title: "Bienvenue chez Tabou",
       description: "Accès complet à l'espace membre, aux opérations et aux ressources.",
-      status: status === "ACCEPTED" ? "done" : "upcoming",
+      status: "upcoming",
       ...(status === "ACCEPTED" && application.reviewedAt
         ? { date: fmt(application.reviewedAt) }
         : {}),
@@ -333,11 +335,16 @@ export default async function CandidaturePage() {
                 <Rocket size={16} className="text-gold shrink-0 mt-0.5" />
                 <div>
                   <p className="text-gold text-sm font-semibold">
-                    Bienvenue dans Tabou !
+                    Votre candidature a été acceptée !
                   </p>
-                  <p className="text-text-muted text-xs mt-0.5">
-                    Votre accès membre sera activé à votre prochaine connexion.
-                    Rafraîchissez la page ou reconnectez-vous.
+                  <p className="text-text-muted text-xs mt-1 leading-relaxed">
+                    Assurez-vous d&apos;avoir <strong className="text-text-secondary">rejoint la corporation en jeu</strong> (Tabou
+                    ou Urban Zone), puis <strong className="text-text-secondary">reconnectez-vous</strong> sur ce site.
+                  </p>
+                  <p className="text-text-muted text-xs mt-1.5 leading-relaxed">
+                    <span className="text-amber-400 font-semibold">Note :</span> après avoir rejoint
+                    en jeu, l&apos;API EVE (ESI) peut prendre jusqu&apos;à ~1 heure pour propager le changement.
+                    Si votre accès n&apos;est pas activé immédiatement, patientez puis reconnectez-vous.
                   </p>
                 </div>
               </div>

@@ -8,12 +8,12 @@ import {
   type ReactNode,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, Info, X } from "lucide-react";
+import { CheckCircle, XCircle, Info, AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type ToastType = "success" | "error" | "info";
+export type ToastType = "success" | "error" | "info" | "warning";
 
 interface Toast {
   id: string;
@@ -39,12 +39,14 @@ const ICON_MAP = {
   success: CheckCircle,
   error:   XCircle,
   info:    Info,
+  warning: AlertTriangle,
 } as const;
 
 const COLOR_MAP: Record<ToastType, string> = {
   success: "border-green-400/40 [&_svg:first-child]:text-green-400",
   error:   "border-red-400/40   [&_svg:first-child]:text-red-400",
   info:    "border-gold/40      [&_svg:first-child]:text-gold",
+  warning: "border-amber-400/40 [&_svg:first-child]:text-amber-400",
 };
 
 // ── Provider ───────────────────────────────────────────────────────────────
@@ -55,9 +57,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const addToast = useCallback((message: string, type: ToastType = "success") => {
     const id = Math.random().toString(36).slice(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
+    const duration = type === "warning" ? 8000 : 4200;
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4200);
+    }, duration);
   }, []);
 
   const remove = useCallback((id: string) => {

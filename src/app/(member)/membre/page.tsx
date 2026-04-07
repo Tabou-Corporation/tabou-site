@@ -212,9 +212,15 @@ export default async function MemberDashboardPage() {
                 )}
 
                 {application?.status === "ACCEPTED" && (
-                  <p className="text-gold text-sm font-semibold">
-                    Candidature acceptée — rechargez la page pour accéder à l&apos;espace membre.
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-gold text-sm font-semibold">
+                      Candidature acceptée !
+                    </p>
+                    <p className="text-text-muted text-xs leading-relaxed">
+                      Rejoignez la corporation en jeu (Tabou ou Urban Zone) puis reconnectez-vous.
+                      L&apos;ESI peut prendre ~1h pour propager le changement.
+                    </p>
+                  </div>
                 )}
 
                 <div className="flex flex-col gap-2 pt-1">
@@ -229,7 +235,7 @@ export default async function MemberDashboardPage() {
                       <ArrowRight size={12} />
                     </Link>
                   )}
-                  {hasApplication && applicationActive && application.status !== "ACCEPTED" && (
+                  {hasApplication && applicationActive && (
                     <Link
                       href="/membre/candidature"
                       className="inline-flex items-center gap-1.5 text-text-muted text-xs hover:text-text-secondary transition-colors"

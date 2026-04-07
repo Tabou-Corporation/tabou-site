@@ -228,6 +228,12 @@ export async function updateApplicationStatus(
     revalidatePath("/staff/candidatures");
     revalidatePath(`/staff/candidatures/${id}`);
     revalidatePath("/membre");
+    revalidatePath("/membre/candidature");
+
+    // Informe le recruteur si la promotion est différée (ESI pas à jour)
+    if (status === "ACCEPTED" && !esiPromotedRole) {
+      return { success: true, info: "promotion_deferred" };
+    }
     return { success: true };
   } catch {
     return { success: false, error: "Erreur lors de la mise à jour du statut." };

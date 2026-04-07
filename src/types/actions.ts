@@ -3,5 +3,5 @@
  * Permet un feedback d'erreur cohérent côté client.
  */
 export type ActionResult =
-  | { success: true }
+  | { success: true; info?: string }
   | { success: false; error: string };
