@@ -13,3 +13,4 @@ Types : `feature` · `improvement` · `fix` · `security`
 
 <!-- SESSION 2026-04-07 — intégrée en v2.6, fichier remis à zéro -->
 <!-- SESSION 2026-04-07 (suite) — intégrée en v2.7, fichier remis à zéro -->
+<!-- SESSION 2026-04-07 (troisième) — intégrée en v2.8, fichier remis à zéro -->

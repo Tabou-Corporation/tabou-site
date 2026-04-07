@@ -28,10 +28,23 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "2.8",
+    title: "ESI-First & Robustesse Recrutement",
+    description: "L'ESI devient la seule source de vérité pour les rôles membres — suppression des conflits d'acceptation et des blocages de candidats.",
+    status: "current",
+    changes: [
+      { type: "security",    label: "Acceptation ESI-first : la promotion interroge l'ESI en temps réel au lieu du corporationId stocké en DB (potentiellement périmé)" },
+      { type: "fix",         label: "Conflit signIn ↔ acceptation supprimé — plus de candidat suspendu immédiatement après avoir été accepté" },
+      { type: "fix",         label: "Si le candidat n'est pas encore dans la corp au moment de l'acceptation, la promotion est automatiquement différée à sa prochaine connexion" },
+      { type: "fix",         label: "Invalidation de session à l'acceptation — plus de tableau de bord 'candidat' bloqué après promotion" },
+      { type: "improvement", label: "L'audit log d'acceptation trace la corporation ESI et la décision prise (promotion immédiate ou différée)" },
+    ],
+  },
+  {
     version: "2.7",
     title: "Sécurité, Robustesse & SEO",
     description: "Renforcement sécurité HTTP, robustesse du site, indexation Google et correction de bugs critiques.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "security", label: "Header HSTS ajouté — HTTPS forcé sur tous les navigateurs pour 1 an" },
       { type: "fix",      label: "SITE_CONFIG.url corrigé (tabou-corp.fr → tabou-eve.fr) — sitemap, JSON-LD et canonicals étaient sur le mauvais domaine" },
