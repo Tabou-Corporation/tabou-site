@@ -28,10 +28,27 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "2.6",
+    title: "CMS Étendu & Pilotage Navigation",
+    description: "Notifications Discord configurables, compteur ESI en temps réel, suivi des candidatures amélioré et contrôle admin de la navigation.",
+    status: "current",
+    changes: [
+      { type: "feature", label: "Notifications Discord pour annonces, guides, assemblées et événements (webhooks configurables par canal)" },
+      { type: "feature", label: "Compteur de membres Tabou dynamique via ESI sur la page d'accueil" },
+      { type: "feature", label: "Toggle ESI auto dans l'éditeur CMS pour les stats de la home" },
+      { type: "feature", label: "Timeline de suivi dans les candidatures (historique des étapes)" },
+      { type: "feature", label: "Alerte recruteur si le candidat appartient à une corporation concurrente" },
+      { type: "feature", label: "Onglet \"Pilotes\" masquable/affichable depuis l'admin CMS (onglet Navigation)" },
+      { type: "improvement", label: "Logo de la homepage recentré au-dessus du wordmark TABOU" },
+      { type: "fix", label: "Liens Discord dynamiques depuis le CMS sur l'ensemble du site" },
+      { type: "fix", label: "Label ESI pour le compteur de membres corrigé" },
+    ],
+  },
+  {
     version: "2.5",
     title: "Synchronisation & Fiabilité",
     description: "Sync automatique des corporations, refonte admin et renforcement de la fiabilité du site.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "feature", label: "Sync automatique quotidien des corporations via ESI (Vercel Cron)" },
       { type: "feature", label: "Bouton de sync ESI manuel dans le dashboard admin" },
