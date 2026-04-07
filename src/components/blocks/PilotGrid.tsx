@@ -30,9 +30,11 @@ export function PilotGrid({ members, interactive = true }: PilotGridProps) {
   const tabouMembers = useMemo(
     () =>
       members
+        // On se base uniquement sur corporationId — fallback Tabou si non renseigné
+        // (les officers/directors UZ ont toujours corporationId via ESI sync)
         .filter((m) =>
           m.corporationId === CORPORATIONS.tabou.id ||
-          (!m.corporationId && m.role !== "member_uz")
+          (!m.corporationId && m.role !== "member_uz" && m.role !== "officer" && m.role !== "director" && m.role !== "ceo" && m.role !== "admin")
         )
         .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9)),
     [members]
