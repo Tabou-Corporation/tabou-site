@@ -47,7 +47,7 @@ export function PilotGrid({ members, interactive = true }: PilotGridProps) {
           m.corporationId === CORPORATIONS.urbanZone.id ||
           (!m.corporationId && m.role === "member_uz")
         )
-        .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
+        .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9) || (a.name ?? "").localeCompare(b.name ?? "")),
     [members]
   );
 
