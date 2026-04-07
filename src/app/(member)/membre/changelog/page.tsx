@@ -28,10 +28,24 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "2.7",
+    title: "Sécurité, Robustesse & SEO",
+    description: "Renforcement sécurité HTTP, robustesse du site, indexation Google et correction de bugs critiques.",
+    status: "current",
+    changes: [
+      { type: "security", label: "Header HSTS ajouté — HTTPS forcé sur tous les navigateurs pour 1 an" },
+      { type: "fix",      label: "SITE_CONFIG.url corrigé (tabou-corp.fr → tabou-eve.fr) — sitemap, JSON-LD et canonicals étaient sur le mauvais domaine" },
+      { type: "feature",  label: "Webhook admin/monitoring Discord — alerte automatique si la sync ESI quotidienne rencontre des erreurs" },
+      { type: "improvement", label: "Loading skeletons sur les pages de détail (guides, assemblées, candidatures)" },
+      { type: "fix",      label: "Race condition auth corrigée — plus de doublons de compte au premier login (double-clic / retry réseau)" },
+      { type: "fix",      label: "Doublon utilisateur multiface supprimé en base, corporationId restauré" },
+    ],
+  },
+  {
     version: "2.6",
     title: "CMS Étendu & Pilotage Navigation",
     description: "Notifications Discord configurables, compteur ESI en temps réel, suivi des candidatures amélioré et contrôle admin de la navigation.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "feature", label: "Notifications Discord pour annonces, guides, assemblées et événements (webhooks configurables par canal)" },
       { type: "feature", label: "Compteur de membres Tabou dynamique via ESI sur la page d'accueil" },

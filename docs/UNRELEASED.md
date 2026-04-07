@@ -12,3 +12,4 @@ Types : `feature` · `improvement` · `fix` · `security`
 <!-- Les entrées ci-dessous seront intégrées à la prochaine version du changelog -->
 
 <!-- SESSION 2026-04-07 — intégrée en v2.6, fichier remis à zéro -->
+<!-- SESSION 2026-04-07 (suite) — intégrée en v2.7, fichier remis à zéro -->
