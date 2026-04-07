@@ -69,6 +69,13 @@ export function DiscordEditor({ initialContent }: Props) {
           placeholder="https://discord.com/api/webhooks/…"
           hint="Canal assemblées — notifié à la publication d'un compte-rendu"
         />
+        <Field
+          label="Admin / Monitoring — URL webhook"
+          value={content.adminWebhookUrl ?? ""}
+          onChange={(v) => set("adminWebhookUrl", v)}
+          placeholder="https://discord.com/api/webhooks/…"
+          hint="Canal privé staff — alertes techniques (erreurs sync ESI, cron partiel)"
+        />
         <div className="text-text-muted text-xs border-t border-border-subtle pt-3 space-y-1">
           <p className="font-semibold text-text-secondary">Comment créer un webhook :</p>
           <p>Canal Discord → Paramètres du canal → Intégrations → Webhooks → Nouveau webhook → Copier l&apos;URL</p>

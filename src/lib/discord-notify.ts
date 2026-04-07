@@ -13,7 +13,7 @@ const COLOR_GOLD = 0xF0B030;
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function getWebhookUrl(
-  key: "announcementsWebhookUrl" | "guidesWebhookUrl" | "assembliesWebhookUrl" | "calendarWebhookUrl",
+  key: "announcementsWebhookUrl" | "guidesWebhookUrl" | "assembliesWebhookUrl" | "calendarWebhookUrl" | "adminWebhookUrl",
 ): Promise<string> {
   try {
     const config = await getDiscordConfig();
@@ -46,6 +46,46 @@ function stripHtml(html: string): string {
 function truncate(text: string, max: number): string {
   const clean = stripHtml(text);
   return clean.length > max ? clean.slice(0, max).trimEnd() + "…" : clean;
+}
+
+// ── Cron sync monitoring ──────────────────────────────────────────────────────
+
+export function notifyCronSyncResult(result: {
+  total: number;
+  checked: number;
+  updated: number;
+  errors: number;
+  aborted?: boolean;
+}): void {
+  // Ne notifie que si quelque chose s'est mal passé
+  if (result.errors === 0 && !result.aborted) return;
+
+  const run = async () => {
+    const url = await getWebhookUrl("adminWebhookUrl");
+    if (!url) return;
+
+    const color = result.aborted ? 0xEF4444 : 0xF59E0B; // rouge si aborté, orange si erreurs partielles
+    const title = result.aborted
+      ? "⛔ Sync ESI ABORTÉ"
+      : `⚠️ Sync ESI — ${result.errors} erreur(s)`;
+
+    await send(url, {
+      embeds: [{
+        title,
+        color,
+        fields: [
+          { name: "Total pilotes", value: String(result.total), inline: true },
+          { name: "Vérifiés", value: String(result.checked), inline: true },
+          { name: "Mis à jour", value: String(result.updated), inline: true },
+          { name: "Erreurs", value: String(result.errors), inline: true },
+          ...(result.aborted ? [{ name: "Statut", value: "Aborté après 5 échecs ESI consécutifs", inline: false }] : []),
+        ],
+        footer: { text: "Tabou — Cron sync ESI" },
+        timestamp: new Date().toISOString(),
+      }],
+    });
+  };
+  void run();
 }
 
 // ── Annonces ─────────────────────────────────────────────────────────────────

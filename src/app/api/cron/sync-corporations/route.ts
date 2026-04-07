@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { syncAllCorporations } from "@/lib/sync/corporation-sync";
+import { notifyCronSyncResult } from "@/lib/discord-notify";
 import { hasMinRole } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 
@@ -30,6 +31,7 @@ export async function GET(request: Request) {
 
   try {
     const result = await syncAllCorporations();
+    notifyCronSyncResult(result);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     console.error("[cron] sync-corporations failed:", err);
@@ -51,6 +53,7 @@ export async function POST() {
 
   try {
     const result = await syncAllCorporations();
+    notifyCronSyncResult(result);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     console.error("[cron] manual sync failed:", err);

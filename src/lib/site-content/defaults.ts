@@ -507,6 +507,7 @@ export const DEFAULT_DISCORD: DiscordConfig = {
   announcementsWebhookUrl: "",
   guidesWebhookUrl:        "",
   assembliesWebhookUrl:    "",
+  adminWebhookUrl:         "",
   inviteUrl:               "https://discord.gg/tabou",
 };
 

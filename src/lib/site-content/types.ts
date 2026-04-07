@@ -150,6 +150,8 @@ export interface DiscordConfig {
   guidesWebhookUrl: string;
   /** Webhook du canal assemblées — notifications comptes-rendus */
   assembliesWebhookUrl: string;
+  /** Webhook admin/monitoring — alertes techniques (cron, erreurs sync) */
+  adminWebhookUrl: string;
   /** Lien d'invitation public affiché sur le site */
   inviteUrl: string;
 }
