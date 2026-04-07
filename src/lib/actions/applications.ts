@@ -143,6 +143,11 @@ export async function updateApplicationStatus(
           where: { id: application.userId },
           data:  { role: promotedRole },
         });
+        // Invalide toutes les sessions du candidat → au prochain login,
+        // NextAuth réévalue le rôle depuis la DB (évite l'état "candidat" bloqué)
+        await tx.session.deleteMany({
+          where: { userId: application.userId },
+        });
       }
     });
 
