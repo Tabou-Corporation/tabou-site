@@ -140,17 +140,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           ...(autoRole ? { role: autoRole } : {}),
         };
         try {
-          await prisma.user.upsert({
+          // PrismaAdapter crée déjà l'utilisateur avant ce callback —
+          // on fait uniquement un UPDATE pour éviter les doublons en cas
+          // de double-clic ou de retry concurrent.
+          await prisma.user.update({
             where: { id: user.id },
-            update: data,
-            create: {
-              id: user.id,
-              ...data,
-              ...(autoRole ? {} : { role: "candidate" }),
-            },
+            data,
           });
         } catch (err) {
-          console.error("[auth] upsert user failed", user.id, err);
+          console.error("[auth] update user failed", user.id, err);
         }
       }
 
