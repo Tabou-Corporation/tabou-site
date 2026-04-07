@@ -149,6 +149,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const data = {
           name,
           ...(image ? { image } : {}),
+          ...(characterId ? { eveCharacterId: characterId } : {}),
           ...(corporationId ? { corporationId } : {}),
           ...(securityStatus !== undefined ? { securityStatus } : {}),
           ...(autoRole ? { role: autoRole } : {}),
@@ -162,7 +163,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             data,
           });
         } catch (err) {
-          console.error("[auth] update user failed", user.id, err);
+          // Si unique constraint sur eveCharacterId → un doublon PrismaAdapter
+          // a été créé. On fusionne vers le record existant.
+          const isUniqueViolation =
+            err instanceof Error && err.message.includes("Unique constraint");
+          if (isUniqueViolation && characterId) {
+            console.warn(`[auth] doublon détecté pour character ${characterId}, fusion…`);
+            try {
+              // Trouver le "vrai" user (celui qui a déjà le bon eveCharacterId)
+              const existing = await prisma.user.findUnique({
+                where: { eveCharacterId: characterId },
+              });
+              if (existing && existing.id !== user.id) {
+                // Supprimer le doublon fraîchement créé par l'adapter
+                await prisma.user.delete({ where: { id: user.id } });
+                // Mettre à jour le vrai user
+                await prisma.user.update({
+                  where: { id: existing.id },
+                  data: {
+                    name,
+                    ...(image ? { image } : {}),
+                    ...(corporationId ? { corporationId } : {}),
+                    ...(securityStatus !== undefined ? { securityStatus } : {}),
+                    ...(autoRole ? { role: autoRole } : {}),
+                  },
+                });
+              }
+            } catch (mergeErr) {
+              console.error("[auth] fusion doublon échouée", mergeErr);
+            }
+          } else {
+            console.error("[auth] update user failed", user.id, err);
+          }
         }
       }
 
