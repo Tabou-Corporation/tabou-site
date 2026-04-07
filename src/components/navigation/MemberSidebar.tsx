@@ -84,7 +84,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 interface SidebarProps {
   pendingCount?: number;
-  discordUrl?: string;
+  discordUrl?: string | undefined;
 }
 
 // ── MemberSidebar (desktop, fixed) ────────────────────────────────────────
