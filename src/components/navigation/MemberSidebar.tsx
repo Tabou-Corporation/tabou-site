@@ -84,11 +84,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 interface SidebarProps {
   pendingCount?: number;
+  discordUrl?: string;
 }
 
 // ── MemberSidebar (desktop, fixed) ────────────────────────────────────────
 
-export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
+export function MemberSidebar({ pendingCount = 0, discordUrl }: SidebarProps) {
   const { data: session } = useSession();
   if (!session) return null;
 
@@ -158,7 +159,7 @@ export function MemberSidebar({ pendingCount = 0 }: SidebarProps) {
         <div className="border-t border-border-subtle mt-2 pt-1 space-y-0.5">
           <NavItem href="/membre/profil"        icon={User}           label="Mon profil" />
           <NavItem href="/membre/changelog"     icon={History}        label="Changelog" />
-          <NavItem href={SITE_CONFIG.links.discord} icon={MessageSquare} label="Discord" external />
+          <NavItem href={discordUrl || SITE_CONFIG.links.discord} icon={MessageSquare} label="Discord" external />
         </div>
 
         {/* ── Zone Staff ── */}

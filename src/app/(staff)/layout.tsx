@@ -37,7 +37,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
   return (
     <>
       <MainNav discordUrl={discord.inviteUrl || undefined} showPilotes={settings.pilotesNavVisible} />
-      <MemberSidebar pendingCount={pendingCount} />
+      <MemberSidebar pendingCount={pendingCount} discordUrl={discord.inviteUrl || undefined} />
       <main className="flex-1 flex flex-col pt-16 lg:pl-64">
         <MemberMobileNav pendingCount={pendingCount} />
         {children}
