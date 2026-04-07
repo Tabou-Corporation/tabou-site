@@ -39,6 +39,7 @@ const VERSIONS: Version[] = [
       { type: "improvement", label: "Loading skeletons sur les pages de détail (guides, assemblées, candidatures)" },
       { type: "fix",      label: "Race condition auth corrigée — plus de doublons de compte au premier login (double-clic / retry réseau)" },
       { type: "fix",      label: "Doublon utilisateur multiface supprimé en base, corporationId restauré" },
+      { type: "fix",      label: "Lien Discord de la sidebar membre dynamique depuis le CMS (n'était plus hardcodé)" },
     ],
   },
   {
