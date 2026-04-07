@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { canManageRecruitment, parseSpecialties } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
+import { CORPORATIONS } from "@/lib/constants/corporations";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionResult } from "@/types/actions";
@@ -117,7 +118,7 @@ export async function updateApplicationStatus(
   try {
     const application = await prisma.application.findUnique({
       where: { id },
-      include: { user: { select: { name: true } } },
+      include: { user: { select: { name: true, corporationId: true } } },
     });
     if (!application) return { success: false, error: "Candidature introuvable." };
 
@@ -133,9 +134,14 @@ export async function updateApplicationStatus(
       });
 
       if (status === "ACCEPTED") {
+        // Détermine le bon rôle selon la corporation ESI du candidat
+        const promotedRole: UserRole =
+          application.user.corporationId === CORPORATIONS.urbanZone.id
+            ? "member_uz"
+            : "member";
         await tx.user.update({
           where: { id: application.userId },
-          data:  { role: "member" },
+          data:  { role: promotedRole },
         });
       }
     });
@@ -269,11 +275,10 @@ export async function assignApplication(
   if (assignedToId !== null) {
     const target = await prisma.user.findUnique({
       where: { id: assignedToId },
-      select: { role: true },
+      select: { role: true, specialties: true },
     });
-    const RECRUITER_ROLES = ["officer", "director", "ceo", "admin"];
-    if (!target || !RECRUITER_ROLES.includes(target.role)) {
-      return { success: false, error: "L'utilisateur ciblé n'a pas le rôle requis pour être recruteur." };
+    if (!target || !canManageRecruitment(target.role as UserRole, parseSpecialties(target.specialties))) {
+      return { success: false, error: "L'utilisateur ciblé n'a pas les droits de recrutement requis." };
     }
   }
 
