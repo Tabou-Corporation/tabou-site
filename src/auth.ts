@@ -125,7 +125,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           autoRole = "member";
         } else if (!inCorp && ["member_uz", "member", "officer"].includes(currentRole)) {
           // Éjecté de la corpo → suspendre
-          autoRole = "suspended";
+          // SAUF si une candidature a été acceptée récemment (grace period ESI ~24h)
+          // L'ESI peut mettre jusqu'à 1h pour propager un changement de corp.
+          // On donne une fenêtre de 24h pour éviter les faux positifs.
+          const recentAcceptance = await prisma.application.findFirst({
+            where: {
+              userId: user.id,
+              status: "ACCEPTED",
+              reviewedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+            },
+          }).catch(() => null);
+
+          if (!recentAcceptance) {
+            autoRole = "suspended";
+          }
+          // Si acceptation récente → on ne touche pas, ESI n'a pas encore propagé
         }
         // director/ceo/admin : jamais modifié automatiquement
         // officer qui switch Tabou↔UZ : garde officer

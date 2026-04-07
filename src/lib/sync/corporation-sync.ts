@@ -167,7 +167,25 @@ export async function syncAllCorporations(): Promise<SyncResult> {
 
         // Changement de corporation détecté
         const currentRole = user.role as UserRole;
-        const newRole = computeNewRole(currentRole, esiInfo.corporationId);
+        let newRole = computeNewRole(currentRole, esiInfo.corporationId);
+
+        // Grace period : si la suspension vient d'une acceptation récente (<24h),
+        // l'ESI n'a probablement pas encore propagé le changement de corp.
+        if (newRole === "suspended") {
+          const recentAcceptance = await prisma.application.findFirst({
+            where: {
+              userId: user.id,
+              status: "ACCEPTED",
+              reviewedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+            },
+          }).catch(() => null);
+          if (recentAcceptance) {
+            console.log(
+              `[corp-sync] ⏳ ${user.name} : suspension ignorée (acceptation < 24h, ESI pas à jour)`,
+            );
+            newRole = null; // On ne suspend pas, on attend
+          }
+        }
 
         const updateData: Record<string, unknown> = {
           corporationId: esiInfo.corporationId,
