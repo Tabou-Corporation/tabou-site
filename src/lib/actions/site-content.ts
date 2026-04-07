@@ -15,11 +15,12 @@ const VALID_PAGES: PageKey[] = [
   "activities",
   "contact",
   "discord",
+  "settings",
 ];
 
 /** Pages éditables uniquement par les director+ */
 const DIRECTOR_ONLY_PAGES: PageKey[] = [
-  "home", "corporation", "recruitment", "faq", "contact", "discord",
+  "home", "corporation", "recruitment", "faq", "contact", "discord", "settings",
 ];
 
 /** Chemin public correspondant à chaque clé de page */
@@ -31,6 +32,7 @@ const PAGE_PATHS: Record<PageKey, string> = {
   activities:  "/activites",
   contact:     "/contact",
   discord:     "/staff/admin/contenu",
+  settings:    "/staff/admin/contenu",
 };
 
 export interface SaveContentState {
