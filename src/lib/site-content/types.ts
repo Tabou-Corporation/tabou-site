@@ -132,6 +132,12 @@ export interface ContactContent {
   formNote: string;
 }
 
+// ── Settings (navigation & feature toggles) ───────────────────────────────────
+export interface SettingsContent {
+  /** Afficher l'onglet "Pilotes" dans la navigation principale */
+  pilotesNavVisible: boolean;
+}
+
 // ── Discord ───────────────────────────────────────────────────────────────────
 export interface DiscordConfig {
   /** Webhook du canal #recrutement (staff) — notifications candidatures */
@@ -156,7 +162,8 @@ export type PageKey =
   | "faq"
   | "activities"
   | "contact"
-  | "discord";
+  | "discord"
+  | "settings";
 
 export type ContentByPage = {
   home: HomeContent;
@@ -166,4 +173,5 @@ export type ContentByPage = {
   activities: ActivityItem[];
   contact: ContactContent;
   discord: DiscordConfig;
+  settings: SettingsContent;
 };

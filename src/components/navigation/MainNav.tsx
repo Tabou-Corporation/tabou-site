@@ -12,7 +12,13 @@ import { UserMenu } from "./UserMenu";
 import { NAVIGATION } from "@/config/navigation";
 import { CORPORATIONS } from "@/lib/constants/corporations";
 
-export function MainNav({ discordUrl }: { discordUrl?: string | undefined } = {}) {
+export function MainNav({
+  discordUrl,
+  showPilotes = true,
+}: {
+  discordUrl?: string | undefined;
+  showPilotes?: boolean;
+} = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { data: session } = useSession();
@@ -84,6 +90,7 @@ export function MainNav({ discordUrl }: { discordUrl?: string | undefined } = {}
             <div className="hidden md:flex items-center gap-8">
               {NAVIGATION.main
                 .filter((item) => item.visibility === "public")
+                .filter((item) => item.href !== "/pilotes" || showPilotes)
                 .map((item) => (
                   <NavLink
                     key={item.href}
@@ -156,6 +163,7 @@ export function MainNav({ discordUrl }: { discordUrl?: string | undefined } = {}
         <div className="px-4 py-6 space-y-1">
           {NAVIGATION.main
             .filter((item) => item.visibility === "public")
+            .filter((item) => item.href !== "/pilotes" || showPilotes)
             .map((item) => (
               <NavLink
                 key={item.href}

@@ -59,3 +59,4 @@ export const getFaqContent         = () => fetchContent("faq");
 export const getActivitiesContent  = () => fetchContent("activities");
 export const getContactContent     = () => fetchContent("contact");
 export const getDiscordConfig      = () => fetchContent("discord");
+export const getSettingsContent    = () => fetchContent("settings");

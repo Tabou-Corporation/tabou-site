@@ -10,6 +10,7 @@ import type {
   ActivityItem,
   ContactContent,
   DiscordConfig,
+  SettingsContent,
   ContentByPage,
 } from "./types";
 
@@ -509,6 +510,10 @@ export const DEFAULT_DISCORD: DiscordConfig = {
   inviteUrl:               "https://discord.gg/tabou",
 };
 
+export const DEFAULT_SETTINGS: SettingsContent = {
+  pilotesNavVisible: true,
+};
+
 export const DEFAULTS: ContentByPage = {
   home:        DEFAULT_HOME,
   corporation: DEFAULT_CORPORATION,
@@ -517,4 +522,5 @@ export const DEFAULTS: ContentByPage = {
   activities:  DEFAULT_ACTIVITIES,
   contact:     DEFAULT_CONTACT,
   discord:     DEFAULT_DISCORD,
+  settings:    DEFAULT_SETTINGS,
 };
