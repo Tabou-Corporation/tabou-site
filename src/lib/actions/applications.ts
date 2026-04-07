@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { canManageRecruitment, parseSpecialties } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { CORPORATIONS } from "@/lib/constants/corporations";
+import { fetchCharacterInfo } from "@/lib/esi/fetch-character";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionResult } from "@/types/actions";
@@ -118,11 +119,53 @@ export async function updateApplicationStatus(
   try {
     const application = await prisma.application.findUnique({
       where: { id },
-      include: { user: { select: { name: true, corporationId: true } } },
+      include: {
+        user: {
+          select: {
+            name: true,
+            corporationId: true,
+            accounts: {
+              where: { provider: "eveonline" },
+              select: { providerAccountId: true },
+              take: 1,
+            },
+          },
+        },
+      },
     });
     if (!application) return { success: false, error: "Candidature introuvable." };
 
-    // Transaction atomique : mise à jour candidature + promotion si acceptée
+    // ── Acceptation : ESI est la source de vérité ──────────────────────────
+    // On interroge l'ESI en temps réel AVANT la transaction pour déterminer
+    // la corporation actuelle du candidat. Si ESI confirme qu'il est dans
+    // Tabou ou UZ → promotion immédiate. Sinon → on ne promeut pas
+    // (le signIn callback fera la promotion quand il rejoindra la corp).
+    let esiPromotedRole: UserRole | null = null;
+    let esiCorpId: number | null = null;
+    let esiSecStatus: number | undefined;
+
+    if (status === "ACCEPTED") {
+      const characterId = application.user.accounts[0]?.providerAccountId;
+      if (characterId) {
+        const esiInfo = await fetchCharacterInfo(characterId);
+        if (esiInfo) {
+          esiCorpId    = esiInfo.corporationId;
+          esiSecStatus = esiInfo.securityStatus;
+
+          const inTabou = esiCorpId === CORPORATIONS.tabou.id;
+          const inUZ    = esiCorpId === CORPORATIONS.urbanZone.id;
+
+          if (inTabou || inUZ) {
+            esiPromotedRole = inUZ ? "member_uz" : "member";
+          }
+          // Si pas dans Tabou/UZ : on ne promeut pas maintenant.
+          // Le signIn callback promouvra automatiquement quand le
+          // candidat rejoindra la corp et se reconnectera.
+        }
+      }
+    }
+
+    // Transaction atomique : mise à jour candidature + promotion si ESI OK
     await prisma.$transaction(async (tx) => {
       await tx.application.update({
         where: { id },
@@ -134,17 +177,23 @@ export async function updateApplicationStatus(
       });
 
       if (status === "ACCEPTED") {
-        // Détermine le bon rôle selon la corporation ESI du candidat
-        const promotedRole: UserRole =
-          application.user.corporationId === CORPORATIONS.urbanZone.id
-            ? "member_uz"
-            : "member";
-        await tx.user.update({
-          where: { id: application.userId },
-          data:  { role: promotedRole },
-        });
-        // Invalide toutes les sessions du candidat → au prochain login,
-        // NextAuth réévalue le rôle depuis la DB (évite l'état "candidat" bloqué)
+        // Met à jour corporationId depuis l'ESI (donnée fraîche)
+        // + promotion si ESI confirme "dans la corp"
+        const userData: Record<string, unknown> = {};
+        if (esiCorpId)                     userData.corporationId  = esiCorpId;
+        if (esiSecStatus !== undefined)    userData.securityStatus = esiSecStatus;
+        if (esiPromotedRole)               userData.role           = esiPromotedRole;
+
+        if (Object.keys(userData).length > 0) {
+          await tx.user.update({
+            where: { id: application.userId },
+            data: userData,
+          });
+        }
+
+        // Toujours invalider les sessions → force un re-login propre.
+        // Si promu : la nouvelle session aura le bon rôle.
+        // Si non promu : le signIn callback vérifiera ESI à nouveau.
         await tx.session.deleteMany({
           where: { userId: application.userId },
         });
@@ -169,6 +218,10 @@ export async function updateApplicationStatus(
         candidateId:   application.userId,
         from: application.status,
         to:   status,
+        ...(status === "ACCEPTED" ? {
+          esiCorporationId: esiCorpId,
+          promotedTo: esiPromotedRole ?? "deferred_to_signin",
+        } : {}),
       },
     });
 
