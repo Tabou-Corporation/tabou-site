@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
   tagline: "Compétence, discrétion, efficacité.",
   description:
     "Corporation francophone EVE Online en null-sec, Tabou propose un cadre de jeu collectif, actif et accessible.",
-  url: "https://tabou-corp.fr", // à actualiser en production
+  url: "https://tabou-eve.fr",
 
   /** Liens externes officiels */
   links: {
