@@ -96,22 +96,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ? `https://images.evetech.net/characters/${characterId}/portrait?size=256`
         : undefined;
 
-      // Récupère la corporation EVE actuelle via ESI public (null = ESI down → on ne touche à rien)
+      // Récupère la corporation EVE actuelle via ESI public (null = ESI down)
       const esiInfo = characterId ? await fetchCharacterInfo(characterId) : null;
       const corporationId = esiInfo?.corporationId;
       const securityStatus = esiInfo?.securityStatus;
 
       // Détermine le rôle automatique selon la corporation ESI
       let autoRole: UserRole | undefined;
-      if (corporationId) {
-        const currentUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { role: true },
-        }).catch(() => null);
-        const currentRole = (currentUser?.role ?? "candidate") as UserRole;
 
-        const inTabou = corporationId === CORPORATIONS.tabou.id;
-        const inUZ    = corporationId === CORPORATIONS.urbanZone.id;
+      // Si ESI échoue, on utilise le corporationId déjà en DB comme fallback
+      // (permet de promouvoir un candidate dont la corp est déjà connue)
+      const currentUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { role: true, corporationId: true },
+      }).catch(() => null);
+      const currentRole = (currentUser?.role ?? "candidate") as UserRole;
+      const effectiveCorpId = corporationId ?? currentUser?.corporationId;
+
+      if (effectiveCorpId) {
+
+        const inTabou = effectiveCorpId === CORPORATIONS.tabou.id;
+        const inUZ    = effectiveCorpId === CORPORATIONS.urbanZone.id;
         const inCorp  = inTabou || inUZ;
 
         if (inCorp && (currentRole === "candidate" || currentRole === "suspended")) {

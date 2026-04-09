@@ -95,12 +95,21 @@ export async function syncAllCorporations(): Promise<SyncResult> {
     aborted: false, changes: [],
   };
 
-  // Récupère tous les membres actifs avec leur EVE character ID
+  // Récupère tous les membres actifs + les candidates avec un character ID
+  // (candidates inclus pour rattraper ceux dont l'ESI a échoué au premier login)
   const users = await prisma.user.findMany({
     where: {
-      role: {
-        in: ["member_uz", "member", "officer", "director", "ceo", "admin"],
-      },
+      OR: [
+        {
+          role: {
+            in: ["member_uz", "member", "officer", "director", "ceo", "admin"],
+          },
+        },
+        {
+          role: "candidate",
+          eveCharacterId: { not: null },
+        },
+      ],
     },
     select: {
       id: true,

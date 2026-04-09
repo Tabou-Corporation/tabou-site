@@ -28,10 +28,20 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "2.9",
+    title: "Filet de Sécurité Auto-Role",
+    description: "Deux garde-fous pour que plus aucun membre Tabou/UZ ne reste bloqué en « candidat » : fallback DB quand l'ESI timeout au login, et le cron sync rattrape désormais les candidats manqués.",
+    status: "current",
+    changes: [
+      { type: "fix", label: "Auto-role login : fallback sur le corporationId en base quand l'ESI échoue — un membre connu n'est plus bloqué en « candidat »" },
+      { type: "fix", label: "Cron sync étendu aux candidates avec un character ID — rattrape automatiquement les promotions manquées au premier login" },
+    ],
+  },
+  {
     version: "2.8",
     title: "ESI-First & Robustesse Recrutement",
     description: "L'ESI devient la seule source de vérité pour les rôles — plus de blocages, plus de doublons, et le processus d'acceptation guide clairement recruteur et candidat.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "security",    label: "Acceptation ESI-first : la promotion interroge l'ESI en temps réel au lieu du corporationId stocké en DB (potentiellement périmé)" },
       { type: "fix",         label: "Conflit signIn ↔ acceptation supprimé — plus de candidat suspendu immédiatement après avoir été accepté" },
