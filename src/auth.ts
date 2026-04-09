@@ -113,7 +113,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const currentRole = (currentUser?.role ?? "candidate") as UserRole;
       const effectiveCorpId = corporationId ?? currentUser?.corporationId;
 
-      if (effectiveCorpId) {
+      // Garde absolue : les rôles hauts ne sont JAMAIS modifiés automatiquement,
+      // quelle que soit la corporation ESI — même si éjecté de la corpo.
+      const PROTECTED_ROLES: UserRole[] = ["director", "ceo", "admin"];
+
+      if (effectiveCorpId && !PROTECTED_ROLES.includes(currentRole)) {
 
         const inTabou = effectiveCorpId === CORPORATIONS.tabou.id;
         const inUZ    = effectiveCorpId === CORPORATIONS.urbanZone.id;
@@ -146,7 +150,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
           // Si acceptation récente → on ne touche pas, ESI n'a pas encore propagé
         }
-        // director/ceo/admin : jamais modifié automatiquement
         // officer qui switch Tabou↔UZ : garde officer
       }
 
