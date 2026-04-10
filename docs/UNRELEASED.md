@@ -17,3 +17,4 @@ Types : `feature` · `improvement` · `fix` · `security`
 <!-- SESSION 2026-04-08 — intégrée en v2.8, fichier remis à zéro -->
 <!-- SESSION 2026-04-09 — intégrée en v2.9, fichier remis à zéro -->
 <!-- SESSION 2026-04-10 — intégrée en v3.0 (rework buyback → marché P2P), fichier remis à zéro -->
+<!-- SESSION 2026-04-10 (suite) — intégrée en v3.1 (suivi pro + audit sécurité/perf), fichier remis à zéro -->
