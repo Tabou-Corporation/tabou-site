@@ -57,7 +57,7 @@ export function FAQAccordion({ items, className }: FAQAccordionProps) {
   return (
     <div
       className={cn(
-        "bg-bg-surface border border-border rounded-md divide-y-0",
+        "bg-bg-surface border border-border rounded-md",
         "px-6",
         className
       )}
