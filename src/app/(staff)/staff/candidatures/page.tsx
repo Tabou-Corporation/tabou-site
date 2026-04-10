@@ -42,7 +42,7 @@ export default async function CandidaturesPage({
       assignedTo: { select: { name: true } },
     },
     orderBy: [{ createdAt: "desc" }],
-    take: 200,
+    take: 50,
   });
 
   // Compteur "mes candidatures" pour le badge du bouton

@@ -43,7 +43,7 @@ export default async function AdminTransactionsPage({
       buyer:  { select: { name: true, image: true } },
     },
     orderBy: { createdAt: "desc" },
-    take: 200,
+    take: 50,
   });
 
   const archivedCount = await prisma.marketTransaction.count({

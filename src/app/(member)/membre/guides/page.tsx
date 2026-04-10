@@ -24,7 +24,7 @@ export default async function GuidesPage() {
   const guides = await prisma.guide.findMany({
     include: { author: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
-    take: 200,
+    take: 50,
   });
 
   // Grouper par catégorie

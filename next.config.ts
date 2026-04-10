@@ -29,15 +29,16 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // EVE CDN + hébergements connus + toute image HTTPS (CMS hero configurable)
-              "img-src 'self' https: data:",
+              // Images : domaines EVE + hebergements connus uniquement
+              "img-src 'self' https://images.evetech.net https://i.imgur.com https://imgur.com https://cdn.discordapp.com https://*.githubusercontent.com data:",
               // unsafe-inline requis par Next.js (hydration) et Framer Motion (styles inline)
-              // TODO : migrer vers nonces CSP (next.config + middleware) pour supprimer unsafe-inline
+              // TODO : migrer vers nonces CSP quand Next.js le supportera nativement
               "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self'",
               "connect-src 'self'",
               "frame-ancestors 'none'",
+              "upgrade-insecure-requests",
             ].join("; "),
           },
         ],
