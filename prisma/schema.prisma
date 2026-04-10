@@ -411,6 +411,8 @@ model MarketTransaction {
   location      String?
 
   createdAt     DateTime @default(now())
+  /// Soft-delete : archivée par un admin (masquée des vues membres)
+  archivedAt    DateTime?
 
   @@index([sellerId])
   @@index([buyerId])

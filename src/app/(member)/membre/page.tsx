@@ -164,7 +164,7 @@ export default async function MemberDashboardPage() {
     // Marche — derniere transaction
     isMember
       ? prisma.marketTransaction.findFirst({
-          where: { OR: [{ sellerId: session.user.id }, { buyerId: session.user.id }] },
+          where: { archivedAt: null, OR: [{ sellerId: session.user.id }, { buyerId: session.user.id }] },
           orderBy: { createdAt: "desc" },
           select: { listingTitle: true, finalPrice: true, createdAt: true, sellerId: true },
         })

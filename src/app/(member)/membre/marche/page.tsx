@@ -133,7 +133,7 @@ export default async function MarketPage({
   // ─── Tab: Historique ──────────────────────────────────────────────────────
   if (tab === "historique") {
     const transactions = await prisma.marketTransaction.findMany({
-      where: { OR: [{ sellerId: userId }, { buyerId: userId }] },
+      where: { archivedAt: null, OR: [{ sellerId: userId }, { buyerId: userId }] },
       include: {
         seller: { select: { name: true, image: true } },
         buyer:  { select: { name: true, image: true } },

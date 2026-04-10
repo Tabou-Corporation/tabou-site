@@ -191,9 +191,10 @@ export function MemberSidebar({ pendingCount = 0, unreadMarketCount = 0, discord
         {isDirector && (
           <div className="border-t border-border-subtle mt-2 pt-1 space-y-0.5">
             <SectionLabel>Administration</SectionLabel>
-            <NavItem href="/staff/membres"      icon={UsersRound} label="Membres" />
-            <NavItem href="/staff/admin"        icon={LayoutGrid} label="Admin"   exact />
-            <NavItem href="/staff/admin/contenu" icon={PanelLeft} label="Contenu" />
+            <NavItem href="/staff/membres"               icon={UsersRound} label="Membres" />
+            <NavItem href="/staff/admin"                 icon={LayoutGrid} label="Admin"   exact />
+            <NavItem href="/staff/admin/contenu"         icon={PanelLeft} label="Contenu" />
+            <NavItem href="/staff/admin/transactions"    icon={Store}     label="Transactions" />
           </div>
         )}
 
