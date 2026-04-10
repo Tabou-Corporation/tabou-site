@@ -13,7 +13,7 @@ const COLOR_GOLD = 0xF0B030;
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function getWebhookUrl(
-  key: "announcementsWebhookUrl" | "guidesWebhookUrl" | "assembliesWebhookUrl" | "calendarWebhookUrl" | "adminWebhookUrl",
+  key: "announcementsWebhookUrl" | "guidesWebhookUrl" | "assembliesWebhookUrl" | "calendarWebhookUrl" | "adminWebhookUrl" | "buybackWebhookUrl",
 ): Promise<string> {
   try {
     const config = await getDiscordConfig();
@@ -249,6 +249,92 @@ export function notifyNewCalendarEvent(params: {
           type: 2, style: 5,
           label: "Voir & s'inscrire",
           url: `${SITE_URL}/membre/calendrier`,
+        }],
+      }],
+    });
+  };
+  void run();
+}
+
+// ── Buyback ─────────────────────────────────────────────────────────────────
+
+function formatISK(amount: number): string {
+  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)}B ISK`;
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M ISK`;
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K ISK`;
+  return `${Math.round(amount)} ISK`;
+}
+
+export function notifyBuybackSubmitted(params: {
+  requestId: string;
+  sellerName: string | null;
+  totalBuyback: number;
+  itemCount: number;
+  buybackRate: number;
+}): void {
+  const run = async () => {
+    const url = await getWebhookUrl("buybackWebhookUrl");
+    await send(url, {
+      embeds: [{
+        title: "💰 Nouvelle demande de buyback",
+        color: 0x3B82F6,
+        fields: [
+          { name: "Pilote", value: params.sellerName ?? "Inconnu", inline: true },
+          { name: "Montant", value: formatISK(params.totalBuyback), inline: true },
+          { name: "Items", value: String(params.itemCount), inline: true },
+          { name: "Taux", value: `${Math.round(params.buybackRate * 100)}%`, inline: true },
+        ],
+        footer: { text: "Tabou Corporation — Buyback" },
+        timestamp: new Date().toISOString(),
+      }],
+      components: [{
+        type: 1,
+        components: [{
+          type: 2, style: 5,
+          label: "Voir la demande",
+          url: `${SITE_URL}/staff/buyback/${params.requestId}`,
+        }],
+      }],
+    });
+  };
+  void run();
+}
+
+export function notifyBuybackStatusChange(params: {
+  requestId: string;
+  sellerName: string | null;
+  reviewerName: string | null;
+  totalBuyback: number;
+  status: "ACCEPTED" | "PAID" | "REJECTED";
+  reviewNote?: string | null;
+}): void {
+  const config: Record<string, { emoji: string; color: number; label: string }> = {
+    ACCEPTED: { emoji: "✅", color: 0x22C55E, label: "accepté" },
+    PAID:     { emoji: "💸", color: COLOR_GOLD, label: "payé" },
+    REJECTED: { emoji: "❌", color: 0xEF4444, label: "refusé" },
+  };
+  const c = config[params.status]!;
+
+  const run = async () => {
+    const url = await getWebhookUrl("buybackWebhookUrl");
+    await send(url, {
+      embeds: [{
+        title: `${c.emoji} Buyback ${c.label} — ${formatISK(params.totalBuyback)}`,
+        color: c.color,
+        fields: [
+          { name: "Pilote", value: params.sellerName ?? "Inconnu", inline: true },
+          { name: "Par", value: params.reviewerName ?? "Staff", inline: true },
+          ...(params.reviewNote ? [{ name: "Note", value: truncate(params.reviewNote, 200), inline: false }] : []),
+        ],
+        footer: { text: "Tabou Corporation — Buyback" },
+        timestamp: new Date().toISOString(),
+      }],
+      components: [{
+        type: 1,
+        components: [{
+          type: 2, style: 5,
+          label: "Voir la demande",
+          url: `${SITE_URL}/staff/buyback/${params.requestId}`,
         }],
       }],
     });

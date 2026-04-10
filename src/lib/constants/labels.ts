@@ -106,3 +106,21 @@ export const CATEGORY_LABELS: Record<string, string> = {
 export const CATEGORY_ORDER = [
   "general", "pvp", "pve", "fits", "logistics", "industry", "exploration", "diplomacy", "other",
 ] as const;
+
+// ─── Statuts de buyback ──────────────────────────────────────────────────────
+
+export const BUYBACK_STATUS_LABELS: Record<string, string> = {
+  PENDING:  "En attente",
+  ACCEPTED: "Accepté",
+  PAID:     "Payé",
+  REJECTED: "Refusé",
+  EXPIRED:  "Expiré",
+};
+
+export const BUYBACK_STATUS_BADGE: Record<string, "muted" | "gold" | "red"> = {
+  PENDING:  "muted",
+  ACCEPTED: "gold",
+  PAID:     "gold",
+  REJECTED: "red",
+  EXPIRED:  "muted",
+};

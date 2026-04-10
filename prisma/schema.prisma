@@ -7,6 +7,7 @@
 // V6 : + Character (ESI), Kill (zKillboard)
 // V7 : + securityStatus + profileExtra on User ; assignedToId on Application
 // V8 : specialty → specialties (JSON array), domain on Announcement/CalendarEvent
+// V9 : + BuybackRequest (programme de rachat corpo)
 
 generator client {
   provider = "prisma-client-js"
@@ -97,6 +98,8 @@ model User {
   events               CalendarEvent[]
   eventParticipations  EventParticipation[]
   assemblies           Assembly[]
+  buybackRequests      BuybackRequest[]
+  buybackReviews       BuybackRequest[] @relation("BuybackReviewer")
 
   @@index([role])
   @@map("users")
@@ -252,6 +255,55 @@ model Assembly {
 
   @@index([heldAt])
   @@map("assemblies")
+}
+
+// ─── V9 : Buyback Program ─────────────────────────────────────────────────
+
+model BuybackRequest {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Copier-coller brut depuis EVE (conservé pour référence)
+  rawPaste      String         @db.Text
+  /// Détail parsé par Janice : [{name, quantity, typeId, jitaBuy, jitaSell}]
+  items         String         @db.Text
+  /// Nombre d'items distincts dans la demande
+  itemCount     Int            @default(0)
+
+  /// Valeur totale Jita buy (en ISK)
+  totalJitaBuy  Float
+  /// Taux buyback appliqué (ex: 0.90 = 90%)
+  buybackRate   Float
+  /// Montant final que la corpo paie (totalJitaBuy × buybackRate)
+  totalBuyback  Float
+
+  /// Statut du workflow
+  status        BuybackStatus  @default(PENDING)
+  /// Officier qui a traité la demande
+  reviewerId    String?
+  reviewer      User?          @relation("BuybackReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  /// Commentaire de l'officier (motif refus, note logistique, etc.)
+  reviewNote    String?        @db.Text
+
+  /// Expiration obligatoire (max now + 14 jours). Passé ce délai → EXPIRED.
+  expiresAt     DateTime
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("buyback_requests")
+}
+
+enum BuybackStatus {
+  PENDING
+  ACCEPTED
+  PAID
+  REJECTED
+  EXPIRED
 }
 
 // ─── V5 : Audit Log ───────────────────────────────────────────────────────────

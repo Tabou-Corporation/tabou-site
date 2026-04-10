@@ -28,10 +28,26 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
-    version: "2.9",
-    title: "Filet de Sécurité Auto-Role",
-    description: "Deux garde-fous pour que plus aucun membre Tabou/UZ ne reste bloqué en « candidat » : fallback DB quand l'ESI timeout au login, et le cron sync rattrape désormais les candidats manqués.",
+    version: "3.0",
+    title: "Programme Buyback",
+    description: "Nouveau module de rachat d'items : les membres vendent leur loot/minerai a la corporation au taux Jita, avec estimation en temps reel via l'API Janice et workflow de validation staff.",
     status: "current",
+    changes: [
+      { type: "feature", label: "Module Buyback complet — formulaire membre avec copier-coller EVE, estimation Janice en temps reel, soumission et historique" },
+      { type: "feature", label: "Gestion staff des demandes de buyback — liste filtrable, detail avec items, workflow accepter/payer/refuser" },
+      { type: "feature", label: "Expiration automatique des demandes apres 14 jours (max 3 demandes en attente par membre)" },
+      { type: "feature", label: "Taux de buyback configurable depuis l'admin CMS (slider 50-100%) avec toggle d'activation" },
+      { type: "feature", label: "Notifications Discord pour chaque etape du buyback (soumission, acceptation, paiement, refus)" },
+      { type: "feature", label: "Webhook Discord dedie au buyback configurable dans le panneau Discord" },
+      { type: "improvement", label: "Navigation membre et staff enrichie avec acces direct au buyback" },
+      { type: "improvement", label: "Audit trail pour tous les changements de statut buyback" },
+    ],
+  },
+  {
+    version: "2.9",
+    title: "Filet de Securite Auto-Role",
+    description: "Deux garde-fous pour que plus aucun membre Tabou/UZ ne reste bloque en candidat : fallback DB quand l'ESI timeout au login, et le cron sync rattrape desormais les candidats manques.",
+    status: "released",
     changes: [
       { type: "fix", label: "Auto-role login : fallback sur le corporationId en base quand l'ESI échoue — un membre connu n'est plus bloqué en « candidat »" },
       { type: "fix", label: "Cron sync étendu aux candidates avec un character ID — rattrape automatiquement les promotions manquées au premier login" },

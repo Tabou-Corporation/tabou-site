@@ -6,7 +6,8 @@ export type AuditAction =
   | "application_notes"
   | "application_withdraw"
   | "corp_sync_role_change"
-  | "corp_sync_corp_update";
+  | "corp_sync_corp_update"
+  | "buyback_status";
 
 interface AuditParams {
   actorId: string;

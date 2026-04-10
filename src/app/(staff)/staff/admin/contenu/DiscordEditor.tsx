@@ -70,6 +70,13 @@ export function DiscordEditor({ initialContent }: Props) {
           hint="Canal assemblées — notifié à la publication d'un compte-rendu"
         />
         <Field
+          label="Buyback — URL webhook"
+          value={content.buybackWebhookUrl ?? ""}
+          onChange={(v) => set("buybackWebhookUrl", v)}
+          placeholder="https://discord.com/api/webhooks/…"
+          hint="Canal buyback/logistique — demandes soumises, acceptées, payées"
+        />
+        <Field
           label="Admin / Monitoring — URL webhook"
           value={content.adminWebhookUrl ?? ""}
           onChange={(v) => set("adminWebhookUrl", v)}
