@@ -7,7 +7,7 @@
 // V6 : + Character (ESI), Kill (zKillboard)
 // V7 : + securityStatus + profileExtra on User ; assignedToId on Application
 // V8 : specialty → specialties (JSON array), domain on Announcement/CalendarEvent
-// V9 : + BuybackRequest (programme de rachat corpo)
+// V9 : + MarketListing, MarketOffer (marché entre membres)
 
 generator client {
   provider = "prisma-client-js"
@@ -98,8 +98,8 @@ model User {
   events               CalendarEvent[]
   eventParticipations  EventParticipation[]
   assemblies           Assembly[]
-  buybackRequests      BuybackRequest[]
-  buybackReviews       BuybackRequest[] @relation("BuybackReviewer")
+  marketListings       MarketListing[]
+  marketOffers         MarketOffer[]
 
   @@index([role])
   @@map("users")
@@ -257,53 +257,92 @@ model Assembly {
   @@map("assemblies")
 }
 
-// ─── V9 : Buyback Program ─────────────────────────────────────────────────
+// ─── V9 : Marché entre membres ────────────────────────────────────────────
 
-model BuybackRequest {
+model MarketListing {
   id            String         @id @default(cuid())
   userId        String
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  /// Type d'annonce : SELL (je vends), BUY (je cherche), EXCHANGE (j'échange)
+  type          ListingType    @default(SELL)
+  /// Titre court de l'annonce
+  title         String
+  /// Description / précisions (optionnel)
+  description   String?        @db.Text
+
   /// Copier-coller brut depuis EVE (conservé pour référence)
-  rawPaste      String         @db.Text
-  /// Détail parsé par Janice : [{name, quantity, typeId, jitaBuy, jitaSell}]
-  items         String         @db.Text
-  /// Nombre d'items distincts dans la demande
+  rawPaste      String?        @db.Text
+  /// Détail parsé : [{name, quantity, typeId, jitaBuy, jitaSell, totalBuy}]
+  items         String?        @db.Text
+  /// Nombre d'items distincts
   itemCount     Int            @default(0)
 
-  /// Valeur totale Jita buy (en ISK)
-  totalJitaBuy  Float
-  /// Taux buyback appliqué (ex: 0.90 = 90%)
-  buybackRate   Float
-  /// Montant final que la corpo paie (totalJitaBuy × buybackRate)
-  totalBuyback  Float
+  /// Valeur totale Jita buy (prix de référence, informatif)
+  totalJitaBuy  Float?
+  /// Prix demandé en ISK (fixé par le vendeur — null = ouvert aux offres)
+  askingPrice   Float?
+  /// Ou taux en % du Jita buy (ex: 90 = 90%) — null = prix fixe ou libre
+  askingRate    Int?
 
-  /// Statut du workflow
-  status        BuybackStatus  @default(PENDING)
-  /// Officier qui a traité la demande
-  reviewerId    String?
-  reviewer      User?          @relation("BuybackReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
-  /// Commentaire de l'officier (motif refus, note logistique, etc.)
-  reviewNote    String?        @db.Text
+  /// Statut de l'annonce
+  status        ListingStatus  @default(OPEN)
 
-  /// Expiration obligatoire (max now + 14 jours). Passé ce délai → EXPIRED.
+  /// Expiration obligatoire (max now + 14 jours)
   expiresAt     DateTime
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  offers        MarketOffer[]
+
   @@index([userId])
   @@index([status])
   @@index([expiresAt])
-  @@map("buyback_requests")
+  @@index([type, status])
+  @@map("market_listings")
 }
 
-enum BuybackStatus {
+model MarketOffer {
+  id          String       @id @default(cuid())
+  listingId   String
+  listing     MarketListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Prix proposé en ISK (null si échange ou simple message)
+  price       Float?
+  /// Message de l'offre (description de l'échange, commentaire, négociation)
+  message     String?      @db.Text
+
+  /// Statut de l'offre
+  status      OfferStatus  @default(PENDING)
+
+  createdAt   DateTime     @default(now())
+
+  @@index([listingId])
+  @@index([userId])
+  @@map("market_offers")
+}
+
+enum ListingType {
+  SELL
+  BUY
+  EXCHANGE
+}
+
+enum ListingStatus {
+  OPEN
+  SOLD
+  CLOSED
+  EXPIRED
+}
+
+enum OfferStatus {
   PENDING
   ACCEPTED
-  PAID
   REJECTED
-  EXPIRED
+  WITHDRAWN
 }
 
 // ─── V5 : Audit Log ───────────────────────────────────────────────────────────

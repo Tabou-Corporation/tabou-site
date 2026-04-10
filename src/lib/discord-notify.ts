@@ -13,7 +13,7 @@ const COLOR_GOLD = 0xF0B030;
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function getWebhookUrl(
-  key: "announcementsWebhookUrl" | "guidesWebhookUrl" | "assembliesWebhookUrl" | "calendarWebhookUrl" | "adminWebhookUrl" | "buybackWebhookUrl",
+  key: "announcementsWebhookUrl" | "guidesWebhookUrl" | "assembliesWebhookUrl" | "calendarWebhookUrl" | "adminWebhookUrl" | "marketWebhookUrl",
 ): Promise<string> {
   try {
     const config = await getDiscordConfig();
@@ -256,7 +256,10 @@ export function notifyNewCalendarEvent(params: {
   void run();
 }
 
-// ── Buyback ─────────────────────────────────────────────────────────────────
+// ── Marché ───────────────────────────────────────────────────────────────────
+
+const TYPE_EMOJI: Record<string, string> = { SELL: "💰", BUY: "🛒", EXCHANGE: "🔄" };
+const TYPE_LABEL_FR: Record<string, string> = { SELL: "Vente", BUY: "Achat", EXCHANGE: "Échange" };
 
 function formatISK(amount: number): string {
   if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)}B ISK`;
@@ -265,34 +268,37 @@ function formatISK(amount: number): string {
   return `${Math.round(amount)} ISK`;
 }
 
-export function notifyBuybackSubmitted(params: {
-  requestId: string;
-  sellerName: string | null;
-  totalBuyback: number;
+export function notifyNewListing(params: {
+  listingId: string;
+  title: string;
+  type: string;
+  authorName: string | null;
+  askingPrice: number | null;
   itemCount: number;
-  buybackRate: number;
 }): void {
+  const emoji = TYPE_EMOJI[params.type] ?? "📦";
+  const typeLabel = TYPE_LABEL_FR[params.type] ?? params.type;
+
   const run = async () => {
-    const url = await getWebhookUrl("buybackWebhookUrl");
+    const url = await getWebhookUrl("marketWebhookUrl");
     await send(url, {
       embeds: [{
-        title: "💰 Nouvelle demande de buyback",
-        color: 0x3B82F6,
+        title: `${emoji} ${typeLabel} — ${params.title}`,
+        color: COLOR_GOLD,
         fields: [
-          { name: "Pilote", value: params.sellerName ?? "Inconnu", inline: true },
-          { name: "Montant", value: formatISK(params.totalBuyback), inline: true },
+          { name: "Par", value: params.authorName ?? "Membre", inline: true },
           { name: "Items", value: String(params.itemCount), inline: true },
-          { name: "Taux", value: `${Math.round(params.buybackRate * 100)}%`, inline: true },
+          ...(params.askingPrice ? [{ name: "Prix", value: formatISK(params.askingPrice), inline: true }] : [{ name: "Prix", value: "Ouvert aux offres", inline: true }]),
         ],
-        footer: { text: "Tabou Corporation — Buyback" },
+        footer: { text: "Tabou Corporation — Marché" },
         timestamp: new Date().toISOString(),
       }],
       components: [{
         type: 1,
         components: [{
           type: 2, style: 5,
-          label: "Voir la demande",
-          url: `${SITE_URL}/staff/buyback/${params.requestId}`,
+          label: "Voir l'annonce",
+          url: `${SITE_URL}/membre/marche/${params.listingId}`,
         }],
       }],
     });
@@ -300,41 +306,33 @@ export function notifyBuybackSubmitted(params: {
   void run();
 }
 
-export function notifyBuybackStatusChange(params: {
-  requestId: string;
-  sellerName: string | null;
-  reviewerName: string | null;
-  totalBuyback: number;
-  status: "ACCEPTED" | "PAID" | "REJECTED";
-  reviewNote?: string | null;
+export function notifyNewOffer(params: {
+  listingId: string;
+  listingTitle: string;
+  offerAuthorName: string | null;
+  listingAuthorName: string | null;
+  price: number | null;
 }): void {
-  const config: Record<string, { emoji: string; color: number; label: string }> = {
-    ACCEPTED: { emoji: "✅", color: 0x22C55E, label: "accepté" },
-    PAID:     { emoji: "💸", color: COLOR_GOLD, label: "payé" },
-    REJECTED: { emoji: "❌", color: 0xEF4444, label: "refusé" },
-  };
-  const c = config[params.status]!;
-
   const run = async () => {
-    const url = await getWebhookUrl("buybackWebhookUrl");
+    const url = await getWebhookUrl("marketWebhookUrl");
     await send(url, {
       embeds: [{
-        title: `${c.emoji} Buyback ${c.label} — ${formatISK(params.totalBuyback)}`,
-        color: c.color,
+        title: `🤝 Nouvelle offre sur "${truncate(params.listingTitle, 40)}"`,
+        color: 0x3B82F6,
         fields: [
-          { name: "Pilote", value: params.sellerName ?? "Inconnu", inline: true },
-          { name: "Par", value: params.reviewerName ?? "Staff", inline: true },
-          ...(params.reviewNote ? [{ name: "Note", value: truncate(params.reviewNote, 200), inline: false }] : []),
+          { name: "De", value: params.offerAuthorName ?? "Membre", inline: true },
+          { name: "À", value: params.listingAuthorName ?? "Membre", inline: true },
+          ...(params.price ? [{ name: "Prix proposé", value: formatISK(params.price), inline: true }] : []),
         ],
-        footer: { text: "Tabou Corporation — Buyback" },
+        footer: { text: "Tabou Corporation — Marché" },
         timestamp: new Date().toISOString(),
       }],
       components: [{
         type: 1,
         components: [{
           type: 2, style: 5,
-          label: "Voir la demande",
-          url: `${SITE_URL}/staff/buyback/${params.requestId}`,
+          label: "Voir l'annonce",
+          url: `${SITE_URL}/membre/marche/${params.listingId}`,
         }],
       }],
     });

@@ -136,10 +136,8 @@ export interface ContactContent {
 export interface SettingsContent {
   /** Afficher l'onglet "Pilotes" dans la navigation principale */
   pilotesNavVisible: boolean;
-  /** Programme buyback — taux de rachat en pourcentage (ex: 90 = 90% du Jita buy) */
-  buybackRate: number;
-  /** Programme buyback — activé ou désactivé */
-  buybackEnabled: boolean;
+  /** Marché inter-membres — activé ou désactivé */
+  marketEnabled: boolean;
 }
 
 // ── Discord ───────────────────────────────────────────────────────────────────
@@ -156,8 +154,8 @@ export interface DiscordConfig {
   assembliesWebhookUrl: string;
   /** Webhook admin/monitoring — alertes techniques (cron, erreurs sync) */
   adminWebhookUrl: string;
-  /** Webhook du canal buyback — notifications demandes de rachat */
-  buybackWebhookUrl: string;
+  /** Webhook du canal marché — notifications annonces et offres */
+  marketWebhookUrl: string;
   /** Lien d'invitation public affiché sur le site */
   inviteUrl: string;
 }

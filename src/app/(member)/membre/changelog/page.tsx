@@ -29,18 +29,18 @@ interface Version {
 const VERSIONS: Version[] = [
   {
     version: "3.0",
-    title: "Programme Buyback",
-    description: "Nouveau module de rachat d'items : les membres vendent leur loot/minerai a la corporation au taux Jita, avec estimation en temps reel via l'API Janice et workflow de validation staff.",
+    title: "Marche inter-membres",
+    description: "Place de marche entre membres : publiez des annonces de vente, achat ou echange d'items avec estimation Jita en temps reel, systeme d'offres et negociation directe.",
     status: "current",
     changes: [
-      { type: "feature", label: "Module Buyback complet — formulaire membre avec copier-coller EVE, estimation Janice en temps reel, soumission et historique" },
-      { type: "feature", label: "Gestion staff des demandes de buyback — liste filtrable, detail avec items, workflow accepter/payer/refuser" },
-      { type: "feature", label: "Expiration automatique des demandes apres 14 jours (max 3 demandes en attente par membre)" },
-      { type: "feature", label: "Taux de buyback configurable depuis l'admin CMS (slider 50-100%) avec toggle d'activation" },
-      { type: "feature", label: "Notifications Discord pour chaque etape du buyback (soumission, acceptation, paiement, refus)" },
-      { type: "feature", label: "Webhook Discord dedie au buyback configurable dans le panneau Discord" },
-      { type: "improvement", label: "Navigation membre et staff enrichie avec acces direct au buyback" },
-      { type: "improvement", label: "Audit trail pour tous les changements de statut buyback" },
+      { type: "feature", label: "Marche P2P — les membres publient des annonces (vente, achat, echange) avec leurs propres prix" },
+      { type: "feature", label: "Estimation Jita automatique — collez vos items depuis EVE, les prix Jita buy sont calcules via ESI + Fuzzwork" },
+      { type: "feature", label: "Systeme d'offres — proposez un prix et/ou un message, le vendeur accepte ou refuse" },
+      { type: "feature", label: "Tarification flexible — prix fixe ISK, pourcentage du Jita buy, ou ouvert aux offres" },
+      { type: "feature", label: "Expiration automatique apres 14 jours (max 5 annonces ouvertes par membre)" },
+      { type: "feature", label: "Notifications Discord pour les nouvelles annonces et offres" },
+      { type: "improvement", label: "Navigation membre enrichie avec acces direct au marche" },
+      { type: "improvement", label: "Moderation officer — possibilite de fermer toute annonce" },
     ],
   },
   {

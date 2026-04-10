@@ -107,20 +107,44 @@ export const CATEGORY_ORDER = [
   "general", "pvp", "pve", "fits", "logistics", "industry", "exploration", "diplomacy", "other",
 ] as const;
 
-// ─── Statuts de buyback ──────────────────────────────────────────────────────
+// ─── Marché entre membres ─────────────────────────────────────────────────────
 
-export const BUYBACK_STATUS_LABELS: Record<string, string> = {
-  PENDING:  "En attente",
-  ACCEPTED: "Accepté",
-  PAID:     "Payé",
-  REJECTED: "Refusé",
-  EXPIRED:  "Expiré",
+export const LISTING_TYPE_LABELS: Record<string, string> = {
+  SELL:     "Vente",
+  BUY:      "Achat",
+  EXCHANGE: "Échange",
 };
 
-export const BUYBACK_STATUS_BADGE: Record<string, "muted" | "gold" | "red"> = {
-  PENDING:  "muted",
-  ACCEPTED: "gold",
-  PAID:     "gold",
-  REJECTED: "red",
-  EXPIRED:  "muted",
+export const LISTING_TYPE_BADGE: Record<string, "gold" | "default" | "muted"> = {
+  SELL:     "gold",
+  BUY:      "default",
+  EXCHANGE: "muted",
+};
+
+export const LISTING_STATUS_LABELS: Record<string, string> = {
+  OPEN:    "En cours",
+  SOLD:    "Conclu",
+  CLOSED:  "Fermée",
+  EXPIRED: "Expirée",
+};
+
+export const LISTING_STATUS_BADGE: Record<string, "muted" | "gold" | "red"> = {
+  OPEN:    "gold",
+  SOLD:    "muted",
+  CLOSED:  "muted",
+  EXPIRED: "muted",
+};
+
+export const OFFER_STATUS_LABELS: Record<string, string> = {
+  PENDING:   "En attente",
+  ACCEPTED:  "Acceptée",
+  REJECTED:  "Refusée",
+  WITHDRAWN: "Retirée",
+};
+
+export const OFFER_STATUS_BADGE: Record<string, "muted" | "gold" | "red"> = {
+  PENDING:   "muted",
+  ACCEPTED:  "gold",
+  REJECTED:  "red",
+  WITHDRAWN: "muted",
 };

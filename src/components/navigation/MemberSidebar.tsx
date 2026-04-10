@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Megaphone, Calendar, BookOpen, Users,
   User, FileText, MessageSquare, ExternalLink, Scroll,
   ClipboardList, Megaphone as MegaphoneIcon, BookPlus, CalendarPlus,
-  UsersRound, LayoutGrid, PanelLeft, Shield, History, Package,
+  UsersRound, LayoutGrid, PanelLeft, Shield, History, Store,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { hasMinRole, canManageRecruitment, parseSpecialties } from "@/types/roles";
@@ -149,7 +149,7 @@ export function MemberSidebar({ pendingCount = 0, discordUrl }: SidebarProps) {
             <NavItem href="/membre/guides"      icon={BookOpen}    label="Guides" />
             <NavItem href="/membre/assemblees" icon={Scroll}      label="Assemblées" />
             <NavItem href="/membre/annuaire"   icon={Users}       label="Annuaire" />
-            <NavItem href="/membre/buyback"    icon={Package}     label="Buyback" />
+            <NavItem href="/membre/marche"     icon={Store}       label="Marche" />
           </>
         )}
         {role === "candidate" && (
@@ -182,7 +182,6 @@ export function MemberSidebar({ pendingCount = 0, discordUrl }: SidebarProps) {
             <NavItem href="/staff/guides"      icon={BookPlus}      label="Guides"       />
             <NavItem href="/staff/calendrier"  icon={CalendarPlus}  label="Événements"   />
             <NavItem href="/staff/assemblees"  icon={Scroll}        label="Assemblées"   />
-            <NavItem href="/staff/buyback"    icon={Package}       label="Buyback"      />
           </div>
         )}
 
@@ -285,7 +284,7 @@ export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
             <MobileNavItem href="/membre/guides"      icon={BookOpen}  label="Guides" />
             <MobileNavItem href="/membre/assemblees" icon={Scroll}    label="Assemblées" />
             <MobileNavItem href="/membre/annuaire"   icon={Users}     label="Annuaire" />
-            <MobileNavItem href="/membre/buyback"    icon={Package}   label="Buyback" />
+            <MobileNavItem href="/membre/marche"     icon={Store}     label="Marche" />
           </>
         )}
         {role === "candidate" && (
@@ -310,7 +309,6 @@ export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
             <MobileNavItem href="/staff/guides"      icon={BookPlus}      label="Guides" />
             <MobileNavItem href="/staff/calendrier"  icon={CalendarPlus}  label="Événements" />
             <MobileNavItem href="/staff/assemblees"  icon={Scroll}        label="Assemblées" />
-            <MobileNavItem href="/staff/buyback"    icon={Package}       label="Buyback" />
           </>
         )}
 

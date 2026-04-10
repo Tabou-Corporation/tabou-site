@@ -9,20 +9,16 @@ import { redirect } from "next/navigation";
 import type { ActionResult } from "@/types/actions";
 import { writeAuditLog } from "@/lib/audit";
 import { appraiseItems } from "@/lib/janice";
-import { getSettingsContent } from "@/lib/site-content/loader";
-import {
-  notifyBuybackSubmitted,
-  notifyBuybackStatusChange,
-} from "@/lib/discord-notify";
+import { notifyNewListing, notifyNewOffer } from "@/lib/discord-notify";
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
-/** Durée maximale d'une demande de buyback (14 jours) */
 const MAX_EXPIRY_DAYS = 14;
-/** Nombre max de demandes PENDING par utilisateur */
-const MAX_PENDING_PER_USER = 3;
-/** Taille max du paste brut (caractères) */
+const MAX_OPEN_PER_USER = 5;
 const MAX_PASTE_LENGTH = 10_000;
+const MAX_TITLE_LENGTH = 100;
+const MAX_DESCRIPTION_LENGTH = 500;
+const MAX_MESSAGE_LENGTH = 500;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -38,20 +34,19 @@ export type AppraisalFormState = {
       totalBuy: number;
     }>;
     totalBuyPrice: number;
-    totalBuyback: number;
-    buybackRate: number;
     failures: string[];
   };
 };
 
-export type SubmitBuybackState = {
+export type ListingFormState = {
   error?: string;
   success?: boolean;
+  listingId?: string;
 };
 
-// ─── Estimer la valeur (appel Janice, pas de sauvegarde DB) ──────────────────
+// ─── Estimer la valeur (appel Fuzzwork, pas de sauvegarde DB) ────────────────
 
-export async function estimateBuyback(
+export async function estimateItems(
   _prevState: AppraisalFormState,
   formData: FormData
 ): Promise<AppraisalFormState> {
@@ -68,9 +63,6 @@ export async function estimateBuyback(
   }
 
   try {
-    const settings = await getSettingsContent();
-    const rate = (settings.buybackRate ?? 90) / 100;
-
     const result = await appraiseItems(rawPaste);
 
     if (result.items.length === 0) {
@@ -88,197 +80,274 @@ export async function estimateBuyback(
           totalBuy: i.totalBuy,
         })),
         totalBuyPrice: result.totalBuyPrice,
-        totalBuyback: result.totalBuyPrice * rate,
-        buybackRate: rate,
         failures: result.failures,
       },
     };
   } catch (err) {
-    console.error("[buyback] Erreur estimation :", err);
+    console.error("[market] Erreur estimation :", err);
     return { error: "Erreur lors de l'estimation. Réessaie dans quelques instants." };
   }
 }
 
-// ─── Soumettre une demande de buyback ────────────────────────────────────────
+// ─── Créer une annonce ───────────────────────────────────────────────────────
 
-export async function submitBuyback(
-  _prevState: SubmitBuybackState,
+export async function createListing(
+  _prevState: ListingFormState,
   formData: FormData
-): Promise<SubmitBuybackState> {
+): Promise<ListingFormState> {
   const session = await auth();
   if (!session?.user?.id) return { error: "Non authentifié." };
 
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "member")) return { error: "Accès réservé aux membres." };
 
-  const rawPaste     = (formData.get("rawPaste") as string | null)?.trim() ?? "";
-  const itemsJson    = (formData.get("items") as string | null) ?? "[]";
-  const totalJitaBuy = parseFloat(formData.get("totalJitaBuy") as string ?? "0");
-  const buybackRate  = parseFloat(formData.get("buybackRate") as string ?? "0");
-  const totalBuyback = parseFloat(formData.get("totalBuyback") as string ?? "0");
+  const type       = formData.get("type") as string ?? "SELL";
+  const title      = (formData.get("title") as string | null)?.trim() ?? "";
+  const description = (formData.get("description") as string | null)?.trim() || null;
+  const rawPaste   = (formData.get("rawPaste") as string | null)?.trim() || null;
+  const itemsJson  = (formData.get("items") as string | null) ?? "[]";
+  const totalJitaBuy = parseFloat(formData.get("totalJitaBuy") as string ?? "0") || null;
+  const askingPriceRaw = formData.get("askingPrice") as string | null;
+  const askingRateRaw  = formData.get("askingRate") as string | null;
 
-  if (!rawPaste) return { error: "Données manquantes." };
-  if (totalJitaBuy <= 0 || totalBuyback <= 0) return { error: "Valeurs invalides." };
-
-  // Vérifier le nombre de demandes en cours
-  const pendingCount = await prisma.buybackRequest.count({
-    where: { userId: session.user.id, status: "PENDING" },
-  });
-  if (pendingCount >= MAX_PENDING_PER_USER) {
-    return { error: `Tu as déjà ${MAX_PENDING_PER_USER} demandes en attente. Attends qu'elles soient traitées.` };
+  // Validation
+  const VALID_TYPES = ["SELL", "BUY", "EXCHANGE"] as const;
+  if (!VALID_TYPES.includes(type as typeof VALID_TYPES[number])) {
+    return { error: "Type d'annonce invalide." };
+  }
+  if (!title) return { error: "Le titre est requis." };
+  if (title.length > MAX_TITLE_LENGTH) return { error: `Le titre ne peut pas dépasser ${MAX_TITLE_LENGTH} caractères.` };
+  if (description && description.length > MAX_DESCRIPTION_LENGTH) {
+    return { error: `La description ne peut pas dépasser ${MAX_DESCRIPTION_LENGTH} caractères.` };
   }
 
-  // Compter les items
+  const askingPrice = askingPriceRaw ? parseFloat(askingPriceRaw) : null;
+  const askingRate  = askingRateRaw ? parseInt(askingRateRaw, 10) : null;
+
+  if (askingPrice !== null && askingPrice < 0) return { error: "Le prix ne peut pas être négatif." };
+  if (askingRate !== null && (askingRate < 1 || askingRate > 200)) {
+    return { error: "Le taux doit être entre 1% et 200%." };
+  }
+
+  // Limiter les annonces ouvertes
+  const openCount = await prisma.marketListing.count({
+    where: { userId: session.user.id, status: "OPEN" },
+  });
+  if (openCount >= MAX_OPEN_PER_USER) {
+    return { error: `Tu as déjà ${MAX_OPEN_PER_USER} annonces en cours. Ferme-en une avant d'en créer une nouvelle.` };
+  }
+
   let items: unknown[];
   try {
     items = JSON.parse(itemsJson);
   } catch {
-    return { error: "Données d'items invalides." };
+    items = [];
   }
 
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + MAX_EXPIRY_DAYS);
 
   try {
-    const request = await prisma.buybackRequest.create({
+    const listing = await prisma.marketListing.create({
       data: {
         userId: session.user.id,
+        type: type as "SELL" | "BUY" | "EXCHANGE",
+        title,
+        description,
         rawPaste,
-        items: itemsJson,
+        items: Array.isArray(items) && items.length > 0 ? itemsJson : null,
         itemCount: Array.isArray(items) ? items.length : 0,
         totalJitaBuy,
-        buybackRate,
-        totalBuyback,
+        askingPrice,
+        askingRate,
         expiresAt,
       },
     });
 
-    notifyBuybackSubmitted({
-      requestId: request.id,
-      sellerName: session.user.name ?? null,
-      totalBuyback,
+    notifyNewListing({
+      listingId: listing.id,
+      title,
+      type,
+      authorName: session.user.name ?? null,
+      askingPrice,
       itemCount: Array.isArray(items) ? items.length : 0,
-      buybackRate,
     });
 
-    revalidatePath("/membre/buyback");
-    revalidatePath("/staff/buyback");
-    return { success: true };
+    revalidatePath("/membre/marche");
+    return { success: true, listingId: listing.id };
   } catch (err) {
-    console.error("[buyback] Erreur soumission :", err);
-    return { error: "Erreur lors de la soumission." };
+    console.error("[market] Erreur création :", err);
+    return { error: "Erreur lors de la création de l'annonce." };
   }
 }
 
-// ─── Staff : mettre à jour le statut d'une demande ──────────────────────────
+// ─── Faire une offre ─────────────────────────────────────────────────────────
 
-export async function updateBuybackStatus(
-  id: string,
-  status: "ACCEPTED" | "PAID" | "REJECTED",
-  reviewNote?: string
+export async function makeOffer(
+  listingId: string,
+  price: number | null,
+  message: string | null
 ): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "officer")) redirect("/membre");
+  if (!hasMinRole(role, "member")) return { success: false, error: "Accès réservé aux membres." };
 
-  const VALID = ["ACCEPTED", "PAID", "REJECTED"] as const;
-  if (!VALID.includes(status)) {
-    return { success: false, error: "Statut invalide." };
+  if (message && message.length > MAX_MESSAGE_LENGTH) {
+    return { success: false, error: `Le message ne peut pas dépasser ${MAX_MESSAGE_LENGTH} caractères.` };
+  }
+  if (!price && !message) {
+    return { success: false, error: "Propose un prix ou écris un message." };
+  }
+
+  const listing = await prisma.marketListing.findUnique({
+    where: { id: listingId },
+    include: { user: { select: { name: true } } },
+  });
+  if (!listing) return { success: false, error: "Annonce introuvable." };
+  if (listing.status !== "OPEN") return { success: false, error: "Cette annonce n'est plus ouverte." };
+  if (listing.userId === session.user.id) return { success: false, error: "Tu ne peux pas faire une offre sur ta propre annonce." };
+
+  // Vérifier expiration
+  if (listing.expiresAt < new Date()) {
+    await prisma.marketListing.update({ where: { id: listingId }, data: { status: "EXPIRED" } });
+    return { success: false, error: "Cette annonce a expiré." };
   }
 
   try {
-    const request = await prisma.buybackRequest.findUnique({
-      where: { id },
-      include: { user: { select: { name: true } } },
-    });
-    if (!request) return { success: false, error: "Demande introuvable." };
-
-    // Vérifier expiration
-    if (request.status === "PENDING" && request.expiresAt < new Date()) {
-      await prisma.buybackRequest.update({
-        where: { id },
-        data: { status: "EXPIRED" },
-      });
-      revalidatePath("/staff/buyback");
-      revalidatePath(`/staff/buyback/${id}`);
-      return { success: false, error: "Cette demande a expiré." };
-    }
-
-    await prisma.buybackRequest.update({
-      where: { id },
+    await prisma.marketOffer.create({
       data: {
-        status,
-        reviewerId: session.user.id,
-        reviewNote: reviewNote?.trim() || null,
+        listingId,
+        userId: session.user.id,
+        price,
+        message: message?.trim() || null,
       },
     });
 
-    notifyBuybackStatusChange({
-      requestId: id,
-      sellerName: request.user.name ?? null,
-      reviewerName: session.user.name ?? null,
-      totalBuyback: request.totalBuyback,
-      status,
-      reviewNote: reviewNote ?? null,
+    notifyNewOffer({
+      listingId,
+      listingTitle: listing.title,
+      offerAuthorName: session.user.name ?? null,
+      listingAuthorName: listing.user.name ?? null,
+      price,
     });
+
+    revalidatePath(`/membre/marche/${listingId}`);
+    return { success: true };
+  } catch {
+    return { success: false, error: "Erreur lors de l'envoi de l'offre." };
+  }
+}
+
+// ─── Accepter / Refuser une offre (par le propriétaire de l'annonce) ────────
+
+export async function respondToOffer(
+  offerId: string,
+  action: "ACCEPTED" | "REJECTED"
+): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const offer = await prisma.marketOffer.findUnique({
+    where: { id: offerId },
+    include: { listing: { select: { id: true, userId: true, title: true } } },
+  });
+  if (!offer) return { success: false, error: "Offre introuvable." };
+  if (offer.listing.userId !== session.user.id) {
+    return { success: false, error: "Seul le propriétaire de l'annonce peut répondre aux offres." };
+  }
+  if (offer.status !== "PENDING") return { success: false, error: "Cette offre a déjà été traitée." };
+
+  try {
+    if (action === "ACCEPTED") {
+      // Accepter cette offre + fermer l'annonce + rejeter les autres offres
+      await prisma.$transaction([
+        prisma.marketOffer.update({
+          where: { id: offerId },
+          data: { status: "ACCEPTED" },
+        }),
+        prisma.marketOffer.updateMany({
+          where: { listingId: offer.listingId, id: { not: offerId }, status: "PENDING" },
+          data: { status: "REJECTED" },
+        }),
+        prisma.marketListing.update({
+          where: { id: offer.listingId },
+          data: { status: "SOLD" },
+        }),
+      ]);
+    } else {
+      await prisma.marketOffer.update({
+        where: { id: offerId },
+        data: { status: "REJECTED" },
+      });
+    }
 
     writeAuditLog({
       actorId: session.user.id,
       actorName: session.user.name,
-      action: "buyback_status",
-      meta: {
-        buybackId: id,
-        sellerId: request.userId,
-        from: request.status,
-        to: status,
-        totalBuyback: request.totalBuyback,
-      },
+      action: "market_offer",
+      meta: { offerId, listingId: offer.listingId, action },
     });
 
-    revalidatePath("/staff/buyback");
-    revalidatePath(`/staff/buyback/${id}`);
-    revalidatePath("/membre/buyback");
-
+    revalidatePath(`/membre/marche/${offer.listingId}`);
+    revalidatePath("/membre/marche");
     return { success: true };
   } catch {
-    return { success: false, error: "Erreur lors de la mise à jour." };
+    return { success: false, error: "Erreur lors du traitement." };
   }
 }
 
-// ─── Membre : annuler sa propre demande (PENDING uniquement) ────────────────
+// ─── Retirer une offre (par l'auteur de l'offre) ─────────────────────────────
 
-export async function cancelBuyback(id: string): Promise<ActionResult> {
+export async function withdrawOffer(offerId: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  try {
-    const request = await prisma.buybackRequest.findUnique({ where: { id } });
-    if (!request) return { success: false, error: "Demande introuvable." };
-    if (request.userId !== session.user.id) {
-      return { success: false, error: "Cette demande ne vous appartient pas." };
-    }
-    if (request.status !== "PENDING") {
-      return { success: false, error: "Seule une demande en attente peut être annulée." };
-    }
+  const offer = await prisma.marketOffer.findUnique({ where: { id: offerId } });
+  if (!offer) return { success: false, error: "Offre introuvable." };
+  if (offer.userId !== session.user.id) return { success: false, error: "Ce n'est pas ton offre." };
+  if (offer.status !== "PENDING") return { success: false, error: "Cette offre n'est plus en attente." };
 
-    await prisma.buybackRequest.delete({ where: { id } });
-
-    revalidatePath("/membre/buyback");
-    revalidatePath("/staff/buyback");
-    return { success: true };
-  } catch {
-    return { success: false, error: "Erreur lors de l'annulation." };
-  }
+  await prisma.marketOffer.update({ where: { id: offerId }, data: { status: "WITHDRAWN" } });
+  revalidatePath(`/membre/marche/${offer.listingId}`);
+  return { success: true };
 }
 
-// ─── Expirer automatiquement les demandes dépassées ─────────────────────────
+// ─── Fermer son annonce ──────────────────────────────────────────────────────
 
-export async function expireBuybackRequests(): Promise<number> {
-  const result = await prisma.buybackRequest.updateMany({
+export async function closeListing(id: string): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const listing = await prisma.marketListing.findUnique({ where: { id } });
+  if (!listing) return { success: false, error: "Annonce introuvable." };
+  if (listing.userId !== session.user.id) {
+    // Les officiers peuvent aussi fermer
+    const role = (session.user.role ?? "candidate") as UserRole;
+    if (!hasMinRole(role, "officer")) return { success: false, error: "Ce n'est pas ton annonce." };
+  }
+  if (listing.status !== "OPEN") return { success: false, error: "Annonce déjà fermée." };
+
+  await prisma.$transaction([
+    prisma.marketListing.update({ where: { id }, data: { status: "CLOSED" } }),
+    prisma.marketOffer.updateMany({
+      where: { listingId: id, status: "PENDING" },
+      data: { status: "REJECTED" },
+    }),
+  ]);
+
+  revalidatePath("/membre/marche");
+  revalidatePath(`/membre/marche/${id}`);
+  return { success: true };
+}
+
+// ─── Expirer automatiquement les annonces dépassées ─────────────────────────
+
+export async function expireListings(): Promise<number> {
+  const result = await prisma.marketListing.updateMany({
     where: {
-      status: "PENDING",
+      status: "OPEN",
       expiresAt: { lt: new Date() },
     },
     data: { status: "EXPIRED" },

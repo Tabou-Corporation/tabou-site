@@ -508,14 +508,13 @@ export const DEFAULT_DISCORD: DiscordConfig = {
   guidesWebhookUrl:        "",
   assembliesWebhookUrl:    "",
   adminWebhookUrl:         "",
-  buybackWebhookUrl:       "",
+  marketWebhookUrl:        "",
   inviteUrl:               "https://discord.gg/tabou",
 };
 
 export const DEFAULT_SETTINGS: SettingsContent = {
   pilotesNavVisible: true,
-  buybackRate: 90,
-  buybackEnabled: true,
+  marketEnabled: true,
 };
 
 export const DEFAULTS: ContentByPage = {
