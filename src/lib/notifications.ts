@@ -128,6 +128,34 @@ export function notifyListingExpired(params: {
   });
 }
 
+// ── Batch creation ────────────────────────────────────────────────────────────
+
+/** Crée plusieurs notifications en une seule requête (fire-and-forget). */
+export async function createNotificationsBatch(
+  items: Array<{
+    userId: string;
+    type: NotificationType;
+    title: string;
+    body?: string;
+    href?: string;
+  }>
+): Promise<void> {
+  if (items.length === 0) return;
+  try {
+    await prisma.notification.createMany({
+      data: items.map((n) => ({
+        userId: n.userId,
+        type: n.type,
+        title: n.title,
+        body: n.body ?? null,
+        href: n.href ?? null,
+      })),
+    });
+  } catch (err) {
+    console.error("[notification] Erreur batch :", err);
+  }
+}
+
 // ── Formatage ISK (copie légère du helper) ──────────────────────────────────
 
 function formatISK(amount: number): string {

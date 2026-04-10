@@ -15,7 +15,7 @@ import {
   notifyOfferAccepted,
   notifyOfferRejected,
   notifyListingSold,
-  notifyListingExpired,
+  createNotificationsBatch,
 } from "@/lib/notifications";
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
@@ -349,14 +349,17 @@ export async function respondToOffer(
         finalPrice: offer.price,
       });
 
-      // Notifier les autres offreurs rejetes
-      for (const other of otherOffers) {
-        notifyOfferRejected({
-          offerAuthorId: other.userId,
-          listingTitle: offer.listing.title,
-          listingId: offer.listingId,
-          reason: "Une autre offre a ete acceptee.",
-        });
+      // Notifier les autres offreurs rejetes (batch)
+      if (otherOffers.length > 0) {
+        createNotificationsBatch(
+          otherOffers.map((other) => ({
+            userId: other.userId,
+            type: "offer_rejected" as const,
+            title: `Offre declinee sur "${offer.listing.title}"`,
+            body: "Une autre offre a ete acceptee.",
+            href: `/membre/marche/${offer.listingId}`,
+          }))
+        );
       }
     } else {
       // Refus individuel
@@ -436,14 +439,17 @@ export async function closeListing(id: string): Promise<ActionResult> {
     }),
   ]);
 
-  // Notifier les offreurs en attente que leurs offres sont rejetees
-  for (const offer of listing.offers) {
-    notifyOfferRejected({
-      offerAuthorId: offer.userId,
-      listingTitle: listing.title,
-      listingId: id,
-      reason: "L'annonce a ete fermee par le proprietaire.",
-    });
+  // Notifier les offreurs en attente que leurs offres sont rejetees (batch)
+  if (listing.offers.length > 0) {
+    createNotificationsBatch(
+      listing.offers.map((offer) => ({
+        userId: offer.userId,
+        type: "offer_rejected" as const,
+        title: `Offre declinee sur "${listing.title}"`,
+        body: "L'annonce a ete fermee par le proprietaire.",
+        href: `/membre/marche/${id}`,
+      }))
+    );
   }
 
   revalidatePath("/membre/marche");
@@ -489,21 +495,36 @@ export async function expireListings(): Promise<number> {
     }),
   ]);
 
-  // Notifications (fire-and-forget)
+  // Notifications (fire-and-forget, batch)
+  const batchNotifs: Array<{
+    userId: string;
+    type: "listing_expired" | "offer_rejected";
+    title: string;
+    body: string;
+    href: string;
+  }> = [];
+
   for (const listing of toExpire) {
-    notifyListingExpired({
-      ownerId: listing.userId,
-      listingTitle: listing.title,
-      listingId: listing.id,
+    batchNotifs.push({
+      userId: listing.userId,
+      type: "listing_expired",
+      title: `"${listing.title}" a expire`,
+      body: "Ton annonce a depasse les 14 jours et a ete fermee automatiquement.",
+      href: `/membre/marche/${listing.id}`,
     });
     for (const offer of listing.offers) {
-      notifyOfferRejected({
-        offerAuthorId: offer.userId,
-        listingTitle: listing.title,
-        listingId: listing.id,
-        reason: "L'annonce a expire.",
+      batchNotifs.push({
+        userId: offer.userId,
+        type: "offer_rejected",
+        title: `Offre declinee sur "${listing.title}"`,
+        body: "L'annonce a expire.",
+        href: `/membre/marche/${listing.id}`,
       });
     }
+  }
+
+  if (batchNotifs.length > 0) {
+    createNotificationsBatch(batchNotifs);
   }
 
   return toExpire.length;
