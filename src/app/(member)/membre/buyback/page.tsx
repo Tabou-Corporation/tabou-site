@@ -97,6 +97,7 @@ export default async function BuybackPage() {
 
           {/* Colonne info */}
           <div className="space-y-4">
+            {/* Etapes */}
             <Card>
               <CardHeader>
                 <h2 className="font-display font-semibold text-sm text-text-primary">
@@ -106,41 +107,81 @@ export default async function BuybackPage() {
               <CardBody className="space-y-3">
                 <div className="flex items-start gap-2.5">
                   <span className="text-gold font-bold text-xs mt-0.5">1.</span>
-                  <p className="text-text-secondary text-xs">
-                    Copie tes items depuis EVE (inventaire, cargo, hangar)
-                  </p>
+                  <div>
+                    <p className="text-text-secondary text-xs font-medium">Copie tes items</p>
+                    <p className="text-text-muted text-[11px]">Inventaire, cargo ou hangar en jeu</p>
+                  </div>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <span className="text-gold font-bold text-xs mt-0.5">2.</span>
-                  <p className="text-text-secondary text-xs">
-                    Colle-les dans le formulaire et clique &quot;Estimer&quot;
-                  </p>
+                  <div>
+                    <p className="text-text-secondary text-xs font-medium">Colle et estime</p>
+                    <p className="text-text-muted text-[11px]">Les prix Jita sont calcules en temps reel</p>
+                  </div>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <span className="text-gold font-bold text-xs mt-0.5">3.</span>
-                  <p className="text-text-secondary text-xs">
-                    Verifie le montant et soumets la demande
-                  </p>
+                  <div>
+                    <p className="text-text-secondary text-xs font-medium">Soumets ta demande</p>
+                    <p className="text-text-muted text-[11px]">Verifie le montant puis valide</p>
+                  </div>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <span className="text-gold font-bold text-xs mt-0.5">4.</span>
-                  <p className="text-text-secondary text-xs">
-                    Un officier valide et te paye en jeu
-                  </p>
+                  <div>
+                    <p className="text-text-secondary text-xs font-medium">Paiement en jeu</p>
+                    <p className="text-text-muted text-[11px]">Un officier accepte et te transfere les ISK</p>
+                  </div>
                 </div>
               </CardBody>
             </Card>
 
+            {/* Parametres */}
             <Card>
-              <CardBody className="space-y-1 py-3">
-                <p className="text-text-muted text-xs">
-                  Taux actuel : <span className="text-gold font-semibold">{settings.buybackRate}%</span>
+              <CardHeader>
+                <h2 className="font-display font-semibold text-sm text-text-primary">
+                  Parametres actuels
+                </h2>
+              </CardHeader>
+              <CardBody className="space-y-2 py-3">
+                <div className="flex justify-between text-xs">
+                  <span className="text-text-muted">Taux de rachat</span>
+                  <span className="text-gold font-semibold">{settings.buybackRate}%</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-text-muted">Reference</span>
+                  <span className="text-text-secondary">Jita buy (temps reel)</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-text-muted">Expiration</span>
+                  <span className="text-text-secondary">14 jours</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-text-muted">Max en attente</span>
+                  <span className="text-text-secondary">3 demandes</span>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Bon a savoir */}
+            <Card>
+              <CardHeader>
+                <h2 className="font-display font-semibold text-sm text-text-primary">
+                  Bon a savoir
+                </h2>
+              </CardHeader>
+              <CardBody className="space-y-2 py-3">
+                <p className="text-text-muted text-[11px] leading-relaxed">
+                  Les items doivent etre en <strong className="text-text-secondary">anglais</strong> (noms EVE par defaut).
                 </p>
-                <p className="text-text-muted text-xs">
-                  Expiration : <span className="text-text-secondary">14 jours</span>
+                <p className="text-text-muted text-[11px] leading-relaxed">
+                  Tu peux copier directement depuis ton <strong className="text-text-secondary">inventaire</strong>,
+                  {" "}<strong className="text-text-secondary">cargo</strong> ou
+                  {" "}<strong className="text-text-secondary">hangar</strong> avec Ctrl+A puis Ctrl+C.
                 </p>
-                <p className="text-text-muted text-xs">
-                  Max en attente : <span className="text-text-secondary">3 demandes</span>
+                <p className="text-text-muted text-[11px] leading-relaxed">
+                  Une demande non traitee expire automatiquement apres 14 jours.
+                  Tu peux en avoir <strong className="text-text-secondary">3 en parallele</strong>.
                 </p>
               </CardBody>
             </Card>

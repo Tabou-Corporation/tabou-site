@@ -13,7 +13,7 @@ import {
   type SubmitBuybackState,
 } from "@/lib/actions/buyback";
 import { cn } from "@/lib/utils/cn";
-import { Package, AlertTriangle, Check } from "lucide-react";
+import { Package, AlertTriangle, Check, HelpCircle } from "lucide-react";
 
 function formatISK(amount: number): string {
   if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(2)}B ISK`;
@@ -26,6 +26,7 @@ export function BuybackForm() {
   const router = useRouter();
   const { addToast } = useToast();
   const [rawPaste, setRawPaste] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
 
   // Step 1: Estimate
   const [estimateState, estimateAction, estimatePending] = useActionState<AppraisalFormState, FormData>(
@@ -71,14 +72,64 @@ export function BuybackForm() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Package size={16} className="text-gold/70" />
-          <h2 className="font-display font-semibold text-base text-text-primary">
-            Vendre a la corporation
-          </h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Package size={16} className="text-gold/70" />
+            <h2 className="font-display font-semibold text-base text-text-primary">
+              Vendre a la corporation
+            </h2>
+          </div>
+          {!appraisal && (
+            <button
+              type="button"
+              onClick={() => setShowHelp(!showHelp)}
+              className="text-text-muted hover:text-gold transition-colors"
+              title="Aide"
+            >
+              <HelpCircle size={16} />
+            </button>
+          )}
         </div>
       </CardHeader>
       <CardBody className="space-y-4">
+
+        {/* Aide contextuelle */}
+        {showHelp && !appraisal && (
+          <div className="bg-bg-elevated border border-border rounded p-4 space-y-3">
+            <p className="text-text-primary text-sm font-semibold">Comment copier tes items depuis EVE ?</p>
+
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <p className="text-gold text-xs font-semibold">Depuis ton inventaire / cargo / hangar :</p>
+                <ol className="text-text-secondary text-xs space-y-0.5 list-decimal list-inside">
+                  <li>Ouvre ton inventaire en jeu</li>
+                  <li>Selectionne les items (Ctrl+A pour tout)</li>
+                  <li>Copie avec <kbd className="bg-bg-deep px-1.5 py-0.5 rounded text-[10px] font-mono border border-border">Ctrl+C</kbd></li>
+                  <li>Colle ici avec <kbd className="bg-bg-deep px-1.5 py-0.5 rounded text-[10px] font-mono border border-border">Ctrl+V</kbd></li>
+                </ol>
+              </div>
+
+              <div className="border-t border-border-subtle pt-2 space-y-1">
+                <p className="text-gold text-xs font-semibold">Formats acceptes :</p>
+                <div className="font-mono text-[11px] text-text-muted bg-bg-deep rounded p-2 space-y-0.5">
+                  <p>Tritanium	5000</p>
+                  <p>Pyerite	2000</p>
+                  <p>Mexallon x1000</p>
+                  <p>Isogen 500</p>
+                </div>
+              </div>
+
+              <div className="border-t border-border-subtle pt-2">
+                <p className="text-text-muted text-[11px] leading-relaxed">
+                  <strong className="text-text-secondary">Important :</strong> les noms d&apos;items doivent etre
+                  en <strong className="text-text-secondary">anglais</strong> (langue par defaut d&apos;EVE).
+                  Les prix affiches correspondent au Jita buy en temps reel.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Step 1: Paste */}
         {!appraisal && (
           <form action={estimateAction} className="space-y-4">
@@ -101,7 +152,8 @@ export function BuybackForm() {
                 )}
               />
               <p className="text-text-muted text-[11px]">
-                Format EVE : selectionne tes items dans le jeu, copie (Ctrl+C) et colle ici.
+                Selectionne tes items en jeu, copie (Ctrl+C) et colle ici.
+                Clique <button type="button" onClick={() => setShowHelp(true)} className="text-gold hover:underline">?</button> pour plus d&apos;aide.
               </p>
             </div>
 
@@ -160,6 +212,9 @@ export function BuybackForm() {
                   <p className="text-yellow-300/70 text-xs mt-1">
                     {appraisal.failures.join(", ")}
                   </p>
+                  <p className="text-yellow-300/50 text-[11px] mt-1">
+                    Verifie que les noms sont en anglais et bien orthographies.
+                  </p>
                 </div>
               </div>
             )}
@@ -178,8 +233,8 @@ export function BuybackForm() {
                 <span className="text-text-primary font-semibold">Vous recevrez</span>
                 <span className="text-gold font-display font-bold text-lg">{formatISK(appraisal.totalBuyback)}</span>
               </div>
-              <p className="text-text-muted text-[11px] flex items-center gap-1">
-                <span>Expire dans 14 jours</span>
+              <p className="text-text-muted text-[11px]">
+                Expire dans 14 jours — un officier traitera ta demande et te paiera en jeu.
               </p>
             </div>
 
