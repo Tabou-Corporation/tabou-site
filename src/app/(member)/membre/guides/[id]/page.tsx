@@ -25,7 +25,7 @@ export default async function GuideDetailPage({
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member")) redirect("/membre");
+  if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
   const isOfficer = hasMinRole(role, "officer");
 

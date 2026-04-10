@@ -53,7 +53,7 @@ export default async function ListingDetailPage({
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member")) redirect("/membre");
+  if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
   const listing = await prisma.marketListing.findUnique({
     where: { id },

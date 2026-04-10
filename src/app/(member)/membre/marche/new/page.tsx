@@ -13,7 +13,7 @@ export default async function NewListingPage() {
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member")) redirect("/membre");
+  if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
   return (
     <div className="py-10 sm:py-14">
