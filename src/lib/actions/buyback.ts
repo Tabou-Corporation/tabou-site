@@ -101,10 +101,11 @@ export async function createListing(
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "member")) return { error: "Accès réservé aux membres." };
 
-  const type       = formData.get("type") as string ?? "SELL";
-  const title      = (formData.get("title") as string | null)?.trim() ?? "";
+  const type        = formData.get("type") as string ?? "SELL";
+  const title       = (formData.get("title") as string | null)?.trim() ?? "";
   const description = (formData.get("description") as string | null)?.trim() || null;
-  const rawPaste   = (formData.get("rawPaste") as string | null)?.trim() || null;
+  const location    = (formData.get("location") as string | null)?.trim() || null;
+  const rawPaste    = (formData.get("rawPaste") as string | null)?.trim() || null;
   const itemsJson  = (formData.get("items") as string | null) ?? "[]";
   const totalJitaBuy = parseFloat(formData.get("totalJitaBuy") as string ?? "0") || null;
   const askingPriceRaw = formData.get("askingPrice") as string | null;
@@ -154,6 +155,7 @@ export async function createListing(
         type: type as "SELL" | "BUY" | "EXCHANGE",
         title,
         description,
+        location,
         rawPaste,
         items: Array.isArray(items) && items.length > 0 ? itemsJson : null,
         itemCount: Array.isArray(items) ? items.length : 0,

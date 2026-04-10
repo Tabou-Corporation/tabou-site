@@ -14,7 +14,7 @@ import {
 } from "@/lib/constants/labels";
 import { OfferSection } from "./OfferSection";
 import { CloseListingButton } from "./CloseListingButton";
-import { ArrowLeft, Package, ShoppingCart, ArrowLeftRight, Clock } from "lucide-react";
+import { ArrowLeft, Package, ShoppingCart, ArrowLeftRight, Clock, MapPin } from "lucide-react";
 import type { UserRole } from "@/types/roles";
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
@@ -253,6 +253,14 @@ export default async function ListingDetailPage({
                     })}
                   </span>
                 </div>
+                {listing.location && (
+                  <div className="flex justify-between text-xs gap-2">
+                    <span className="text-text-muted flex items-center gap-1">
+                      <MapPin size={11} /> Localisation
+                    </span>
+                    <span className="text-text-secondary text-right">{listing.location}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-xs">
                   <span className="text-text-muted">Offres</span>
                   <span className="text-text-secondary">{listing.offers.length}</span>

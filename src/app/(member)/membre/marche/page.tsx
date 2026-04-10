@@ -14,7 +14,7 @@ import {
   LISTING_TYPE_LABELS, LISTING_TYPE_BADGE,
 } from "@/lib/constants/labels";
 import { cn } from "@/lib/utils/cn";
-import { Plus, Package, ShoppingCart, ArrowLeftRight, Store } from "lucide-react";
+import { Plus, Package, ShoppingCart, ArrowLeftRight, Store, MapPin } from "lucide-react";
 import type { UserRole } from "@/types/roles";
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
@@ -154,15 +154,23 @@ export default async function MarketPage({
                             {l.title}
                           </p>
                         </div>
-                        <p className="text-text-muted text-xs mt-0.5">
-                          {l.user.name ?? "Membre"} · {l.itemCount > 0 ? `${l.itemCount} items · ` : ""}
-                          {days}j restants
-                          {l._count.offers > 0 && (
-                            <span className="text-gold ml-1">
-                              · {l._count.offers} offre{l._count.offers > 1 ? "s" : ""}
+                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                          <span className="text-text-muted text-xs">
+                            {l.user.name ?? "Membre"} · {l.itemCount > 0 ? `${l.itemCount} items · ` : ""}
+                            {days}j restants
+                            {l._count.offers > 0 && (
+                              <span className="text-gold ml-1">
+                                · {l._count.offers} offre{l._count.offers > 1 ? "s" : ""}
+                              </span>
+                            )}
+                          </span>
+                          {l.location && (
+                            <span className="inline-flex items-center gap-1 text-text-muted text-xs">
+                              <MapPin size={10} className="flex-shrink-0" />
+                              {l.location}
                             </span>
                           )}
-                        </p>
+                        </div>
                       </div>
 
                       {/* Prix */}

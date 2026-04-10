@@ -285,6 +285,9 @@ model MarketListing {
   /// Ou taux en % du Jita buy (ex: 90 = 90%) — null = prix fixe ou libre
   askingRate    Int?
 
+  /// Localisation des items (station ou citadelle, texte libre)
+  location      String?
+
   /// Statut de l'annonce
   status        ListingStatus  @default(OPEN)
 

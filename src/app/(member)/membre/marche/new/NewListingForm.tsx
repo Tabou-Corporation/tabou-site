@@ -48,6 +48,7 @@ export function NewListingForm() {
   const [type, setType] = useState<"SELL" | "BUY" | "EXCHANGE">("SELL");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
   const [rawPaste, setRawPaste] = useState("");
   const [pricingMode, setPricingMode] = useState<"fixed" | "rate" | "open">("open");
   const [fixedPrice, setFixedPrice] = useState("");
@@ -72,6 +73,7 @@ export function NewListingForm() {
       fd.set("type", type);
       fd.set("title", title);
       fd.set("description", description);
+      fd.set("location", location);
       fd.set("rawPaste", rawPaste);
       fd.set("items", appraisal ? JSON.stringify(appraisal.items) : "[]");
       fd.set("totalJitaBuy", String(appraisal?.totalBuyPrice ?? 0));
@@ -164,10 +166,26 @@ export function NewListingForm() {
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Precisions, conditions, localisation des items..."
+              placeholder="Precisions, conditions, disponibilite..."
               maxLength={500}
               className={cn(inputCls, "resize-y")}
             />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-text-muted text-xs font-medium">
+              Localisation <span className="text-text-muted font-normal">(optionnel)</span>
+            </label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Ex: Jita 4-4, Amarr VIII, Perimeter - IChokeYou..."
+              maxLength={100}
+              className={inputCls}
+            />
+            <p className="text-text-muted text-[11px]">
+              Station ou citadelle ou se trouvent les items.
+            </p>
           </div>
         </CardBody>
       </Card>
