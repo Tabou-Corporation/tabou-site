@@ -36,27 +36,39 @@ interface Props {
   isOpen: boolean;
   currentUserId: string;
   offers: Offer[];
+  askingPrice: number | null;
+  totalJitaBuy: number | null;
 }
 
-export function OfferSection({ listingId, isOwner, isOpen, currentUserId, offers }: Props) {
+export function OfferSection({ listingId, isOwner, isOpen, currentUserId, offers, askingPrice, totalJitaBuy }: Props) {
   const router = useRouter();
   const { addToast } = useToast();
   const [isPending, startTransition] = useTransition();
 
-  // New offer form
-  const [offerPrice, setOfferPrice] = useState("");
+  // Prix de reference = le prix demande, ou la valeur Jita, ou rien
+  const refPrice = askingPrice ?? totalJitaBuy ?? null;
+
+  // Mode de saisie du prix
+  const [priceMode, setPriceMode] = useState<"slider" | "free">(refPrice ? "slider" : "free");
+  const [sliderPercent, setSliderPercent] = useState(100);
+  const [freePrice, setFreePrice] = useState(refPrice ? String(Math.round(refPrice)) : "");
   const [offerMessage, setOfferMessage] = useState("");
+
+  // Prix calcule selon le mode
+  const computedPrice = priceMode === "slider" && refPrice
+    ? Math.round(refPrice * sliderPercent / 100)
+    : freePrice ? parseFloat(freePrice) : null;
 
   const hasUserOffer = offers.some((o) => o.userId === currentUserId && o.status === "PENDING");
 
   function handleMakeOffer() {
     startTransition(async () => {
-      const price = offerPrice ? parseFloat(offerPrice) : null;
-      const result = await makeOffer(listingId, price, offerMessage || null);
+      const result = await makeOffer(listingId, computedPrice, offerMessage || null);
       if (result.success) {
         addToast("Offre envoyee !", "success");
-        setOfferPrice("");
+        setFreePrice("");
         setOfferMessage("");
+        setSliderPercent(100);
         router.refresh();
       } else {
         addToast(result.error, "error");
@@ -99,23 +111,84 @@ export function OfferSection({ listingId, isOwner, isOpen, currentUserId, offers
             </h2>
           </CardHeader>
           <CardBody className="space-y-3">
-            <div className="space-y-1.5">
-              <label className="block text-text-muted text-xs font-medium">
-                Prix propose (ISK) <span className="text-text-muted font-normal">— optionnel</span>
-              </label>
-              <input
-                type="number"
-                value={offerPrice}
-                onChange={(e) => setOfferPrice(e.target.value)}
-                placeholder="Ex: 100000000"
-                min={0}
-                className={cn(
-                  "w-full bg-bg-elevated border rounded px-3 py-2",
-                  "text-text-primary text-sm",
-                  "border-border focus:border-gold/60 focus:outline-none"
-                )}
-              />
-            </div>
+            {/* Choix du mode de prix */}
+            {refPrice && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPriceMode("slider")}
+                  className={cn(
+                    "px-3 py-1 rounded text-xs font-medium transition-colors border",
+                    priceMode === "slider"
+                      ? "bg-gold text-text-inverted border-gold"
+                      : "bg-bg-elevated text-text-secondary border-border hover:border-border-accent"
+                  )}
+                >
+                  % du prix demande
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPriceMode("free")}
+                  className={cn(
+                    "px-3 py-1 rounded text-xs font-medium transition-colors border",
+                    priceMode === "free"
+                      ? "bg-gold text-text-inverted border-gold"
+                      : "bg-bg-elevated text-text-secondary border-border hover:border-border-accent"
+                  )}
+                >
+                  Saisie libre
+                </button>
+              </div>
+            )}
+
+            {/* Slider % */}
+            {priceMode === "slider" && refPrice ? (
+              <div className="space-y-1.5">
+                <label className="block text-text-muted text-xs font-medium">
+                  Prix propose ({sliderPercent}% {askingPrice ? "du prix demande" : "du Jita buy"})
+                </label>
+                <input
+                  type="range"
+                  min={50}
+                  max={150}
+                  step={5}
+                  value={sliderPercent}
+                  onChange={(e) => setSliderPercent(parseInt(e.target.value))}
+                  className="w-full accent-gold"
+                />
+                <div className="flex justify-between text-text-muted text-[10px]">
+                  <span>50%</span>
+                  <span className="text-gold font-semibold text-xs">{sliderPercent}%</span>
+                  <span>150%</span>
+                </div>
+                <div className="bg-bg-elevated rounded p-2 flex justify-between items-center">
+                  <span className="text-text-muted text-xs">Ton offre</span>
+                  <span className="text-gold font-display font-bold">
+                    {formatISK(computedPrice ?? 0)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              /* Saisie libre */
+              <div className="space-y-1.5">
+                <label className="block text-text-muted text-xs font-medium">
+                  Prix propose (ISK) <span className="text-text-muted font-normal">— optionnel</span>
+                </label>
+                <input
+                  type="number"
+                  value={freePrice}
+                  onChange={(e) => setFreePrice(e.target.value)}
+                  placeholder="Ex: 100000000"
+                  min={0}
+                  className={cn(
+                    "w-full bg-bg-elevated border rounded px-3 py-2",
+                    "text-text-primary text-sm",
+                    "border-border focus:border-gold/60 focus:outline-none"
+                  )}
+                />
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <label className="block text-text-muted text-xs font-medium">
                 Message
@@ -138,7 +211,7 @@ export function OfferSection({ listingId, isOwner, isOpen, currentUserId, offers
               variant="primary"
               size="sm"
               className="w-full"
-              disabled={isPending || (!offerPrice && !offerMessage)}
+              disabled={isPending || (!computedPrice && !offerMessage)}
               onClick={handleMakeOffer}
             >
               {isPending ? <><Spinner /> Envoi...</> : <><MessageSquare size={14} /> Envoyer l&apos;offre</>}

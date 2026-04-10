@@ -13,6 +13,7 @@ import {
   LISTING_STATUS_LABELS, LISTING_STATUS_BADGE,
 } from "@/lib/constants/labels";
 import { OfferSection } from "./OfferSection";
+import { ItemsTable } from "./ItemsTable";
 import { CloseListingButton } from "./CloseListingButton";
 import { ArrowLeft, Package, ShoppingCart, ArrowLeftRight, Clock, MapPin } from "lucide-react";
 import type { UserRole } from "@/types/roles";
@@ -150,51 +151,7 @@ export default async function ListingDetailPage({
 
             {/* Items */}
             {items.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <h2 className="font-display font-semibold text-base text-text-primary">
-                    Items ({items.length})
-                  </h2>
-                </CardHeader>
-                <CardBody>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wide">
-                          <th className="text-left pb-2 font-semibold">Item</th>
-                          <th className="text-right pb-2 font-semibold">Qte</th>
-                          <th className="text-right pb-2 font-semibold">Jita Buy</th>
-                          <th className="text-right pb-2 font-semibold">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item, i) => (
-                          <tr key={i} className="border-b border-border-subtle">
-                            <td className="py-2 text-text-primary">{item.name}</td>
-                            <td className="py-2 text-text-secondary text-right font-mono">
-                              {item.quantity.toLocaleString("fr-FR")}
-                            </td>
-                            <td className="py-2 text-text-secondary text-right font-mono text-xs">
-                              {formatISK(item.jitaBuy)}
-                            </td>
-                            <td className="py-2 text-text-primary text-right font-mono">
-                              {formatISK(item.totalBuy)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {listing.totalJitaBuy && (
-                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
-                      <span className="text-text-muted text-xs">Valeur Jita buy totale</span>
-                      <span className="text-text-secondary font-mono font-semibold">
-                        {formatISK(listing.totalJitaBuy)}
-                      </span>
-                    </div>
-                  )}
-                </CardBody>
-              </Card>
+              <ItemsTable items={items} totalJitaBuy={listing.totalJitaBuy} />
             )}
 
             {/* Offres */}
@@ -204,6 +161,8 @@ export default async function ListingDetailPage({
               isOpen={isOpen}
               currentUserId={session.user.id}
               offers={serializedOffers}
+              askingPrice={listing.askingPrice}
+              totalJitaBuy={listing.totalJitaBuy}
             />
           </div>
 
