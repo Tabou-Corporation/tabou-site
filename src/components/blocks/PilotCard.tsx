@@ -88,7 +88,6 @@ export function PilotCard({
             alt={pilot.name ?? "Pilote"}
             fill
             className="object-cover object-top grayscale-[15%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
-            unoptimized
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
           />
         ) : (
@@ -138,7 +137,6 @@ export function PilotCard({
             width={16}
             height={16}
             className="rounded-sm opacity-50 group-hover:opacity-80 transition-opacity"
-            unoptimized
           />
         </div>
 

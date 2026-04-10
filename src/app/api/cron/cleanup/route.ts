@@ -15,21 +15,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { expireListings } from "@/lib/actions/buyback";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    console.error("[cron/cleanup] CRON_SECRET non configure");
-    return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
-  }
-
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const check = verifyCronSecret(request.headers.get("authorization"));
+  if (!check.ok) {
+    return NextResponse.json({ error: check.error }, { status: check.status });
   }
 
   const now = new Date();

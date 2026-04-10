@@ -120,7 +120,6 @@ export function PilotModal({ pilot, onClose }: Props) {
                         alt={pilot.name ?? "Portrait"}
                         fill
                         className="object-cover object-top"
-                        unoptimized
                         sizes="120px"
                       />
                     ) : (
@@ -139,7 +138,6 @@ export function PilotModal({ pilot, onClose }: Props) {
                       width={20}
                       height={20}
                       className="rounded-sm"
-                      unoptimized
                     />
                   </div>
                 </motion.div>

@@ -192,7 +192,6 @@ export default async function MemberDashboardPage() {
               width={64}
               height={64}
               className="rounded-full border-2 border-gold/20 flex-shrink-0"
-              unoptimized
             />
           )}
           <div>

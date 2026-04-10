@@ -117,7 +117,6 @@ export function MemberSidebar({ pendingCount = 0, unreadMarketCount = 0, discord
               width={40}
               height={40}
               className="rounded-full border border-gold/20 flex-shrink-0"
-              unoptimized
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-bg-elevated border border-border flex items-center justify-center flex-shrink-0">

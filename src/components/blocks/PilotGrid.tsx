@@ -83,7 +83,6 @@ export function PilotGrid({ members, interactive = true }: PilotGridProps) {
                 "rounded-sm transition-opacity",
                 activeTab === id ? "opacity-100" : "opacity-40"
               )}
-              unoptimized
             />
             <span className="font-display tracking-wide">{corp.name}</span>
             <span className={cn(
