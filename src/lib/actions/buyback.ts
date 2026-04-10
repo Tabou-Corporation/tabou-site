@@ -54,7 +54,7 @@ export async function estimateItems(
   if (!session?.user?.id) return { error: "Non authentifié." };
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member")) return { error: "Accès réservé aux membres." };
+  if (!hasMinRole(role, "member_uz")) return { error: "Accès réservé aux membres." };
 
   const rawPaste = (formData.get("rawPaste") as string | null)?.trim() ?? "";
   if (!rawPaste) return { error: "Colle tes items depuis EVE (un par ligne)." };
@@ -99,7 +99,7 @@ export async function createListing(
   if (!session?.user?.id) return { error: "Non authentifié." };
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member")) return { error: "Accès réservé aux membres." };
+  if (!hasMinRole(role, "member_uz")) return { error: "Accès réservé aux membres." };
 
   const type        = formData.get("type") as string ?? "SELL";
   const title       = (formData.get("title") as string | null)?.trim() ?? "";
@@ -194,7 +194,7 @@ export async function makeOffer(
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member")) return { success: false, error: "Accès réservé aux membres." };
+  if (!hasMinRole(role, "member_uz")) return { success: false, error: "Accès réservé aux membres." };
 
   if (message && message.length > MAX_MESSAGE_LENGTH) {
     return { success: false, error: `Le message ne peut pas dépasser ${MAX_MESSAGE_LENGTH} caractères.` };
