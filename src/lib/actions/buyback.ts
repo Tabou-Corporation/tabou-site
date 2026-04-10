@@ -10,6 +10,13 @@ import type { ActionResult } from "@/types/actions";
 import { writeAuditLog } from "@/lib/audit";
 import { appraiseItems } from "@/lib/janice";
 import { notifyNewListing, notifyNewOffer } from "@/lib/discord-notify";
+import {
+  notifyOfferReceived,
+  notifyOfferAccepted,
+  notifyOfferRejected,
+  notifyListingSold,
+  notifyListingExpired,
+} from "@/lib/notifications";
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
@@ -51,22 +58,22 @@ export async function estimateItems(
   formData: FormData
 ): Promise<AppraisalFormState> {
   const session = await auth();
-  if (!session?.user?.id) return { error: "Non authentifié." };
+  if (!session?.user?.id) return { error: "Non authentifie." };
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member_uz")) return { error: "Accès réservé aux membres." };
+  if (!hasMinRole(role, "member_uz")) return { error: "Acces reserve aux membres." };
 
   const rawPaste = (formData.get("rawPaste") as string | null)?.trim() ?? "";
   if (!rawPaste) return { error: "Colle tes items depuis EVE (un par ligne)." };
   if (rawPaste.length > MAX_PASTE_LENGTH) {
-    return { error: `Le texte ne peut pas dépasser ${MAX_PASTE_LENGTH} caractères.` };
+    return { error: `Le texte ne peut pas depasser ${MAX_PASTE_LENGTH} caracteres.` };
   }
 
   try {
     const result = await appraiseItems(rawPaste);
 
     if (result.items.length === 0) {
-      return { error: "Aucun item reconnu. Vérifie le format du copier-coller EVE." };
+      return { error: "Aucun item reconnu. Verifie le format du copier-coller EVE." };
     }
 
     return {
@@ -85,28 +92,28 @@ export async function estimateItems(
     };
   } catch (err) {
     console.error("[market] Erreur estimation :", err);
-    return { error: "Erreur lors de l'estimation. Réessaie dans quelques instants." };
+    return { error: "Erreur lors de l'estimation. Reessaie dans quelques instants." };
   }
 }
 
-// ─── Créer une annonce ───────────────────────────────────────────────────────
+// ─── Creer une annonce ───────────────────────────────────────────────────────
 
 export async function createListing(
   _prevState: ListingFormState,
   formData: FormData
 ): Promise<ListingFormState> {
   const session = await auth();
-  if (!session?.user?.id) return { error: "Non authentifié." };
+  if (!session?.user?.id) return { error: "Non authentifie." };
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member_uz")) return { error: "Accès réservé aux membres." };
+  if (!hasMinRole(role, "member_uz")) return { error: "Acces reserve aux membres." };
 
   const type        = formData.get("type") as string ?? "SELL";
   const title       = (formData.get("title") as string | null)?.trim() ?? "";
   const description = (formData.get("description") as string | null)?.trim() || null;
   const location    = (formData.get("location") as string | null)?.trim() || null;
   const rawPaste    = (formData.get("rawPaste") as string | null)?.trim() || null;
-  const itemsJson  = (formData.get("items") as string | null) ?? "[]";
+  const itemsJson   = (formData.get("items") as string | null) ?? "[]";
   const totalJitaBuy = parseFloat(formData.get("totalJitaBuy") as string ?? "0") || null;
   const askingPriceRaw = formData.get("askingPrice") as string | null;
   const askingRateRaw  = formData.get("askingRate") as string | null;
@@ -117,17 +124,17 @@ export async function createListing(
     return { error: "Type d'annonce invalide." };
   }
   if (!title) return { error: "Le titre est requis." };
-  if (title.length > MAX_TITLE_LENGTH) return { error: `Le titre ne peut pas dépasser ${MAX_TITLE_LENGTH} caractères.` };
+  if (title.length > MAX_TITLE_LENGTH) return { error: `Le titre ne peut pas depasser ${MAX_TITLE_LENGTH} caracteres.` };
   if (description && description.length > MAX_DESCRIPTION_LENGTH) {
-    return { error: `La description ne peut pas dépasser ${MAX_DESCRIPTION_LENGTH} caractères.` };
+    return { error: `La description ne peut pas depasser ${MAX_DESCRIPTION_LENGTH} caracteres.` };
   }
 
   const askingPrice = askingPriceRaw ? parseFloat(askingPriceRaw) : null;
   const askingRate  = askingRateRaw ? parseInt(askingRateRaw, 10) : null;
 
-  if (askingPrice !== null && askingPrice < 0) return { error: "Le prix ne peut pas être négatif." };
+  if (askingPrice !== null && askingPrice < 0) return { error: "Le prix ne peut pas etre negatif." };
   if (askingRate !== null && (askingRate < 1 || askingRate > 200)) {
-    return { error: "Le taux doit être entre 1% et 200%." };
+    return { error: "Le taux doit etre entre 1% et 200%." };
   }
 
   // Limiter les annonces ouvertes
@@ -135,7 +142,7 @@ export async function createListing(
     where: { userId: session.user.id, status: "OPEN" },
   });
   if (openCount >= MAX_OPEN_PER_USER) {
-    return { error: `Tu as déjà ${MAX_OPEN_PER_USER} annonces en cours. Ferme-en une avant d'en créer une nouvelle.` };
+    return { error: `Tu as deja ${MAX_OPEN_PER_USER} annonces en cours. Ferme-en une avant d'en creer une nouvelle.` };
   }
 
   let items: unknown[];
@@ -166,6 +173,7 @@ export async function createListing(
       },
     });
 
+    // Discord (fire-and-forget)
     notifyNewListing({
       listingId: listing.id,
       title,
@@ -175,11 +183,19 @@ export async function createListing(
       itemCount: Array.isArray(items) ? items.length : 0,
     });
 
+    writeAuditLog({
+      actorId: session.user.id,
+      actorName: session.user.name,
+      action: "market_listing",
+      meta: { listingId: listing.id, type, title },
+    });
+
     revalidatePath("/membre/marche");
+    revalidatePath("/membre");
     return { success: true, listingId: listing.id };
   } catch (err) {
-    console.error("[market] Erreur création :", err);
-    return { error: "Erreur lors de la création de l'annonce." };
+    console.error("[market] Erreur creation :", err);
+    return { error: "Erreur lors de la creation de l'annonce." };
   }
 }
 
@@ -194,27 +210,27 @@ export async function makeOffer(
   if (!session?.user?.id) redirect("/login");
 
   const role = (session.user.role ?? "candidate") as UserRole;
-  if (!hasMinRole(role, "member_uz")) return { success: false, error: "Accès réservé aux membres." };
+  if (!hasMinRole(role, "member_uz")) return { success: false, error: "Acces reserve aux membres." };
 
   if (message && message.length > MAX_MESSAGE_LENGTH) {
-    return { success: false, error: `Le message ne peut pas dépasser ${MAX_MESSAGE_LENGTH} caractères.` };
+    return { success: false, error: `Le message ne peut pas depasser ${MAX_MESSAGE_LENGTH} caracteres.` };
   }
   if (!price && !message) {
-    return { success: false, error: "Propose un prix ou écris un message." };
+    return { success: false, error: "Propose un prix ou ecris un message." };
   }
 
   const listing = await prisma.marketListing.findUnique({
     where: { id: listingId },
-    include: { user: { select: { name: true } } },
+    include: { user: { select: { id: true, name: true } } },
   });
   if (!listing) return { success: false, error: "Annonce introuvable." };
   if (listing.status !== "OPEN") return { success: false, error: "Cette annonce n'est plus ouverte." };
   if (listing.userId === session.user.id) return { success: false, error: "Tu ne peux pas faire une offre sur ta propre annonce." };
 
-  // Vérifier expiration
+  // Verifier expiration
   if (listing.expiresAt < new Date()) {
     await prisma.marketListing.update({ where: { id: listingId }, data: { status: "EXPIRED" } });
-    return { success: false, error: "Cette annonce a expiré." };
+    return { success: false, error: "Cette annonce a expire." };
   }
 
   try {
@@ -227,6 +243,7 @@ export async function makeOffer(
       },
     });
 
+    // Discord (fire-and-forget)
     notifyNewOffer({
       listingId,
       listingTitle: listing.title,
@@ -235,14 +252,25 @@ export async function makeOffer(
       price,
     });
 
+    // In-app notification au proprietaire
+    notifyOfferReceived({
+      listingOwnerId: listing.userId,
+      listingTitle: listing.title,
+      offerAuthorName: session.user.name ?? null,
+      listingId,
+      offerPrice: price,
+    });
+
     revalidatePath(`/membre/marche/${listingId}`);
+    revalidatePath("/membre/marche");
+    revalidatePath("/membre");
     return { success: true };
   } catch {
     return { success: false, error: "Erreur lors de l'envoi de l'offre." };
   }
 }
 
-// ─── Accepter / Refuser une offre (par le propriétaire de l'annonce) ────────
+// ─── Accepter / Refuser une offre (par le proprietaire de l'annonce) ────────
 
 export async function respondToOffer(
   offerId: string,
@@ -253,17 +281,31 @@ export async function respondToOffer(
 
   const offer = await prisma.marketOffer.findUnique({
     where: { id: offerId },
-    include: { listing: { select: { id: true, userId: true, title: true } } },
+    include: {
+      listing: {
+        select: {
+          id: true, userId: true, title: true, type: true,
+          itemCount: true, location: true,
+        },
+      },
+      user: { select: { id: true, name: true } },
+    },
   });
   if (!offer) return { success: false, error: "Offre introuvable." };
   if (offer.listing.userId !== session.user.id) {
-    return { success: false, error: "Seul le propriétaire de l'annonce peut répondre aux offres." };
+    return { success: false, error: "Seul le proprietaire de l'annonce peut repondre aux offres." };
   }
-  if (offer.status !== "PENDING") return { success: false, error: "Cette offre a déjà été traitée." };
+  if (offer.status !== "PENDING") return { success: false, error: "Cette offre a deja ete traitee." };
 
   try {
     if (action === "ACCEPTED") {
-      // Accepter cette offre + fermer l'annonce + rejeter les autres offres
+      // Recuperer les autres offres PENDING pour les notifier
+      const otherOffers = await prisma.marketOffer.findMany({
+        where: { listingId: offer.listingId, id: { not: offerId }, status: "PENDING" },
+        select: { userId: true },
+      });
+
+      // Transaction atomique : accepter + rejeter les autres + vendre + creer transaction
       await prisma.$transaction([
         prisma.marketOffer.update({
           where: { id: offerId },
@@ -277,11 +319,56 @@ export async function respondToOffer(
           where: { id: offer.listingId },
           data: { status: "SOLD" },
         }),
+        prisma.marketTransaction.create({
+          data: {
+            listingId: offer.listingId,
+            offerId: offer.id,
+            sellerId: offer.listing.userId,
+            buyerId: offer.userId,
+            listingTitle: offer.listing.title,
+            listingType: offer.listing.type,
+            finalPrice: offer.price,
+            itemCount: offer.listing.itemCount,
+            location: offer.listing.location,
+          },
+        }),
       ]);
+
+      // Notifications in-app (fire-and-forget)
+      notifyOfferAccepted({
+        offerAuthorId: offer.userId,
+        listingTitle: offer.listing.title,
+        listingId: offer.listingId,
+      });
+
+      notifyListingSold({
+        sellerId: offer.listing.userId,
+        listingTitle: offer.listing.title,
+        listingId: offer.listingId,
+        buyerName: offer.user.name,
+        finalPrice: offer.price,
+      });
+
+      // Notifier les autres offreurs rejetes
+      for (const other of otherOffers) {
+        notifyOfferRejected({
+          offerAuthorId: other.userId,
+          listingTitle: offer.listing.title,
+          listingId: offer.listingId,
+          reason: "Une autre offre a ete acceptee.",
+        });
+      }
     } else {
+      // Refus individuel
       await prisma.marketOffer.update({
         where: { id: offerId },
         data: { status: "REJECTED" },
+      });
+
+      notifyOfferRejected({
+        offerAuthorId: offer.userId,
+        listingTitle: offer.listing.title,
+        listingId: offer.listingId,
       });
     }
 
@@ -294,8 +381,10 @@ export async function respondToOffer(
 
     revalidatePath(`/membre/marche/${offer.listingId}`);
     revalidatePath("/membre/marche");
+    revalidatePath("/membre");
     return { success: true };
-  } catch {
+  } catch (err) {
+    console.error("[market] Erreur traitement offre :", err);
     return { success: false, error: "Erreur lors du traitement." };
   }
 }
@@ -313,6 +402,7 @@ export async function withdrawOffer(offerId: string): Promise<ActionResult> {
 
   await prisma.marketOffer.update({ where: { id: offerId }, data: { status: "WITHDRAWN" } });
   revalidatePath(`/membre/marche/${offer.listingId}`);
+  revalidatePath("/membre/marche");
   return { success: true };
 }
 
@@ -322,14 +412,21 @@ export async function closeListing(id: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const listing = await prisma.marketListing.findUnique({ where: { id } });
+  const listing = await prisma.marketListing.findUnique({
+    where: { id },
+    include: {
+      offers: {
+        where: { status: "PENDING" },
+        select: { userId: true },
+      },
+    },
+  });
   if (!listing) return { success: false, error: "Annonce introuvable." };
   if (listing.userId !== session.user.id) {
-    // Les officiers peuvent aussi fermer
     const role = (session.user.role ?? "candidate") as UserRole;
     if (!hasMinRole(role, "officer")) return { success: false, error: "Ce n'est pas ton annonce." };
   }
-  if (listing.status !== "OPEN") return { success: false, error: "Annonce déjà fermée." };
+  if (listing.status !== "OPEN") return { success: false, error: "Annonce deja fermee." };
 
   await prisma.$transaction([
     prisma.marketListing.update({ where: { id }, data: { status: "CLOSED" } }),
@@ -339,20 +436,75 @@ export async function closeListing(id: string): Promise<ActionResult> {
     }),
   ]);
 
+  // Notifier les offreurs en attente que leurs offres sont rejetees
+  for (const offer of listing.offers) {
+    notifyOfferRejected({
+      offerAuthorId: offer.userId,
+      listingTitle: listing.title,
+      listingId: id,
+      reason: "L'annonce a ete fermee par le proprietaire.",
+    });
+  }
+
   revalidatePath("/membre/marche");
   revalidatePath(`/membre/marche/${id}`);
+  revalidatePath("/membre");
   return { success: true };
 }
 
-// ─── Expirer automatiquement les annonces dépassées ─────────────────────────
+// ─── Expirer automatiquement les annonces depassees ─────────────────────────
 
 export async function expireListings(): Promise<number> {
-  const result = await prisma.marketListing.updateMany({
-    where: {
-      status: "OPEN",
-      expiresAt: { lt: new Date() },
+  // Recuperer les annonces a expirer avec leurs offres pending
+  const toExpire = await prisma.marketListing.findMany({
+    where: { status: "OPEN", expiresAt: { lt: new Date() } },
+    select: {
+      id: true,
+      title: true,
+      userId: true,
+      offers: {
+        where: { status: "PENDING" },
+        select: { userId: true },
+      },
     },
-    data: { status: "EXPIRED" },
   });
-  return result.count;
+
+  if (toExpire.length === 0) return 0;
+
+  // Expirer en batch
+  await prisma.$transaction([
+    prisma.marketListing.updateMany({
+      where: {
+        status: "OPEN",
+        expiresAt: { lt: new Date() },
+      },
+      data: { status: "EXPIRED" },
+    }),
+    prisma.marketOffer.updateMany({
+      where: {
+        listing: { status: "OPEN", expiresAt: { lt: new Date() } },
+        status: "PENDING",
+      },
+      data: { status: "REJECTED" },
+    }),
+  ]);
+
+  // Notifications (fire-and-forget)
+  for (const listing of toExpire) {
+    notifyListingExpired({
+      ownerId: listing.userId,
+      listingTitle: listing.title,
+      listingId: listing.id,
+    });
+    for (const offer of listing.offers) {
+      notifyOfferRejected({
+        offerAuthorId: offer.userId,
+        listingTitle: listing.title,
+        listingId: listing.id,
+        reason: "L'annonce a expire.",
+      });
+    }
+  }
+
+  return toExpire.length;
 }

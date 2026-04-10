@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/Separator";
 import {
   MessageSquare, Shield, Calendar, Megaphone, Scroll,
   CheckCircle, Clock, XCircle, Pin,
-  HelpCircle, ArrowRight, RefreshCw, Video,
+  HelpCircle, ArrowRight, RefreshCw, Video, Store,
 } from "lucide-react";
 import { SITE_CONFIG } from "@/config/site";
 import { hasMinRole } from "@/types/roles";
@@ -88,7 +88,7 @@ export default async function MemberDashboardPage() {
   const in14Days = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [application, recentAnnouncements, upcomingEvents, lastAssembly, recentAnnouncementCount, pendingCount] = await Promise.all([
+  const [application, recentAnnouncements, upcomingEvents, lastAssembly, recentAnnouncementCount, pendingCount, myOpenListings, pendingOffersReceived, myPendingOffers, lastTransaction] = await Promise.all([
     // Candidature — candidats seulement
     role === "candidate"
       ? prisma.application.findFirst({
@@ -143,6 +143,32 @@ export default async function MemberDashboardPage() {
     isOfficer
       ? prisma.application.count({ where: { status: "PENDING" } })
       : Promise.resolve(0),
+
+    // Marche — mes annonces ouvertes
+    isMember
+      ? prisma.marketListing.count({ where: { userId: session.user.id, status: "OPEN" } })
+      : Promise.resolve(0),
+
+    // Marche — offres recues en attente sur mes annonces
+    isMember
+      ? prisma.marketOffer.count({
+          where: { status: "PENDING", listing: { userId: session.user.id, status: "OPEN" } },
+        })
+      : Promise.resolve(0),
+
+    // Marche — mes offres en attente
+    isMember
+      ? prisma.marketOffer.count({ where: { userId: session.user.id, status: "PENDING" } })
+      : Promise.resolve(0),
+
+    // Marche — derniere transaction
+    isMember
+      ? prisma.marketTransaction.findFirst({
+          where: { OR: [{ sellerId: session.user.id }, { buyerId: session.user.id }] },
+          orderBy: { createdAt: "desc" },
+          select: { listingTitle: true, finalPrice: true, createdAt: true, sellerId: true },
+        })
+      : Promise.resolve(null),
   ]);
 
   const hasApplication    = !!application;
@@ -516,6 +542,64 @@ export default async function MemberDashboardPage() {
                   )}
                 </section>
 
+                {/* Activite marche */}
+                <section>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-display font-semibold text-lg text-text-primary">
+                      Marche
+                    </h2>
+                    <Link
+                      href="/membre/marche"
+                      className="text-xs text-text-muted hover:text-gold transition-colors inline-flex items-center gap-1"
+                    >
+                      Voir tout <ArrowRight size={11} />
+                    </Link>
+                  </div>
+                  <Card>
+                    <CardBody className="py-3 px-4 space-y-2.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-text-muted text-xs">Mes annonces actives</span>
+                        <span className="text-text-primary font-mono font-semibold">{myOpenListings}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-text-muted text-xs">Offres a traiter</span>
+                        <span className={pendingOffersReceived > 0 ? "text-gold font-mono font-bold" : "text-text-primary font-mono font-semibold"}>
+                          {pendingOffersReceived}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-text-muted text-xs">Mes offres en cours</span>
+                        <span className="text-text-primary font-mono font-semibold">{myPendingOffers}</span>
+                      </div>
+                      {lastTransaction && (
+                        <div className="border-t border-border-subtle pt-2 mt-1">
+                          <p className="text-text-muted text-[10px] uppercase tracking-wide font-semibold mb-1">
+                            Derniere transaction
+                          </p>
+                          <p className="text-text-primary text-xs font-medium truncate">
+                            {lastTransaction.listingTitle}
+                          </p>
+                          <p className="text-text-muted text-[11px] mt-0.5">
+                            {lastTransaction.finalPrice && (
+                              <span className="text-gold font-mono">{formatISK(lastTransaction.finalPrice)} ISK</span>
+                            )}
+                            {" · "}
+                            {lastTransaction.sellerId === session.user.id ? "Vendu" : "Achete"}
+                            {" · "}
+                            {timeAgo(lastTransaction.createdAt)}
+                          </p>
+                        </div>
+                      )}
+                      {myOpenListings === 0 && pendingOffersReceived === 0 && myPendingOffers === 0 && !lastTransaction && (
+                        <div className="text-center py-2">
+                          <Store size={18} className="text-text-muted/40 mx-auto mb-1" />
+                          <p className="text-text-muted text-xs">Aucune activite marche</p>
+                        </div>
+                      )}
+                    </CardBody>
+                  </Card>
+                </section>
+
                 {/* Top Pilotes du mois */}
                 <section>
                   <h2 className="font-display font-semibold text-lg text-text-primary mb-4">
@@ -539,6 +623,15 @@ export default async function MemberDashboardPage() {
       </Container>
     </div>
   );
+}
+
+// ── ISK helper ──────────────────────────────────────────────────────────
+
+function formatISK(amount: number): string {
+  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(2)}B`;
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K`;
+  return `${Math.round(amount)}`;
 }
 
 // ── Time ago helper ─────────────────────────────────────────────────────

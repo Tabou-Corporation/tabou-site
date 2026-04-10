@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
@@ -10,6 +11,10 @@ import { Separator } from "@/components/ui/Separator";
 import { Button } from "@/components/ui/Button";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { expireListings } from "@/lib/actions/buyback";
+import { MarketTabs } from "./MarketTabs";
+import { MyListingsTab } from "./MyListingsTab";
+import { MyOffersTab } from "./MyOffersTab";
+import { HistoryTab } from "./HistoryTab";
 import {
   LISTING_TYPE_LABELS, LISTING_TYPE_BADGE,
 } from "@/lib/constants/labels";
@@ -37,7 +42,7 @@ function daysUntil(date: Date): number {
 export default async function MarketPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; tab?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -45,10 +50,119 @@ export default async function MarketPage({
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
-  const { type: typeFilter } = await searchParams;
+  const { type: typeFilter, tab } = await searchParams;
+  const userId = session.user.id;
 
   // Expirer les annonces depassees
   await expireListings();
+
+  // Marquer les notifications marche comme lues quand on visite la page
+  await prisma.notification.updateMany({
+    where: { userId, read: false, type: { startsWith: "offer_" } },
+    data: { read: true },
+  });
+  await prisma.notification.updateMany({
+    where: { userId, read: false, type: { startsWith: "listing_" } },
+    data: { read: true },
+  });
+
+  // ─── Tab: Mes annonces ────────────────────────────────────────────────────
+  if (tab === "mes-annonces") {
+    const listings = await prisma.marketListing.findMany({
+      where: { userId },
+      include: {
+        user: { select: { name: true, image: true } },
+        _count: { select: { offers: { where: { status: "PENDING" } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+
+    const myOpenCount = listings.filter((l) => l.status === "OPEN").length;
+    const myPendingOffers = await prisma.marketOffer.count({
+      where: { userId, status: "PENDING" },
+    });
+
+    return (
+      <div className="py-10 sm:py-14">
+        <Container>
+          <MarketHeader />
+          <Suspense>
+            <MarketTabs myListingsCount={myOpenCount} myPendingOffersCount={myPendingOffers} />
+          </Suspense>
+          <MyListingsTab listings={listings} />
+        </Container>
+      </div>
+    );
+  }
+
+  // ─── Tab: Mes offres ──────────────────────────────────────────────────────
+  if (tab === "mes-offres") {
+    const offers = await prisma.marketOffer.findMany({
+      where: { userId },
+      include: {
+        listing: {
+          select: {
+            id: true, title: true, type: true, status: true,
+            user: { select: { name: true, image: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+
+    const myOpenCount = await prisma.marketListing.count({
+      where: { userId, status: "OPEN" },
+    });
+    const myPendingOffers = offers.filter((o) => o.status === "PENDING").length;
+
+    return (
+      <div className="py-10 sm:py-14">
+        <Container>
+          <MarketHeader />
+          <Suspense>
+            <MarketTabs myListingsCount={myOpenCount} myPendingOffersCount={myPendingOffers} />
+          </Suspense>
+          <MyOffersTab offers={offers} />
+        </Container>
+      </div>
+    );
+  }
+
+  // ─── Tab: Historique ──────────────────────────────────────────────────────
+  if (tab === "historique") {
+    const transactions = await prisma.marketTransaction.findMany({
+      where: { OR: [{ sellerId: userId }, { buyerId: userId }] },
+      include: {
+        seller: { select: { name: true, image: true } },
+        buyer:  { select: { name: true, image: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    const myOpenCount = await prisma.marketListing.count({
+      where: { userId, status: "OPEN" },
+    });
+    const myPendingOffers = await prisma.marketOffer.count({
+      where: { userId, status: "PENDING" },
+    });
+
+    return (
+      <div className="py-10 sm:py-14">
+        <Container>
+          <MarketHeader />
+          <Suspense>
+            <MarketTabs myListingsCount={myOpenCount} myPendingOffersCount={myPendingOffers} />
+          </Suspense>
+          <HistoryTab transactions={transactions} currentUserId={userId} />
+        </Container>
+      </div>
+    );
+  }
+
+  // ─── Tab par defaut: Parcourir ────────────────────────────────────────────
 
   const VALID_TYPES = ["SELL", "BUY", "EXCHANGE"] as const;
   type LT = (typeof VALID_TYPES)[number];
@@ -58,41 +172,29 @@ export default async function MarketPage({
     ? { status: "OPEN" as const, type: typeFilter }
     : { status: "OPEN" as const };
 
-  const listings = await prisma.marketListing.findMany({
-    where,
-    include: {
-      user: { select: { name: true, image: true } },
-      _count: { select: { offers: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  const [listings, myOpenCount, myPendingOffers] = await Promise.all([
+    prisma.marketListing.findMany({
+      where,
+      include: {
+        user: { select: { name: true, image: true } },
+        _count: { select: { offers: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.marketListing.count({ where: { userId, status: "OPEN" } }),
+    prisma.marketOffer.count({ where: { userId, status: "PENDING" } }),
+  ]);
 
   return (
     <div className="py-10 sm:py-14">
       <Container>
-        {/* En-tete */}
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-2">
-              Espace membre
-            </p>
-            <h1 className="font-display font-bold text-3xl text-text-primary">
-              Marche
-            </h1>
-            <p className="text-text-muted text-sm mt-2">
-              Achetez, vendez et echangez entre membres de la corporation.
-            </p>
-          </div>
-          <Button as="a" href="/membre/marche/new" size="sm">
-            <Plus size={14} />
-            Nouvelle annonce
-          </Button>
-        </div>
+        <MarketHeader />
+        <Suspense>
+          <MarketTabs myListingsCount={myOpenCount} myPendingOffersCount={myPendingOffers} />
+        </Suspense>
 
-        <Separator gold className="mb-6" />
-
-        {/* Filtres */}
+        {/* Filtres type (seulement sur Parcourir) */}
         <div className="flex items-center gap-2 mb-6 flex-wrap">
           {[
             { key: undefined, label: "Toutes", icon: null },
@@ -202,5 +304,32 @@ export default async function MarketPage({
         )}
       </Container>
     </div>
+  );
+}
+
+// ── Composant header reutilise ────────────────────────────────────────────
+
+function MarketHeader() {
+  return (
+    <>
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-2">
+            Espace membre
+          </p>
+          <h1 className="font-display font-bold text-3xl text-text-primary">
+            Marche
+          </h1>
+          <p className="text-text-muted text-sm mt-2">
+            Achetez, vendez et echangez entre membres de la corporation.
+          </p>
+        </div>
+        <Button as="a" href="/membre/marche/new" size="sm">
+          <Plus size={14} />
+          Nouvelle annonce
+        </Button>
+      </div>
+      <Separator gold className="mb-6" />
+    </>
   );
 }

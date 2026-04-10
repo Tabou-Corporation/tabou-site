@@ -8,6 +8,7 @@
 // V7 : + securityStatus + profileExtra on User ; assignedToId on Application
 // V8 : specialty → specialties (JSON array), domain on Announcement/CalendarEvent
 // V9 : + MarketListing, MarketOffer (marché entre membres)
+// V10 : + Notification, MarketTransaction (suivi pro du marché)
 
 generator client {
   provider = "prisma-client-js"
@@ -100,6 +101,9 @@ model User {
   assemblies           Assembly[]
   marketListings       MarketListing[]
   marketOffers         MarketOffer[]
+  notifications        Notification[]
+  transactionsAsSeller MarketTransaction[] @relation("TransactionSeller")
+  transactionsAsBuyer  MarketTransaction[] @relation("TransactionBuyer")
 
   @@index([role])
   @@map("users")
@@ -298,6 +302,7 @@ model MarketListing {
   updatedAt     DateTime       @updatedAt
 
   offers        MarketOffer[]
+  transactions  MarketTransaction[]
 
   @@index([userId])
   @@index([status])
@@ -322,9 +327,13 @@ model MarketOffer {
   status      OfferStatus  @default(PENDING)
 
   createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
+
+  transaction MarketTransaction?
 
   @@index([listingId])
   @@index([userId])
+  @@index([status])
   @@map("market_offers")
 }
 
@@ -346,6 +355,67 @@ enum OfferStatus {
   ACCEPTED
   REJECTED
   WITHDRAWN
+}
+
+// ─── V10 : Notifications + Transactions ───────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  /// Destinataire
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Type : offer_received | offer_accepted | offer_rejected | listing_sold | listing_expired
+  type      String
+  /// Titre court affiché dans la liste
+  title     String
+  /// Corps optionnel (message complémentaire)
+  body      String?
+  /// Lien vers la ressource (ex: /membre/marche/clxyz123)
+  href      String?
+
+  /// Marque de lecture
+  read      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model MarketTransaction {
+  id            String   @id @default(cuid())
+
+  /// Annonce d'origine
+  listingId     String
+  listing       MarketListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  /// Offre acceptée
+  offerId       String   @unique
+  offer         MarketOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  /// Vendeur (propriétaire de l'annonce)
+  sellerId      String
+  seller        User     @relation("TransactionSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  /// Acheteur (auteur de l'offre)
+  buyerId       String
+  buyer         User     @relation("TransactionBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  /// Snapshot dénormalisé — survit même si l'annonce est supprimée
+  listingTitle  String
+  listingType   String
+  finalPrice    Float?
+  itemCount     Int      @default(0)
+  location      String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([sellerId])
+  @@index([buyerId])
+  @@index([createdAt])
+  @@map("market_transactions")
 }
 
 // ─── V5 : Audit Log ───────────────────────────────────────────────────────────

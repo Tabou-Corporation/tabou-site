@@ -24,9 +24,12 @@ export default async function MemberLayout({ children }: { children: React.React
   const specialties = session.user.specialties ?? null;
   const hasRecruitment = canManageRecruitment(role, parseSpecialties(specialties));
 
-  const [pendingCount, discord, settings] = await Promise.all([
+  const [pendingCount, unreadMarketCount, discord, settings] = await Promise.all([
     hasMinRole(role, "officer") && hasRecruitment
       ? prisma.application.count({ where: { status: "PENDING" } })
+      : Promise.resolve(0),
+    hasMinRole(role, "member_uz")
+      ? prisma.notification.count({ where: { userId: session.user.id!, read: false } })
       : Promise.resolve(0),
     getDiscordConfig(),
     getSettingsContent(),
@@ -35,9 +38,9 @@ export default async function MemberLayout({ children }: { children: React.React
   return (
     <>
       <MainNav discordUrl={discord.inviteUrl || undefined} showPilotes={settings.pilotesNavVisible} />
-      <MemberSidebar pendingCount={pendingCount} discordUrl={discord.inviteUrl || undefined} />
+      <MemberSidebar pendingCount={pendingCount} unreadMarketCount={unreadMarketCount} discordUrl={discord.inviteUrl || undefined} />
       <main className="flex-1 flex flex-col pt-16 lg:pl-64">
-        <MemberMobileNav pendingCount={pendingCount} />
+        <MemberMobileNav pendingCount={pendingCount} unreadMarketCount={unreadMarketCount} />
         {children}
       </main>
       <div className="lg:pl-64">

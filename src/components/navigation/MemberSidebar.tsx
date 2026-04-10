@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Megaphone, Calendar, BookOpen, Users,
   User, FileText, MessageSquare, ExternalLink, Scroll,
   ClipboardList, Megaphone as MegaphoneIcon, BookPlus, CalendarPlus,
-  UsersRound, LayoutGrid, PanelLeft, Shield, History, Store,
+  UsersRound, LayoutGrid, PanelLeft, Shield, History, Store, Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { hasMinRole, canManageRecruitment, parseSpecialties } from "@/types/roles";
@@ -84,12 +84,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 interface SidebarProps {
   pendingCount?: number;
+  unreadMarketCount?: number;
   discordUrl?: string | undefined;
 }
 
 // ── MemberSidebar (desktop, fixed) ────────────────────────────────────────
 
-export function MemberSidebar({ pendingCount = 0, discordUrl }: SidebarProps) {
+export function MemberSidebar({ pendingCount = 0, unreadMarketCount = 0, discordUrl }: SidebarProps) {
   const { data: session } = useSession();
   if (!session) return null;
 
@@ -149,7 +150,7 @@ export function MemberSidebar({ pendingCount = 0, discordUrl }: SidebarProps) {
             <NavItem href="/membre/guides"      icon={BookOpen}    label="Guides" />
             <NavItem href="/membre/assemblees" icon={Scroll}      label="Assemblées" />
             <NavItem href="/membre/annuaire"   icon={Users}       label="Annuaire" />
-            <NavItem href="/membre/marche"     icon={Store}       label="Marche" />
+            <NavItem href="/membre/marche"     icon={Store}       label="Marche" badge={unreadMarketCount} />
           </>
         )}
         {role === "candidate" && (
@@ -158,6 +159,7 @@ export function MemberSidebar({ pendingCount = 0, discordUrl }: SidebarProps) {
 
         {/* Profil & outils */}
         <div className="border-t border-border-subtle mt-2 pt-1 space-y-0.5">
+          <NavItem href="/membre/notifications" icon={Bell}           label="Notifications" badge={unreadMarketCount} />
           <NavItem href="/membre/profil"        icon={User}           label="Mon profil" />
           <NavItem href="/membre/changelog"     icon={History}        label="Changelog" />
           <NavItem href={discordUrl || SITE_CONFIG.links.discord} icon={MessageSquare} label="Discord" external />
@@ -258,7 +260,7 @@ function MobileSeparator({ label }: { label: string }) {
   );
 }
 
-export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
+export function MemberMobileNav({ pendingCount = 0, unreadMarketCount = 0 }: SidebarProps) {
   const { data: session } = useSession();
   if (!session) return null;
 
@@ -284,7 +286,7 @@ export function MemberMobileNav({ pendingCount = 0 }: SidebarProps) {
             <MobileNavItem href="/membre/guides"      icon={BookOpen}  label="Guides" />
             <MobileNavItem href="/membre/assemblees" icon={Scroll}    label="Assemblées" />
             <MobileNavItem href="/membre/annuaire"   icon={Users}     label="Annuaire" />
-            <MobileNavItem href="/membre/marche"     icon={Store}     label="Marche" />
+            <MobileNavItem href="/membre/marche"     icon={Store}     label="Marche" badge={unreadMarketCount} />
           </>
         )}
         {role === "candidate" && (
