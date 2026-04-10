@@ -96,6 +96,13 @@ export async function updateAnnouncement(
   if (!content) return { error: "Le contenu est requis." };
   if (content.length > LIMITS.content) return { error: `Le contenu ne peut pas dépasser ${LIMITS.content} caractères.` };
   if (!VALID_CONTENT_DOMAINS.includes(domain)) return { error: "Domaine invalide." };
+
+  // Verifier ownership : l'officier doit avoir acces au domaine cible ET au domaine actuel
+  const existing = await prisma.announcement.findUnique({ where: { id }, select: { domain: true } });
+  if (!existing) return { error: "Annonce introuvable." };
+  if (!canCreateInDomain(user.role, user.domains, existing.domain)) {
+    return { error: "Vous n'avez pas accès au domaine de cette annonce." };
+  }
   if (!canCreateInDomain(user.role, user.domains, domain)) {
     return { error: "Vous n'avez pas accès à ce domaine." };
   }
@@ -112,7 +119,13 @@ export async function updateAnnouncement(
 }
 
 export async function deleteAnnouncement(id: string): Promise<ActionResult> {
-  await requireOfficer();
+  const user = await requireOfficer();
+  // Verifier que l'officier a acces au domaine de l'annonce
+  const existing = await prisma.announcement.findUnique({ where: { id }, select: { domain: true } });
+  if (!existing) return { success: false, error: "Annonce introuvable." };
+  if (!canCreateInDomain(user.role, user.domains, existing.domain)) {
+    return { success: false, error: "Vous n'avez pas accès au domaine de cette annonce." };
+  }
   try {
     await prisma.announcement.delete({ where: { id } });
     revalidatePath("/membre");
@@ -259,7 +272,7 @@ export async function updateCalendarEvent(
   _prev: ContentFormState,
   formData: FormData
 ): Promise<ContentFormState> {
-  await requireOfficer();
+  const user = await requireOfficer();
 
   const id          = formData.get("id") as string | null;
   const title       = (formData.get("title")       as string | null)?.trim() ?? "";
@@ -269,6 +282,16 @@ export async function updateCalendarEvent(
 
   if (!id) return { error: "Événement introuvable." };
   if (!["op", "training", "social", "other"].includes(type)) return { error: "Type d'événement invalide." };
+
+  // Verifier ownership sur le domaine existant + cible
+  const existing = await prisma.calendarEvent.findUnique({ where: { id }, select: { domain: true } });
+  if (!existing) return { error: "Événement introuvable." };
+  if (!canCreateInDomain(user.role, user.domains, existing.domain)) {
+    return { error: "Vous n'avez pas accès au domaine de cet événement." };
+  }
+  if (!canCreateInDomain(user.role, user.domains, domain)) {
+    return { error: "Vous n'avez pas accès à ce domaine." };
+  }
 
   const startAtRaw         = formData.get("startAt")         as string | null;
   const endAtRaw           = formData.get("endAt")           as string | null;
@@ -316,7 +339,12 @@ export async function updateCalendarEvent(
 }
 
 export async function deleteCalendarEvent(id: string): Promise<ActionResult> {
-  await requireOfficer();
+  const user = await requireOfficer();
+  const existing = await prisma.calendarEvent.findUnique({ where: { id }, select: { domain: true } });
+  if (!existing) return { success: false, error: "Événement introuvable." };
+  if (!canCreateInDomain(user.role, user.domains, existing.domain)) {
+    return { success: false, error: "Vous n'avez pas accès au domaine de cet événement." };
+  }
   try {
     await prisma.calendarEvent.delete({ where: { id } });
     revalidatePath("/membre/calendrier");

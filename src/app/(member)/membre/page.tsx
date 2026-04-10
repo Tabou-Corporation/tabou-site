@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Container } from "@/components/layout/Container";
@@ -17,6 +16,8 @@ import { SITE_CONFIG } from "@/config/site";
 import { hasMinRole } from "@/types/roles";
 import type { UserRole } from "@/types/roles";
 import { ROLE_LABELS, ROLE_BADGE_VARIANT } from "@/lib/constants/labels";
+import { fetchTopPilotsPodium } from "@/lib/zkillboard/top-pilot";
+import { TopPilotPodium } from "@/components/blocks/TopPilotPodium";
 
 // ── Labels ──────────────────────────────────────────────────────────────
 
@@ -88,7 +89,7 @@ export default async function MemberDashboardPage() {
   const in14Days = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [application, recentAnnouncements, upcomingEvents, lastAssembly, recentAnnouncementCount, pendingCount, myOpenListings, pendingOffersReceived, myPendingOffers, lastTransaction] = await Promise.all([
+  const [application, recentAnnouncements, upcomingEvents, lastAssembly, recentAnnouncementCount, pendingCount, myOpenListings, pendingOffersReceived, myPendingOffers, lastTransaction, topPilots] = await Promise.all([
     // Candidature — candidats seulement
     role === "candidate"
       ? prisma.application.findFirst({
@@ -169,6 +170,11 @@ export default async function MemberDashboardPage() {
           select: { listingTitle: true, finalPrice: true, createdAt: true, sellerId: true },
         })
       : Promise.resolve(null),
+
+    // Top pilotes du mois (zKillboard) — parallelise au lieu de Suspense lazy
+    isMember
+      ? fetchTopPilotsPodium().catch(() => [])
+      : Promise.resolve([]),
   ]);
 
   const hasApplication    = !!application;
@@ -606,11 +612,11 @@ export default async function MemberDashboardPage() {
                   </h2>
                   <Card>
                     <CardBody className="py-1 px-0">
-                      <Suspense fallback={
-                        <p className="text-text-muted text-xs italic px-4 py-3">Chargement…</p>
-                      }>
-                        <DashboardTopPilots />
-                      </Suspense>
+                      {topPilots.length > 0 ? (
+                        <TopPilotPodium pilots={topPilots} />
+                      ) : (
+                        <p className="text-text-muted text-xs italic px-4 py-3">Pas de données ce mois-ci.</p>
+                      )}
                     </CardBody>
                   </Card>
                 </section>
@@ -650,15 +656,3 @@ function timeAgo(date: Date): string {
   return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
-// ── Top Pilots wrapper (server component, no width constraint) ──────────
-
-import { fetchTopPilotsPodium } from "@/lib/zkillboard/top-pilot";
-import { TopPilotPodium } from "@/components/blocks/TopPilotPodium";
-
-async function DashboardTopPilots() {
-  const pilots = await fetchTopPilotsPodium();
-  if (!pilots.length) {
-    return <p className="text-text-muted text-xs italic px-4 py-3">Pas de données ce mois-ci.</p>;
-  }
-  return <TopPilotPodium pilots={pilots} />;
-}

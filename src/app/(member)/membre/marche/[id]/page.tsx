@@ -63,6 +63,7 @@ export default async function ListingDetailPage({
       offers: {
         include: { user: { select: { name: true, image: true } } },
         orderBy: { createdAt: "desc" },
+        take: 30,
       },
     },
   });
