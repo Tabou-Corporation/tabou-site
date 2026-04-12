@@ -48,9 +48,17 @@ interface CalendarEventData {
   recurrenceEndAt: string | null;
 }
 
-/** Format ISO → datetime-local value (YYYY-MM-DDTHH:mm) */
+/** Format ISO (UTC) → datetime-local value en heure française (Europe/Paris) */
 function toDatetimeLocal(iso: string): string {
-  return iso.slice(0, 16);
+  const date = new Date(iso);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
 }
 
 /** Format ISO → date value (YYYY-MM-DD) */

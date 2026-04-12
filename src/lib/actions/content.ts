@@ -14,6 +14,28 @@ import {
   notifyNewCalendarEvent,
 } from "@/lib/discord-notify";
 
+/**
+ * Interprète une chaîne datetime-local (ex: "2026-04-12T19:00") comme
+ * heure française (Europe/Paris) et retourne un Date UTC correct.
+ * datetime-local n'inclut pas de timezone, le serveur Vercel (UTC) le
+ * parserait sinon comme UTC.
+ */
+function parseFrenchDateTime(raw: string): Date {
+  const naive = new Date(raw + "Z"); // forcer interprétation UTC
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false,
+  }).formatToParts(naive);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "0";
+  const parisAsUtc = new Date(
+    `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}Z`,
+  );
+  const offsetMs = parisAsUtc.getTime() - naive.getTime();
+  return new Date(naive.getTime() - offsetMs);
+}
+
 // ─── Limites de longueur ──────────────────────────────────────────────────────
 const LIMITS = {
   title:       200,
@@ -230,8 +252,8 @@ export async function createCalendarEvent(
     return { error: `La description ne peut pas dépasser ${LIMITS.description} caractères.` };
   if (!startAtRaw) return { error: "La date de début est requise." };
 
-  const startAt = new Date(startAtRaw);
-  const endAt = endAtRaw ? new Date(endAtRaw) : null;
+  const startAt = parseFrenchDateTime(startAtRaw);
+  const endAt = endAtRaw ? parseFrenchDateTime(endAtRaw) : null;
 
   if (isNaN(startAt.getTime())) return { error: "Date de début invalide." };
   if (endAt && isNaN(endAt.getTime())) return { error: "Date de fin invalide." };
@@ -304,8 +326,8 @@ export async function updateCalendarEvent(
     return { error: `La description ne peut pas dépasser ${LIMITS.description} caractères.` };
   if (!startAtRaw) return { error: "La date de début est requise." };
 
-  const startAt = new Date(startAtRaw);
-  const endAt = endAtRaw ? new Date(endAtRaw) : null;
+  const startAt = parseFrenchDateTime(startAtRaw);
+  const endAt = endAtRaw ? parseFrenchDateTime(endAtRaw) : null;
 
   if (isNaN(startAt.getTime())) return { error: "Date de début invalide." };
   if (endAt && isNaN(endAt.getTime())) return { error: "Date de fin invalide." };

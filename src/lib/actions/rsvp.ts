@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import type { UserRole } from "@/types/roles";
 import type { ActionResult } from "@/types/actions";
 import { getDiscordConfig } from "@/lib/site-content/loader";
+import { stripHtml } from "@/lib/discord-notify";
 
 export type RsvpStatus = "GOING" | "MAYBE" | "NOT_GOING";
 
@@ -108,7 +109,7 @@ export async function notifyDiscordEvent(eventId: string): Promise<{ error?: str
     content: "@everyone",
     embeds: [{
       title: `📅 ${event.title}`,
-      description: event.description ?? "",
+      description: event.description ? stripHtml(event.description) : "",
       color: 0xF0B030,
       fields: [
         { name: "Type", value: TYPE_LABELS[event.type] ?? event.type, inline: true },

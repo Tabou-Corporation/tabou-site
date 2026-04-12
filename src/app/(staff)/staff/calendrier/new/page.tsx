@@ -116,7 +116,7 @@ export default function NewCalendarEventPage() {
                     Date et heure de début <span className="text-red-400 text-xs">*</span>
                   </label>
                   <input name="startAt" type="datetime-local" required className={inputClass} />
-                  <p className="text-text-muted text-xs">Heure locale — affiché en EVE Time (UTC)</p>
+                  <p className="text-text-muted text-xs">Saisissez l&apos;heure française — la conversion EVE (UTC) est automatique</p>
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-text-secondary text-sm font-medium">
