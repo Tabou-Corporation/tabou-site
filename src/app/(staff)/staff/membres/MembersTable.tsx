@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Search, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, ArrowUpDown, ChevronUp, ChevronDown, AlertTriangle } from "lucide-react";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { Badge } from "@/components/ui/Badge";
 import { ROLE_LABELS, ROLE_BADGE, ROLE_ORDER } from "@/lib/constants/labels";
@@ -18,6 +18,7 @@ interface SerializedUser {
 }
 
 const CORP_IDS = [98809880, 98215397]; // Tabou + Urban Zone
+const MEMBER_ROLES = ["member", "member_uz", "officer", "director", "ceo", "admin"];
 
 function getSuspendReason(u: SerializedUser): string | null {
   if (u.role !== "suspended") return null;
@@ -25,6 +26,12 @@ function getSuspendReason(u: SerializedUser): string | null {
     return "Hors corporation";
   }
   return "Suspendu manuellement";
+}
+
+/** Membre actif dont le corporationId ne correspond pas à Tabou/UZ */
+function isEsiDesync(u: SerializedUser): boolean {
+  if (!MEMBER_ROLES.includes(u.role)) return false;
+  return !u.corporationId || !CORP_IDS.includes(u.corporationId);
 }
 
 type SortKey = "name" | "role" | "date";
@@ -141,8 +148,13 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                 </td>
               </tr>
             ) : (
-              filtered.map((u) => (
-                <tr key={u.id} className="border-b border-border/30 last:border-b-0 group">
+              filtered.map((u) => {
+                const desync = isEsiDesync(u);
+                return (
+                <tr key={u.id} className={cn(
+                  "border-b border-border/30 last:border-b-0 group",
+                  desync && "bg-red-950/20"
+                )}>
                   <td className="px-4 py-2.5">
                     <Link href={`/staff/membres/${u.id}`} className="block">
                       <AvatarDisplay image={u.image} name={u.name} size={32} />
@@ -153,8 +165,11 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                       href={`/staff/membres/${u.id}`}
                       className="block group-hover:text-gold transition-colors"
                     >
-                      <span className="text-text-primary font-display font-semibold text-sm">
+                      <span className="inline-flex items-center gap-1.5 text-text-primary font-display font-semibold text-sm">
                         {u.name ?? "Pilote inconnu"}
+                        {desync && (
+                          <AlertTriangle size={12} className="text-red-400 shrink-0" aria-label="ESI désynchronisé" />
+                        )}
                       </span>
                       <span className="sm:hidden block mt-0.5">
                         <Badge variant={u.role === "suspended" ? "red" : (ROLE_BADGE[u.role] ?? "muted")} className="text-2xs">
@@ -162,6 +177,9 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                         </Badge>
                         {getSuspendReason(u) && (
                           <span className="text-red-400/70 text-2xs ml-1">{getSuspendReason(u)}</span>
+                        )}
+                        {desync && (
+                          <span className="text-red-400/70 text-2xs ml-1">ESI désynchronisé</span>
                         )}
                       </span>
                     </Link>
@@ -173,6 +191,9 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                       </Badge>
                       {getSuspendReason(u) && (
                         <span className="text-red-400/70 text-xs ml-2">{getSuspendReason(u)}</span>
+                      )}
+                      {desync && (
+                        <span className="text-red-400/70 text-xs ml-2">ESI désynchronisé</span>
                       )}
                     </Link>
                   </td>
@@ -186,7 +207,8 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                     </Link>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
