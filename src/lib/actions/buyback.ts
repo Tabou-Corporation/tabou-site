@@ -181,6 +181,11 @@ export async function createListing(
       authorName: session.user.name ?? null,
       askingPrice,
       itemCount: Array.isArray(items) ? items.length : 0,
+      description,
+      location,
+      totalJitaBuy,
+      askingRate,
+      expiresAt,
     });
 
     writeAuditLog({
@@ -250,6 +255,9 @@ export async function makeOffer(
       offerAuthorName: session.user.name ?? null,
       listingAuthorName: listing.user.name ?? null,
       price,
+      message: message?.trim() || null,
+      listingAskingPrice: listing.askingPrice,
+      itemCount: listing.itemCount,
     });
 
     // In-app notification au proprietaire

@@ -277,12 +277,19 @@ export function notifyNewCalendarEvent(params: {
 
 const TYPE_EMOJI: Record<string, string> = { SELL: "💰", BUY: "🛒", EXCHANGE: "🔄" };
 const TYPE_LABEL_FR: Record<string, string> = { SELL: "Vente", BUY: "Achat", EXCHANGE: "Échange" };
+const TYPE_COLOR: Record<string, number> = { SELL: COLOR_GOLD, BUY: 0x3B82F6, EXCHANGE: 0x8B5CF6 };
 
 function formatISK(amount: number): string {
   if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)}B ISK`;
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M ISK`;
   if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K ISK`;
-  return `${Math.round(amount)} ISK`;
+  return `${Math.round(amount).toLocaleString("fr-FR")} ISK`;
+}
+
+function formatExpiry(date: Date): string {
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris",
+  });
 }
 
 export function notifyNewListing(params: {
@@ -292,21 +299,56 @@ export function notifyNewListing(params: {
   authorName: string | null;
   askingPrice: number | null;
   itemCount: number;
+  description: string | null;
+  location: string | null;
+  totalJitaBuy: number | null;
+  askingRate: number | null;
+  expiresAt: Date;
 }): void {
   const emoji = TYPE_EMOJI[params.type] ?? "📦";
   const typeLabel = TYPE_LABEL_FR[params.type] ?? params.type;
+  const color = TYPE_COLOR[params.type] ?? COLOR_GOLD;
+
+  // Build description line
+  const descLine = params.description
+    ? truncate(params.description, 120)
+    : undefined;
+
+  // Build price display
+  let priceValue = "Ouvert aux offres";
+  if (params.askingPrice) {
+    priceValue = formatISK(params.askingPrice);
+    if (params.totalJitaBuy && params.totalJitaBuy > 0) {
+      const pct = Math.round((params.askingPrice / params.totalJitaBuy) * 100);
+      priceValue += ` (${pct}% Jita)`;
+    }
+  } else if (params.askingRate) {
+    priceValue = `${params.askingRate}% Jita Buy`;
+  }
 
   const run = async () => {
     const url = await getWebhookUrl("marketWebhookUrl");
+
+    const fields = [
+      { name: "👤 Vendeur", value: params.authorName ?? "Membre", inline: true },
+      { name: "📦 Items", value: String(params.itemCount), inline: true },
+      { name: "💵 Prix demandé", value: priceValue, inline: true },
+    ];
+
+    if (params.totalJitaBuy) {
+      fields.push({ name: "📊 Valeur Jita Buy", value: formatISK(params.totalJitaBuy), inline: true });
+    }
+    if (params.location) {
+      fields.push({ name: "📍 Localisation", value: params.location, inline: true });
+    }
+    fields.push({ name: "⏰ Expire le", value: formatExpiry(params.expiresAt), inline: true });
+
     await send(url, {
       embeds: [{
-        title: `${emoji} ${typeLabel} — ${params.title}`,
-        color: COLOR_GOLD,
-        fields: [
-          { name: "Par", value: params.authorName ?? "Membre", inline: true },
-          { name: "Items", value: String(params.itemCount), inline: true },
-          ...(params.askingPrice ? [{ name: "Prix", value: formatISK(params.askingPrice), inline: true }] : [{ name: "Prix", value: "Ouvert aux offres", inline: true }]),
-        ],
+        title: `${emoji} ${typeLabel} — ${truncate(params.title, 50)}`,
+        description: descLine,
+        color,
+        fields,
         footer: { text: "Tabou Corporation — Marché" },
         timestamp: new Date().toISOString(),
       }],
@@ -314,7 +356,7 @@ export function notifyNewListing(params: {
         type: 1,
         components: [{
           type: 2, style: 5,
-          label: "Voir l'annonce",
+          label: "🔗 Voir l'annonce",
           url: `${SITE_URL}/membre/marche/${params.listingId}`,
         }],
       }],
@@ -329,18 +371,42 @@ export function notifyNewOffer(params: {
   offerAuthorName: string | null;
   listingAuthorName: string | null;
   price: number | null;
+  message: string | null;
+  listingAskingPrice: number | null;
+  itemCount: number;
 }): void {
   const run = async () => {
     const url = await getWebhookUrl("marketWebhookUrl");
+
+    // Build description with offer message
+    const descLine = params.message
+      ? `💬 *"${truncate(params.message, 100)}"*`
+      : undefined;
+
+    const fields = [
+      { name: "👤 De", value: params.offerAuthorName ?? "Membre", inline: true },
+      { name: "👤 À", value: params.listingAuthorName ?? "Membre", inline: true },
+      { name: "📦 Items", value: String(params.itemCount), inline: true },
+    ];
+
+    if (params.price) {
+      fields.push({ name: "💵 Prix proposé", value: formatISK(params.price), inline: true });
+    }
+    if (params.listingAskingPrice) {
+      fields.push({ name: "💵 Prix demandé", value: formatISK(params.listingAskingPrice), inline: true });
+    }
+    if (params.price && params.listingAskingPrice && params.listingAskingPrice > 0) {
+      const diff = Math.round(((params.price - params.listingAskingPrice) / params.listingAskingPrice) * 100);
+      const sign = diff >= 0 ? "+" : "";
+      fields.push({ name: "📈 Écart", value: `${sign}${diff}%`, inline: true });
+    }
+
     await send(url, {
       embeds: [{
-        title: `🤝 Nouvelle offre sur "${truncate(params.listingTitle, 40)}"`,
+        title: `🤝 Nouvelle offre — ${truncate(params.listingTitle, 45)}`,
+        description: descLine,
         color: 0x3B82F6,
-        fields: [
-          { name: "De", value: params.offerAuthorName ?? "Membre", inline: true },
-          { name: "À", value: params.listingAuthorName ?? "Membre", inline: true },
-          ...(params.price ? [{ name: "Prix proposé", value: formatISK(params.price), inline: true }] : []),
-        ],
+        fields,
         footer: { text: "Tabou Corporation — Marché" },
         timestamp: new Date().toISOString(),
       }],
@@ -348,7 +414,7 @@ export function notifyNewOffer(params: {
         type: 1,
         components: [{
           type: 2, style: 5,
-          label: "Voir l'annonce",
+          label: "🔗 Voir l'annonce",
           url: `${SITE_URL}/membre/marche/${params.listingId}`,
         }],
       }],
