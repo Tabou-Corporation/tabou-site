@@ -88,21 +88,21 @@ export async function notifyDiscordEvent(eventId: string): Promise<{ error?: str
   const siteUrl = process.env.NEXTAUTH_URL ?? "https://tabou-eve.fr";
   const eventUrl = `${siteUrl}/membre/calendrier`;
 
-  /** Formate une date avec heure EVE (UTC) + heure FR (Europe/Paris) */
+  /** Formate une date avec heure FR (Europe/Paris) en priorité + UTC en secondaire */
   function fmtTime(date: Date, opts?: { includeDate?: boolean }): string {
     const includeDate = opts?.includeDate ?? true;
     const datePart = includeDate
       ? date.toLocaleDateString("fr-FR", {
-          weekday: "long", day: "numeric", month: "long", timeZone: "UTC",
+          weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris",
         }) + "\n"
       : "";
-    const eveTime = date.toLocaleTimeString("fr-FR", {
-      hour: "2-digit", minute: "2-digit", timeZone: "UTC",
-    });
     const frTime = date.toLocaleTimeString("fr-FR", {
       hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
     });
-    return `${datePart}🕐 ${eveTime} (EVE/UTC)\n🇫🇷 ${frTime} (heure FR)`;
+    const eveTime = date.toLocaleTimeString("fr-FR", {
+      hour: "2-digit", minute: "2-digit", timeZone: "UTC",
+    });
+    return `${datePart}🕐 ${frTime} (heure FR)\n🌐 ${eveTime} (UTC)`;
   }
 
   const payload = {
@@ -120,7 +120,7 @@ export async function notifyDiscordEvent(eventId: string): Promise<{ error?: str
           inline: true,
         }] : []),
       ],
-      footer: { text: "Tabou Corporation — Les horaires EVE correspondent à l'heure UTC" },
+      footer: { text: "Tabou Corporation — Horaires affichés en heure française — UTC entre parenthèses" },
       url: eventUrl,
     }],
     components: [{

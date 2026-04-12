@@ -54,20 +54,23 @@ const EVENT_TYPE_COLOR: Record<string, string> = {
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
-function relativeDate(date: Date): string {
+function relativeDate(date: Date): { fr: string; utc: string } {
   const now = new Date();
   const diff = date.getTime() - now.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const time = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const frTime = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+  const utcTime = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
 
-  if (days < 0) return `${date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} ${time}`;
-  if (days === 0) return `Aujourd'hui ${time}`;
-  if (days === 1) return `Demain ${time}`;
-  if (days < 7) {
+  let prefix: string;
+  if (days < 0) prefix = date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  else if (days === 0) prefix = "Aujourd'hui";
+  else if (days === 1) prefix = "Demain";
+  else if (days < 7) {
     const weekday = date.toLocaleDateString("fr-FR", { weekday: "long" });
-    return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${time}`;
-  }
-  return `${date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} ${time}`;
+    prefix = `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}`;
+  } else prefix = date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+
+  return { fr: `${prefix} ${frTime}`, utc: `${utcTime} UTC` };
 }
 
 // ── Page ────────────────────────────────────────────────────────────────
@@ -310,7 +313,8 @@ export default async function MemberDashboardPage() {
                           {nextPersonalEvent.title}
                         </p>
                         <p className="text-text-muted text-xs mt-0.5">
-                          {relativeDate(new Date(nextPersonalEvent.startAt))} EVE
+                          {relativeDate(new Date(nextPersonalEvent.startAt)).fr}
+                          <span className="text-text-muted/50 ml-1.5">({relativeDate(new Date(nextPersonalEvent.startAt)).utc})</span>
                         </p>
                       </>
                     ) : (
@@ -434,7 +438,8 @@ export default async function MemberDashboardPage() {
                                       {ev.title}
                                     </p>
                                     <p className="text-text-muted text-xs mt-0.5">
-                                      {relativeDate(new Date(ev.startAt))} EVE
+                                      {relativeDate(new Date(ev.startAt)).fr}
+                                      <span className="text-text-muted/50 ml-1.5">({relativeDate(new Date(ev.startAt)).utc})</span>
                                     </p>
                                   </div>
                                 </div>

@@ -169,18 +169,7 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                         timeZone: "UTC",
                       })}
                     </p>
-                    <p className="text-text-muted">
-                      {new Date(selectedEvent.startAt).toLocaleTimeString("fr-FR", {
-                        hour: "2-digit", minute: "2-digit", timeZone: "UTC",
-                      })} EVE
-                      {selectedEvent.endAt && (
-                        <> → {new Date(selectedEvent.endAt).toLocaleTimeString("fr-FR", {
-                          hour: "2-digit", minute: "2-digit", timeZone: "UTC",
-                        })} EVE</>
-                      )}
-                    </p>
-                    <p className="text-text-muted text-xs mt-0.5">
-                      🇫🇷{" "}
+                    <p className="text-text-primary">
                       {new Date(selectedEvent.startAt).toLocaleTimeString("fr-FR", {
                         hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
                       })}
@@ -189,7 +178,17 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                           hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
                         })}</>
                       )}
-                      {" "}heure FR
+                    </p>
+                    <p className="text-text-muted/50 text-xs mt-0.5">
+                      {new Date(selectedEvent.startAt).toLocaleTimeString("fr-FR", {
+                        hour: "2-digit", minute: "2-digit", timeZone: "UTC",
+                      })}
+                      {selectedEvent.endAt && (
+                        <> → {new Date(selectedEvent.endAt).toLocaleTimeString("fr-FR", {
+                          hour: "2-digit", minute: "2-digit", timeZone: "UTC",
+                        })}</>
+                      )}
+                      {" "}UTC
                     </p>
                   </div>
                 </div>
