@@ -346,19 +346,12 @@ export function notifyNewListing(params: {
     await send(url, {
       embeds: [{
         title: `${emoji} ${typeLabel} — ${truncate(params.title, 50)}`,
+        url: `${SITE_URL}/membre/marche/${params.listingId}`,
         description: descLine,
         color,
         fields,
         footer: { text: "Tabou Corporation — Marché" },
         timestamp: new Date().toISOString(),
-      }],
-      components: [{
-        type: 1,
-        components: [{
-          type: 2, style: 5,
-          label: "🔗 Voir l'annonce",
-          url: `${SITE_URL}/membre/marche/${params.listingId}`,
-        }],
       }],
     });
   };
@@ -404,19 +397,12 @@ export function notifyNewOffer(params: {
     await send(url, {
       embeds: [{
         title: `🤝 Nouvelle offre — ${truncate(params.listingTitle, 45)}`,
+        url: `${SITE_URL}/membre/marche/${params.listingId}`,
         description: descLine,
         color: 0x3B82F6,
         fields,
         footer: { text: "Tabou Corporation — Marché" },
         timestamp: new Date().toISOString(),
-      }],
-      components: [{
-        type: 1,
-        components: [{
-          type: 2, style: 5,
-          label: "🔗 Voir l'annonce",
-          url: `${SITE_URL}/membre/marche/${params.listingId}`,
-        }],
       }],
     });
   };
