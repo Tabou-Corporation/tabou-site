@@ -139,9 +139,10 @@ export default async function AdminPage() {
   }
 
   if (desyncUsers.length > 0) {
+    const names = desyncUsers.map((u) => u.name ?? "???").join(", ");
     alerts.push({
       icon: <AlertTriangle size={14} />,
-      text: `${desyncUsers.length} membre${desyncUsers.length > 1 ? "s" : ""} hors corporation (ESI)`,
+      text: `${desyncUsers.length} membre${desyncUsers.length > 1 ? "s" : ""} hors corporation (ESI) : ${names}`,
       href: "/staff/membres",
       level: "error",
     });
