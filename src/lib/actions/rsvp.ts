@@ -87,12 +87,22 @@ export async function notifyDiscordEvent(eventId: string): Promise<{ error?: str
   const siteUrl = process.env.NEXTAUTH_URL ?? "https://tabou-eve.fr";
   const eventUrl = `${siteUrl}/membre/calendrier`;
 
-  const dateStr = event.startAt.toLocaleDateString("fr-FR", {
-    weekday: "long", day: "numeric", month: "long",
-  });
-  const timeStr = event.startAt.toLocaleTimeString("fr-FR", {
-    hour: "2-digit", minute: "2-digit",
-  });
+  /** Formate une date avec heure EVE (UTC) + heure FR (Europe/Paris) */
+  function fmtTime(date: Date, opts?: { includeDate?: boolean }): string {
+    const includeDate = opts?.includeDate ?? true;
+    const datePart = includeDate
+      ? date.toLocaleDateString("fr-FR", {
+          weekday: "long", day: "numeric", month: "long", timeZone: "UTC",
+        }) + "\n"
+      : "";
+    const eveTime = date.toLocaleTimeString("fr-FR", {
+      hour: "2-digit", minute: "2-digit", timeZone: "UTC",
+    });
+    const frTime = date.toLocaleTimeString("fr-FR", {
+      hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
+    });
+    return `${datePart}🕐 ${eveTime} (EVE/UTC)\n🇫🇷 ${frTime} (heure FR)`;
+  }
 
   const payload = {
     content: "@everyone",
@@ -102,14 +112,14 @@ export async function notifyDiscordEvent(eventId: string): Promise<{ error?: str
       color: 0xF0B030,
       fields: [
         { name: "Type", value: TYPE_LABELS[event.type] ?? event.type, inline: true },
-        { name: "Date", value: `${dateStr} à ${timeStr} EVE`, inline: true },
+        { name: "📆 Début", value: fmtTime(event.startAt), inline: false },
         ...(event.endAt ? [{
-          name: "Fin",
-          value: event.endAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + " EVE",
+          name: "🏁 Fin",
+          value: fmtTime(event.endAt, { includeDate: false }),
           inline: true,
         }] : []),
       ],
-      footer: { text: "Tabou Corporation — EVE Online" },
+      footer: { text: "Tabou Corporation — Les horaires EVE correspondent à l'heure UTC" },
       url: eventUrl,
     }],
     components: [{
@@ -117,7 +127,7 @@ export async function notifyDiscordEvent(eventId: string): Promise<{ error?: str
       components: [{
         type: 2,
         style: 5,
-        label: "Voir l'événement & s'inscrire",
+        label: "📅 Voir l'événement & s'inscrire",
         url: eventUrl,
       }],
     }],

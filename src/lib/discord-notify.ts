@@ -12,6 +12,23 @@ const COLOR_GOLD = 0xF0B030;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Formate une date avec heure EVE (UTC) + heure FR (Europe/Paris) */
+function formatEveAndFrTime(date: Date, opts?: { includeDate?: boolean }): string {
+  const includeDate = opts?.includeDate ?? true;
+  const datePart = includeDate
+    ? date.toLocaleDateString("fr-FR", {
+        weekday: "long", day: "numeric", month: "long", timeZone: "UTC",
+      }) + "\n"
+    : "";
+  const eveTime = date.toLocaleTimeString("fr-FR", {
+    hour: "2-digit", minute: "2-digit", timeZone: "UTC",
+  });
+  const frTime = date.toLocaleTimeString("fr-FR", {
+    hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
+  });
+  return `${datePart}🕐 ${eveTime} (EVE/UTC)\n🇫🇷 ${frTime} (heure FR)`;
+}
+
 async function getWebhookUrl(
   key: "announcementsWebhookUrl" | "guidesWebhookUrl" | "assembliesWebhookUrl" | "calendarWebhookUrl" | "adminWebhookUrl" | "marketWebhookUrl",
 ): Promise<string> {
@@ -222,11 +239,6 @@ export function notifyNewCalendarEvent(params: {
   const TYPE_LABELS: Record<string, string> = {
     op: "Opération", training: "Formation", social: "Event social", other: "Autre",
   };
-  const dateStr = params.startAt.toLocaleDateString("fr-FR", {
-    weekday: "long", day: "numeric", month: "long",
-  }) + " à " + params.startAt.toLocaleTimeString("fr-FR", {
-    hour: "2-digit", minute: "2-digit", timeZone: "UTC",
-  }) + " EVE";
 
   const run = async () => {
     const url = await getWebhookUrl("calendarWebhookUrl");
@@ -237,17 +249,22 @@ export function notifyNewCalendarEvent(params: {
         color: COLOR_GOLD,
         fields: [
           { name: "Type", value: TYPE_LABELS[params.type] ?? params.type, inline: true },
-          { name: "Date", value: dateStr, inline: true },
           { name: "Organisateur", value: params.authorName ?? "Staff", inline: true },
+          { name: "📆 Début", value: formatEveAndFrTime(params.startAt), inline: false },
+          ...(params.endAt ? [{
+            name: "🏁 Fin",
+            value: formatEveAndFrTime(params.endAt, { includeDate: false }),
+            inline: true,
+          }] : []),
         ],
-        footer: { text: "Tabou Corporation" },
+        footer: { text: "Tabou Corporation — Les horaires EVE correspondent à l'heure UTC" },
         timestamp: new Date().toISOString(),
       }],
       components: [{
         type: 1,
         components: [{
           type: 2, style: 5,
-          label: "Voir & s'inscrire",
+          label: "📅 Voir & s'inscrire sur le site",
           url: `${SITE_URL}/membre/calendrier`,
         }],
       }],
