@@ -28,10 +28,25 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "3.2",
+    title: "Clarté & Corrections",
+    description: "Meilleure lisibilité des horaires (heure française en priorité), comptage des membres corrigé et fiabilité de la synchronisation ESI.",
+    status: "current",
+    changes: [
+      { type: "improvement", label: "Horaires en heure française en premier, UTC entre parenthèses — dashboard, calendrier et notifications Discord" },
+      { type: "fix", label: "Saisie calendrier en heure FR, conversion UTC automatique à l'enregistrement" },
+      { type: "fix", label: "Comptage membres — onglet « Direction » (director/CEO/admin) séparé des officiers, filtre fonctionnel" },
+      { type: "fix", label: "Annuaire — officiers et direction comptés séparément dans l'en-tête" },
+      { type: "fix", label: "Indicateur ESI désynchronisé visible sur les lignes membres concernées (staff)" },
+      { type: "fix", label: "Noms des membres hors corporation affichés dans l'alerte admin" },
+      { type: "fix", label: "Cron sync — candidats promus avec le bon corporationId, annuaire affiche member_uz indépendamment du corpId" },
+    ],
+  },
+  {
     version: "3.1",
     title: "Suivi Pro & Securite",
     description: "Notifications en temps reel, historique des transactions, dashboard marche repense, audit de securite complet et optimisations de performance.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "feature", label: "Notifications in-app — offre recue, acceptee, refusee, annonce vendue ou expiree" },
       { type: "feature", label: "Historique des transactions — snapshot permanent avec prix final, acheteur et vendeur" },
