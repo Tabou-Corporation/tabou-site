@@ -27,28 +27,26 @@ export function PilotGrid({ members, interactive = true }: PilotGridProps) {
   const openPilot  = useCallback((p: PilotData) => setSelectedPilot(p), []);
   const closePilot = useCallback(() => setSelectedPilot(null), []);
 
-  const tabouMembers = useMemo(
-    () =>
-      members
-        // On se base uniquement sur corporationId — fallback Tabou si non renseigné
-        // (les officers/directors UZ ont toujours corporationId via ESI sync)
-        .filter((m) =>
-          m.corporationId === CORPORATIONS.tabou.id ||
-          (!m.corporationId && m.role !== "member_uz" && m.role !== "officer" && m.role !== "director" && m.role !== "ceo" && m.role !== "admin")
-        )
-        .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9)),
-    [members]
-  );
-
+  // UZ = corporationId UZ OU rôle member_uz (couvre rôle forcé manuellement)
   const uzMembers = useMemo(
     () =>
       members
         .filter((m) =>
           m.corporationId === CORPORATIONS.urbanZone.id ||
-          (!m.corporationId && m.role === "member_uz")
+          m.role === "member_uz"
         )
         .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9) || (a.name ?? "").localeCompare(b.name ?? "")),
     [members]
+  );
+
+  // Tabou = tout le monde SAUF ceux déjà dans l'onglet UZ
+  const uzIds = useMemo(() => new Set(uzMembers.map((m) => m.id)), [uzMembers]);
+  const tabouMembers = useMemo(
+    () =>
+      members
+        .filter((m) => !uzIds.has(m.id))
+        .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9)),
+    [members, uzIds]
   );
 
   const displayed = activeTab === "tabou" ? tabouMembers : uzMembers;

@@ -162,12 +162,51 @@ export async function syncAllCorporations(): Promise<SyncResult> {
 
         // Pas de changement de corporation
         if (esiInfo.corporationId === user.corporationId) {
-          // Mise à jour du securityStatus seulement
+          // Vérifie que le rôle est cohérent (rattrape les candidats/suspended
+          // dont le corporationId a été stocké mais le rôle n'a pas été mis à jour)
+          const roleFixNeeded =
+            (user.role === "candidate" || user.role === "suspended") &&
+            (esiInfo.corporationId === TABOU_ID || esiInfo.corporationId === UZ_ID);
+
+          const fixedRole = roleFixNeeded
+            ? computeNewRole(user.role as UserRole, esiInfo.corporationId)
+            : null;
+
           try {
             await prisma.user.update({
               where: { id: user.id },
-              data: { securityStatus: esiInfo.securityStatus },
+              data: {
+                securityStatus: esiInfo.securityStatus,
+                ...(fixedRole ? { role: fixedRole } : {}),
+              },
             });
+
+            if (fixedRole) {
+              result.updated++;
+              result.changes.push({
+                userId: user.id,
+                name: user.name,
+                oldCorpId: user.corporationId,
+                newCorpId: esiInfo.corporationId,
+                oldRole: user.role,
+                newRole: fixedRole,
+              });
+              writeAuditLog({
+                actorId: "SYSTEM_SYNC",
+                actorName: "Corporation Sync",
+                action: "corp_sync_role_change",
+                meta: {
+                  userId: user.id,
+                  userName: user.name,
+                  reason: "role_fix_same_corp",
+                  oldRole: user.role,
+                  newRole: fixedRole,
+                },
+              });
+              console.log(
+                `[corp-sync] 🔧 ${user.name} : rôle corrigé ${user.role} → ${fixedRole} (même corp, rôle incohérent)`,
+              );
+            }
           } catch {
             // Non bloquant
           }
