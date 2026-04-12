@@ -16,7 +16,7 @@ export default async function AnnuairePage() {
   const role = (session.user.role ?? "candidate") as UserRole;
   if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
-  const [members, total, officers, uzCount] = await Promise.all([
+  const [members, total, officerCount, directionCount, uzCount] = await Promise.all([
     prisma.user.findMany({
       where: {
         role: { in: ["member_uz", "member", "officer", "director", "ceo", "admin"] },
@@ -40,7 +40,10 @@ export default async function AnnuairePage() {
       where: { role: { in: ["member_uz", "member", "officer", "director", "ceo", "admin"] } },
     }),
     prisma.user.count({
-      where: { role: { in: ["officer", "director", "ceo", "admin"] } },
+      where: { role: "officer" },
+    }),
+    prisma.user.count({
+      where: { role: { in: ["director", "ceo", "admin"] } },
     }),
     prisma.user.count({
       where: { role: "member_uz" },
@@ -60,8 +63,9 @@ export default async function AnnuairePage() {
           </h1>
           <p className="text-text-muted text-sm mt-2">
             <span className="text-text-secondary font-semibold">{total}</span> pilote{total > 1 ? "s" : ""} actif{total > 1 ? "s" : ""}
-            {uzCount   > 0 && <> · <span className="text-text-secondary">{uzCount}</span> Urban Zone</>}
-            {officers  > 0 && <> · <span className="text-gold/70">{officers}</span> officier{officers > 1 ? "s" : ""}</>}
+            {uzCount        > 0 && <> · <span className="text-text-secondary">{uzCount}</span> Urban Zone</>}
+            {officerCount   > 0 && <> · <span className="text-gold/70">{officerCount}</span> officier{officerCount > 1 ? "s" : ""}</>}
+            {directionCount > 0 && <> · <span className="text-gold/70">{directionCount}</span> direction</>}
           </p>
         </div>
 

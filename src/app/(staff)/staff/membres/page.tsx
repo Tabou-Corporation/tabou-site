@@ -25,16 +25,19 @@ export default async function MembresPage({
   if (!hasMinRole(role, "director")) redirect("/membre");
 
   // Whitelist — seules ces valeurs sont acceptées en searchParam
-  const VALID_FILTERS = ["all", "candidate", "member_uz", "member", "officer", "director", "ceo", "admin"] as const;
+  const VALID_FILTERS = ["all", "candidate", "member_uz", "member", "officer", "direction", "director", "ceo", "admin"] as const;
   type ValidFilter = typeof VALID_FILTERS[number];
   const filter: ValidFilter | undefined =
     rawFilter && (VALID_FILTERS as readonly string[]).includes(rawFilter)
       ? (rawFilter as ValidFilter)
       : undefined;
 
-  const whereRole = filter && filter !== "all"
-    ? { role: filter }
-    : { role: { not: "public" } };
+  // "direction" = director + ceo + admin
+  const whereRole = filter === "direction"
+    ? { role: { in: ["director", "ceo", "admin"] } }
+    : filter && filter !== "all"
+      ? { role: filter }
+      : { role: { not: "public" } };
 
   const users = await prisma.user.findMany({
     where: whereRole,
@@ -46,14 +49,15 @@ export default async function MembresPage({
     _count: true,
   });
   const countMap = Object.fromEntries(counts.map((c) => [c.role, c._count]));
+  const totalAll = counts.filter(c => c.role !== "public").reduce((sum, c) => sum + c._count, 0);
 
   const tabs = [
-    { key: "all",        label: "Tous",         count: users.length },
+    { key: "all",        label: "Tous",         count: totalAll },
     { key: "candidate",  label: "Candidats",    count: countMap["candidate"] ?? 0 },
     { key: "member_uz",  label: "Urban Zone",   count: countMap["member_uz"] ?? 0 },
     { key: "member",     label: "Membres",      count: countMap["member"] ?? 0 },
     { key: "officer",    label: "Officiers",    count: countMap["officer"] ?? 0 },
-    { key: "director",   label: "Directeurs",   count: (countMap["director"] ?? 0) + (countMap["ceo"] ?? 0) + (countMap["admin"] ?? 0) },
+    { key: "direction",   label: "Direction",     count: (countMap["director"] ?? 0) + (countMap["ceo"] ?? 0) + (countMap["admin"] ?? 0) },
   ];
 
   // Serialize for client component
