@@ -166,17 +166,30 @@ export function CorpCalendar({ events, currentUserId, isOfficer }: CorpCalendarP
                     <p className="text-text-primary font-medium capitalize">
                       {new Date(selectedEvent.startAt).toLocaleDateString("fr-FR", {
                         weekday: "long", day: "numeric", month: "long", year: "numeric",
+                        timeZone: "UTC",
                       })}
                     </p>
                     <p className="text-text-muted">
                       {new Date(selectedEvent.startAt).toLocaleTimeString("fr-FR", {
-                        hour: "2-digit", minute: "2-digit",
+                        hour: "2-digit", minute: "2-digit", timeZone: "UTC",
                       })} EVE
                       {selectedEvent.endAt && (
                         <> → {new Date(selectedEvent.endAt).toLocaleTimeString("fr-FR", {
-                          hour: "2-digit", minute: "2-digit",
+                          hour: "2-digit", minute: "2-digit", timeZone: "UTC",
                         })} EVE</>
                       )}
+                    </p>
+                    <p className="text-text-muted text-xs mt-0.5">
+                      🇫🇷{" "}
+                      {new Date(selectedEvent.startAt).toLocaleTimeString("fr-FR", {
+                        hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
+                      })}
+                      {selectedEvent.endAt && (
+                        <> → {new Date(selectedEvent.endAt).toLocaleTimeString("fr-FR", {
+                          hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
+                        })}</>
+                      )}
+                      {" "}heure FR
                     </p>
                   </div>
                 </div>
