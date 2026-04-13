@@ -28,6 +28,7 @@ interface AssemblyData {
   id: string;
   title: string;
   content: string;
+  discordSummary: string | null;
   videoUrl: string | null;
   type: string;
   heldAt: string;
@@ -151,6 +152,20 @@ export default function EditAssemblyPage() {
                     className={inputClass}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-text-secondary text-sm font-medium">
+                  Résumé Discord <span className="text-text-muted font-normal">(optionnel — affiché dans la notification)</span>
+                </label>
+                <textarea
+                  name="discordSummary"
+                  maxLength={500}
+                  rows={3}
+                  defaultValue={assembly.discordSummary ?? ""}
+                  placeholder="Résumé concis pour la notification Discord : points clés, décisions, nominations…"
+                  className={inputClass + " resize-y"}
+                />
               </div>
 
               <div className="space-y-1.5">

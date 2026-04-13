@@ -22,6 +22,7 @@ export async function GET(
     id: assembly.id,
     title: assembly.title,
     content: assembly.content,
+    discordSummary: assembly.discordSummary,
     videoUrl: assembly.videoUrl,
     type: assembly.type,
     heldAt: assembly.heldAt.toISOString(),

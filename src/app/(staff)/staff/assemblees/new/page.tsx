@@ -108,6 +108,20 @@ export default function NewAssemblyPage() {
                 </div>
               </div>
 
+              {/* Discord summary */}
+              <div className="space-y-1.5">
+                <label className="block text-text-secondary text-sm font-medium">
+                  Résumé Discord <span className="text-text-muted font-normal">(optionnel — affiché dans la notification)</span>
+                </label>
+                <textarea
+                  name="discordSummary"
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Résumé concis pour la notification Discord : points clés, décisions, nominations…"
+                  className={inputClass + " resize-y"}
+                />
+              </div>
+
               {/* Content */}
               <div className="space-y-1.5">
                 <label className="block text-text-secondary text-sm font-medium">
