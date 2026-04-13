@@ -249,6 +249,147 @@
   font-family: 'Courier New', monospace;
 }
 
+/* ─── Mentions @membre — éditeur + rendu ───────────────────────────────── */
+
+.eve-mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(240, 176, 48, 0.12);
+  border: 1px solid rgba(240, 176, 48, 0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: 500;
+  color: var(--color-gold-light);
+  font-size: 0.85em;
+  vertical-align: baseline;
+  transition: background 0.15s, border-color 0.15s;
+}
+.eve-mention:hover {
+  background: rgba(240, 176, 48, 0.22);
+  border-color: rgba(240, 176, 48, 0.45);
+}
+.eve-mention-portrait {
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  border: 1px solid rgba(240, 176, 48, 0.3);
+}
+
+/* ─── Liens dans le contenu riche ──────────────────────────────────────── */
+
+.prose-eve a,
+.rich-editor-content a {
+  color: var(--color-gold);
+  text-decoration: underline;
+  text-decoration-color: rgba(240, 176, 48, 0.35);
+  text-underline-offset: 2px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.prose-eve a:hover,
+.rich-editor-content a:hover {
+  color: var(--color-gold-light);
+  text-decoration-color: var(--color-gold);
+}
+
+/* ─── Mention dropdown (autocomplete) ──────────────────────────────────── */
+
+.mention-dropdown {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  max-height: 240px;
+  overflow-y: auto;
+  min-width: 200px;
+}
+.mention-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background 0.1s;
+  text-align: left;
+}
+.mention-dropdown-item:hover,
+.mention-dropdown-item.is-selected {
+  background: rgba(240, 176, 48, 0.1);
+}
+
+/* ─── Document officiel — en-tête assemblée ────────────────────────────── */
+
+.assembly-official-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 2px solid rgba(240, 176, 48, 0.3);
+  background: linear-gradient(135deg, rgba(240, 176, 48, 0.05) 0%, transparent 60%);
+}
+.assembly-official-header img {
+  border-radius: 8px;
+  border: 1px solid rgba(240, 176, 48, 0.3);
+}
+
+/* ─── Table des matières — assemblée ───────────────────────────────────── */
+
+.assembly-toc {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  background: var(--color-bg-elevated);
+}
+.assembly-toc-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  margin-bottom: 8px;
+}
+.assembly-toc ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: toc;
+}
+.assembly-toc li {
+  counter-increment: toc;
+}
+.assembly-toc li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.assembly-toc li a:hover {
+  color: var(--color-gold);
+}
+.assembly-toc li a::before {
+  content: counter(toc) ".";
+  color: var(--color-gold);
+  font-weight: 600;
+  font-size: 0.75rem;
+  min-width: 18px;
+}
+.assembly-toc li.toc-h3 a {
+  padding-left: 26px;
+}
+.assembly-toc li.toc-h3 a::before {
+  content: "—";
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
 /* ─── Letter reveal — hero wordmark TABOU ────────────────────────────────── */
 /* Scale + blur → overshoot → settle                                          */
 @keyframes letter-reveal {

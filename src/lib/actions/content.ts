@@ -39,7 +39,7 @@ function parseFrenchDateTime(raw: string): Date {
 // ─── Limites de longueur ──────────────────────────────────────────────────────
 const LIMITS = {
   title:       200,
-  content:   10000,
+  content:   30000,
   description: 500,
 } as const;
 
@@ -407,6 +407,7 @@ export async function createAssembly(
 
   notifyNewAssembly({
     assemblyId: assembly.id, title, type, heldAt, hasVideo: !!videoUrl,
+    content, authorName: user.name ?? null,
   });
 
   revalidatePath("/membre/assemblees");

@@ -1,5 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hasMinRole } from "@/types/roles";
@@ -11,6 +12,8 @@ import { ArrowLeft, Pencil, Video, ExternalLink } from "lucide-react";
 import { deleteAssembly } from "@/lib/actions/content";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { RichTextContent } from "@/components/ui/RichTextContent";
+import { CORPORATIONS } from "@/lib/constants/corporations";
+import { AssemblyToc } from "@/components/assemblies/AssemblyToc";
 import type { UserRole } from "@/types/roles";
 
 const ASSEMBLY_TYPE_LABELS: Record<string, string> = {
@@ -134,9 +137,42 @@ export default async function AssemblyDetailPage({
           </div>
         )}
 
-        {/* Content */}
+        {/* Official Document */}
         <Card>
+          {/* En-tête officiel avec logo */}
+          <div className="assembly-official-header">
+            <Image
+              src={CORPORATIONS.tabou.logoUrl(128)}
+              alt="Tabou Corporation"
+              width={56}
+              height={56}
+              className="flex-shrink-0"
+              unoptimized
+            />
+            <div className="min-w-0">
+              <p className="text-gold text-2xs font-semibold tracking-extra-wide uppercase">
+                Tabou Corporation — Document officiel
+              </p>
+              <p className="text-text-primary font-display font-semibold text-lg leading-tight mt-0.5">
+                {assembly.title}
+              </p>
+              <p className="text-text-muted text-xs mt-0.5">
+                Réunion du{" "}
+                {new Date(assembly.heldAt).toLocaleDateString("fr-FR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+
           <CardBody>
+            {/* Table des matières auto-générée */}
+            <AssemblyToc html={assembly.content} />
+
+            {/* Contenu */}
             <RichTextContent html={assembly.content} />
           </CardBody>
         </Card>

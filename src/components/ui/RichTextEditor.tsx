@@ -1,14 +1,19 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, ReactRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
-import { useEffect, useState } from "react";
+import Link from "@tiptap/extension-link";
+import Mention from "@tiptap/extension-mention";
+import tippy, { type Instance as TippyInstance } from "tippy.js";
+import { useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading2, Heading3, List, ListOrdered, Quote, Minus, Undo, Redo,
+  Link as LinkIcon,
 } from "lucide-react";
+import { MentionList, type MentionListRef } from "./MentionList";
 
 interface Props {
   /** Nom du champ hidden envoyé dans le FormData */
@@ -64,6 +69,96 @@ export function RichTextEditor({ name, defaultValue = "", placeholder, minHeight
         codeBlock: false,
       }),
       Underline,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { class: "mention-link", target: "_blank", rel: "noopener noreferrer" },
+      }),
+      Mention.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            characterId: { default: null, parseHTML: (el) => el.getAttribute("data-character-id") || null },
+          };
+        },
+      }).configure({
+        HTMLAttributes: { class: "eve-mention" },
+        renderHTML({ node }) {
+          return [
+            "span",
+            {
+              class: "eve-mention",
+              "data-id": node.attrs.id,
+              "data-character-id": node.attrs.characterId ?? "",
+              "data-label": node.attrs.label,
+            },
+            `@${node.attrs.label}`,
+          ];
+        },
+        suggestion: {
+          char: "@",
+          items: async ({ query }: { query: string }) => {
+            if (!query || query.length < 1) return [];
+            try {
+              const res = await fetch(`/api/members/search?q=${encodeURIComponent(query)}`);
+              if (!res.ok) return [];
+              return res.json();
+            } catch {
+              return [];
+            }
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          render: (): any => {
+            let component: ReactRenderer<MentionListRef> | null = null;
+            let popup: TippyInstance[] | null = null;
+
+            return {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onStart: (props: any) => {
+                component = new ReactRenderer(MentionList, {
+                  props,
+                  editor: props.editor,
+                });
+
+                if (!props.clientRect) return;
+
+                popup = tippy("body", {
+                  getReferenceClientRect: props.clientRect,
+                  appendTo: () => document.body,
+                  content: component.element,
+                  showOnCreate: true,
+                  interactive: true,
+                  trigger: "manual",
+                  placement: "bottom-start",
+                });
+              },
+
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onUpdate(props: any) {
+                component?.updateProps(props);
+                if (popup?.[0] && props.clientRect) {
+                  popup[0].setProps({
+                    getReferenceClientRect: props.clientRect,
+                  });
+                }
+              },
+
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onKeyDown(props: any) {
+                if (props.event.key === "Escape") {
+                  popup?.[0]?.hide();
+                  return true;
+                }
+                return component?.ref?.onKeyDown(props) ?? false;
+              },
+
+              onExit() {
+                popup?.[0]?.destroy();
+                component?.destroy();
+              },
+            };
+          },
+        },
+      }),
     ],
     content: defaultValue || `<p></p>`,
     editorProps: {
@@ -92,6 +187,18 @@ export function RichTextEditor({ name, defaultValue = "", placeholder, minHeight
       }
     }
   }, [defaultValue, editor]);
+
+  const setLink = useCallback(() => {
+    if (!editor) return;
+    const prev = editor.getAttributes("link").href;
+    const url = window.prompt("URL du lien :", prev ?? "https://");
+    if (url === null) return; // cancelled
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }, [editor]);
 
   const isEmpty = !editor || empty;
 
@@ -182,6 +289,13 @@ export function RichTextEditor({ name, defaultValue = "", placeholder, minHeight
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
         >
           <Minus size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          title="Lien (Ctrl+K)"
+          onClick={setLink}
+          active={editor.isActive("link")}
+        >
+          <LinkIcon size={14} />
         </ToolbarButton>
 
         <span className="w-px h-4 bg-border mx-1" />

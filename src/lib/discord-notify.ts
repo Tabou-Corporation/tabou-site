@@ -187,12 +187,26 @@ export function notifyNewGuide(params: {
 
 // ── Assemblées ───────────────────────────────────────────────────────────────
 
+/** Extrait les sections H2 du HTML pour les lister dans l'embed Discord */
+function extractSections(html: string): string[] {
+  const regex = /<h2[^>]*>(.*?)<\/h2>/gi;
+  const sections: string[] = [];
+  let m;
+  while ((m = regex.exec(html)) !== null) {
+    const text = (m[1] ?? "").replace(/<[^>]*>/g, "").trim();
+    if (text) sections.push(text);
+  }
+  return sections;
+}
+
 export function notifyNewAssembly(params: {
   assemblyId: string;
   title: string;
   type: string;
   heldAt: Date;
   hasVideo: boolean;
+  content?: string;
+  authorName?: string | null;
 }): void {
   const typeLabel = params.type === "extraordinary" ? "Extraordinaire" : "Mensuelle";
   const dateStr = params.heldAt.toLocaleDateString("fr-FR", {
@@ -201,23 +215,51 @@ export function notifyNewAssembly(params: {
 
   const run = async () => {
     const url = await getWebhookUrl("assembliesWebhookUrl");
+
+    // Extract sections from content for a rich summary
+    const sections = params.content ? extractSections(params.content) : [];
+    const summaryText = params.content ? truncate(params.content, 200) : undefined;
+
+    const fields = [
+      { name: "📋 Type", value: typeLabel, inline: true },
+      { name: "📅 Date", value: dateStr, inline: true },
+      ...(params.authorName ? [{ name: "✍️ Rédigé par", value: params.authorName, inline: true }] : []),
+      ...(params.hasVideo ? [{ name: "🎬 Vidéo", value: "✅ Disponible", inline: true }] : []),
+    ];
+
+    // Add sections as a numbered list
+    if (sections.length > 0) {
+      const sectionList = sections
+        .slice(0, 8) // max 8 sections to avoid embed overflow
+        .map((s, i) => `**${i + 1}.** ${s}`)
+        .join("\n");
+      fields.push({
+        name: `📑 Ordre du jour (${sections.length} points)`,
+        value: sectionList,
+        inline: false,
+      });
+    }
+
     await send(url, {
       embeds: [{
         title: `🏛️ ${params.title}`,
+        description: summaryText,
         color: 0x8B5CF6,
-        fields: [
-          { name: "Type", value: typeLabel, inline: true },
-          { name: "Date", value: dateStr, inline: true },
-          ...(params.hasVideo ? [{ name: "Vidéo", value: "✅ Disponible", inline: true }] : []),
-        ],
-        footer: { text: "Tabou Corporation — Assemblées" },
+        thumbnail: {
+          url: "https://images.evetech.net/corporations/98809880/logo?size=128",
+        },
+        fields,
+        footer: {
+          text: "Tabou Corporation — Assemblées",
+          icon_url: "https://images.evetech.net/corporations/98809880/logo?size=32",
+        },
         timestamp: new Date().toISOString(),
       }],
       components: [{
         type: 1,
         components: [{
           type: 2, style: 5,
-          label: "Voir le compte-rendu",
+          label: "📖 Lire le compte-rendu complet",
           url: `${SITE_URL}/membre/assemblees/${params.assemblyId}`,
         }],
       }],

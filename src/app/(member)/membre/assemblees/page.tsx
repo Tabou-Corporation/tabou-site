@@ -9,7 +9,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { Plus, Video, Scroll } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { stripHtml } from "@/lib/discord-notify";
 import type { UserRole } from "@/types/roles";
+
+const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
 const ASSEMBLY_TYPE_LABELS: Record<string, string> = {
   monthly: "Mensuelle",
@@ -78,51 +81,71 @@ export default async function AssembleesPage() {
                   {year}
                 </p>
                 <div className="space-y-2">
-                  {items.map((a) => (
-                    <Link key={a.id} href={`/membre/assemblees/${a.id}`} className="block">
-                      <Card interactive>
-                        <CardBody className="py-3.5 px-4">
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <Scroll
-                                size={16}
-                                className={
-                                  a.type === "extraordinary"
-                                    ? "text-amber-400 flex-shrink-0"
-                                    : "text-gold/50 flex-shrink-0"
-                                }
-                              />
-                              <div className="min-w-0">
-                                <p className="text-text-primary text-sm font-medium truncate">
-                                  {a.title}
-                                </p>
-                                <p className="text-text-muted text-xs mt-0.5">
-                                  {new Date(a.heldAt).toLocaleDateString("fr-FR", {
-                                    day: "numeric",
-                                    month: "long",
-                                    year: "numeric",
-                                  })}
-                                  {" · "}
-                                  {a.author?.name ?? "Officier"}
-                                </p>
+                  {items.map((a) => {
+                    const isNew = Date.now() - new Date(a.createdAt).getTime() < SEVEN_DAYS;
+                    const preview = stripHtml(a.content);
+                    const previewText = preview.length > 120
+                      ? preview.slice(0, 120).trimEnd() + "…"
+                      : preview;
+
+                    return (
+                      <Link key={a.id} href={`/membre/assemblees/${a.id}`} className="block">
+                        <Card interactive>
+                          <CardBody className="py-3.5 px-4">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-start gap-3 min-w-0 flex-1">
+                                <Scroll
+                                  size={16}
+                                  className={`mt-0.5 ${
+                                    a.type === "extraordinary"
+                                      ? "text-amber-400 flex-shrink-0"
+                                      : "text-gold/50 flex-shrink-0"
+                                  }`}
+                                />
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-text-primary text-sm font-medium truncate">
+                                      {a.title}
+                                    </p>
+                                    {isNew && (
+                                      <Badge variant="gold" className="text-2xs flex-shrink-0">
+                                        Nouveau
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-text-muted text-xs mt-0.5">
+                                    {new Date(a.heldAt).toLocaleDateString("fr-FR", {
+                                      day: "numeric",
+                                      month: "long",
+                                      year: "numeric",
+                                    })}
+                                    {" · "}
+                                    {a.author?.name ?? "Officier"}
+                                  </p>
+                                  {previewText && (
+                                    <p className="text-text-muted text-xs mt-1.5 line-clamp-2 leading-relaxed">
+                                      {previewText}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Badge
+                                  variant={a.type === "extraordinary" ? "gold" : "muted"}
+                                  className="text-2xs"
+                                >
+                                  {ASSEMBLY_TYPE_LABELS[a.type] ?? a.type}
+                                </Badge>
+                                {a.videoUrl && (
+                                  <Video size={14} className="text-text-muted" />
+                                )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <Badge
-                                variant={a.type === "extraordinary" ? "gold" : "muted"}
-                                className="text-2xs"
-                              >
-                                {ASSEMBLY_TYPE_LABELS[a.type] ?? a.type}
-                              </Badge>
-                              {a.videoUrl && (
-                                <Video size={14} className="text-text-muted" />
-                              )}
-                            </div>
-                          </div>
-                        </CardBody>
-                      </Card>
-                    </Link>
-                  ))}
+                          </CardBody>
+                        </Card>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             ))}
