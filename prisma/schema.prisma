@@ -90,6 +90,12 @@ model User {
   securityStatus Float?
   /// Profil étendu JSON : { timezone, languages[], mainActivity, alts[] }
   profileExtra   String?  @db.Text
+  /// Début de la période d'absence déclarée
+  absenceStart   DateTime?
+  /// Fin de la période d'absence déclarée
+  absenceEnd     DateTime?
+  /// Motif d'absence (optionnel, texte libre, max 120 car.)
+  absenceReason  String?  @db.VarChar(120)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

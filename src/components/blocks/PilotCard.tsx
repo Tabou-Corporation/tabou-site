@@ -21,10 +21,20 @@ export interface PilotData {
   securityStatus?: number | null;
   /** EVE character ID — pour le lien zKillboard */
   eveCharacterId?: string | null;
+  /** Absence — dates ISO stringifiées */
+  absenceStart?: string | null;
+  absenceEnd?: string | null;
+  absenceReason?: string | null;
 }
 
 const isHighRank = (role: string) =>
   ["officer", "director", "ceo", "admin"].includes(role);
+
+function isAbsent(pilot: PilotData): boolean {
+  if (!pilot.absenceStart || !pilot.absenceEnd) return false;
+  const now = Date.now();
+  return new Date(pilot.absenceStart).getTime() <= now && now <= new Date(pilot.absenceEnd).getTime();
+}
 
 export function PilotCard({
   pilot,
@@ -39,6 +49,7 @@ export function PilotCard({
     || (!pilot.corporationId && pilot.role === "member_uz");
   const corp = isUZ ? CORPORATIONS.urbanZone : CORPORATIONS.tabou;
   const highRank = isHighRank(pilot.role);
+  const absent = isAbsent(pilot);
 
   return (
     <motion.div
@@ -59,6 +70,7 @@ export function PilotCard({
         "bg-bg-deep border border-border-subtle",
         "border-l-2 transition-colors duration-200",
         onClick && "cursor-pointer",
+        absent && "opacity-60",
         highRank
           ? "border-l-gold hover:border-l-gold hover:border-border"
           : "border-l-border-subtle hover:border-l-gold/50 hover:border-border"
@@ -103,6 +115,15 @@ export function PilotCard({
           <div className="absolute top-2 right-2 z-10">
             <span className="bg-bg-deep/80 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-1.5 py-0.5 tracking-wider uppercase">
               {ROLE_LABELS[pilot.role]}
+            </span>
+          </div>
+        )}
+
+        {/* Badge absence */}
+        {absent && (
+          <div className="absolute top-2 left-2 z-10">
+            <span className="bg-bg-deep/80 backdrop-blur-sm border border-amber-500/40 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 tracking-wider uppercase">
+              En pause
             </span>
           </div>
         )}

@@ -17,6 +17,7 @@ import { parseSpecialties } from "@/types/roles";
 import { parseProfileExtra, ACTIVITY_LABEL, LANGUAGE_LABEL, getActivities } from "@/lib/profile-extra";
 import type { Language } from "@/lib/profile-extra";
 import type { UserRole } from "@/types/roles";
+import { StaffAbsenceEditor } from "@/components/blocks/StaffAbsenceEditor";
 
 export default async function MembreDetailPage({
   params,
@@ -42,6 +43,9 @@ export default async function MembreDetailPage({
       bio:            true,
       securityStatus: true,
       profileExtra:   true,
+      absenceStart:   true,
+      absenceEnd:     true,
+      absenceReason:  true,
       createdAt:      true,
       // Uniquement le compte EVE Online — pas les autres providers OAuth
       accounts: {
@@ -259,6 +263,25 @@ export default async function MembreDetailPage({
                   >
                     EVEWho →
                   </a>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Gestion absence */}
+            {canEdit && (
+              <Card>
+                <CardHeader>
+                  <h2 className="font-display font-semibold text-sm text-text-primary">
+                    Disponibilité
+                  </h2>
+                </CardHeader>
+                <CardBody>
+                  <StaffAbsenceEditor
+                    userId={user.id}
+                    absenceStart={user.absenceStart?.toISOString() ?? null}
+                    absenceEnd={user.absenceEnd?.toISOString() ?? null}
+                    absenceReason={user.absenceReason ?? null}
+                  />
                 </CardBody>
               </Card>
             )}

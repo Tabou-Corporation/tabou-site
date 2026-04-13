@@ -13,6 +13,7 @@ import { ROLE_LABELS } from "@/lib/constants/labels";
 import { SecurityStatusBadge } from "@/components/ui/SecurityStatusBadge";
 import { ProfileExtraEditor } from "./ProfileExtraEditor";
 import { parseProfileExtra, ACTIVITY_LABEL } from "@/lib/profile-extra";
+import { AbsenceEditor } from "@/components/blocks/AbsenceEditor";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -129,6 +130,25 @@ export default async function ProfilePage() {
                 <InfoRow
                   label="Statut"
                   value={role === "candidate" ? "En période d'essai" : "Membre actif"}
+                />
+              </CardBody>
+            </Card>
+
+            {/* Disponibilité */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display font-semibold text-base text-text-primary">
+                    Disponibilité
+                  </h3>
+                  <span className="text-text-muted text-xs">Visible dans l&apos;annuaire</span>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <AbsenceEditor
+                  absenceStart={user.absenceStart?.toISOString() ?? null}
+                  absenceEnd={user.absenceEnd?.toISOString() ?? null}
+                  absenceReason={user.absenceReason ?? null}
                 />
               </CardBody>
             </Card>

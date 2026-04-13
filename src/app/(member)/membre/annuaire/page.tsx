@@ -32,6 +32,9 @@ export default async function AnnuairePage() {
         createdAt:      true,
         profileExtra:   true,
         securityStatus: true,
+        absenceStart:   true,
+        absenceEnd:     true,
+        absenceReason:  true,
         accounts:       { where: { provider: "eveonline" }, select: { providerAccountId: true }, take: 1 },
       },
       orderBy: [{ role: "asc" }, { name: "asc" }],
@@ -75,6 +78,9 @@ export default async function AnnuairePage() {
         <PilotGrid members={members.map((m) => ({
           ...m,
           eveCharacterId: m.accounts[0]?.providerAccountId ?? null,
+          absenceStart: m.absenceStart?.toISOString() ?? null,
+          absenceEnd: m.absenceEnd?.toISOString() ?? null,
+          absenceReason: m.absenceReason ?? null,
         }))} />
       </Container>
     </div>

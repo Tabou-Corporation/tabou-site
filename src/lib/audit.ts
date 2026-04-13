@@ -9,7 +9,9 @@ export type AuditAction =
   | "corp_sync_corp_update"
   | "market_listing"
   | "market_offer"
-  | "market_transaction";
+  | "market_transaction"
+  | "absence_set"
+  | "absence_clear";
 
 interface AuditParams {
   actorId: string;
