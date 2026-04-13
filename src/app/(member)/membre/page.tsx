@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/Separator";
 import {
   MessageSquare, Shield, Calendar, Megaphone, Scroll,
   CheckCircle, Clock, XCircle, Pin,
-  HelpCircle, ArrowRight, RefreshCw, Video, Store,
+  HelpCircle, ArrowRight, RefreshCw, Video, Store, Crown, BookOpenText,
 } from "lucide-react";
 import { SITE_CONFIG } from "@/config/site";
 import { hasMinRole } from "@/types/roles";
@@ -92,7 +92,7 @@ export default async function MemberDashboardPage() {
   const in14Days = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [application, recentAnnouncements, upcomingEvents, lastAssembly, recentAnnouncementCount, pendingCount, myOpenListings, pendingOffersReceived, myPendingOffers, lastTransaction, topPilots] = await Promise.all([
+  const [application, recentAnnouncements, upcomingEvents, lastAssembly, recentAnnouncementCount, pendingCount, myOpenListings, pendingOffersReceived, myPendingOffers, lastTransaction, topPilots, topLexiqueContributors] = await Promise.all([
     // Candidature — candidats seulement
     role === "candidate"
       ? prisma.application.findFirst({
@@ -178,7 +178,32 @@ export default async function MemberDashboardPage() {
     isMember
       ? fetchTopPilotsPodium().catch(() => [])
       : Promise.resolve([]),
+
+    // Top contributeur lexique
+    isMember
+      ? prisma.glossaryTerm.groupBy({
+          by: ["authorId"],
+          _count: { id: true },
+          orderBy: { _count: { id: "desc" } },
+          take: 1,
+        })
+      : Promise.resolve([]),
   ]);
+
+  // Top contributeur lexique
+  let lexiqueChampion: { name: string; characterId: string | null; count: number } | null = null;
+  if (topLexiqueContributors.length > 0) {
+    const tc = topLexiqueContributors[0]!;
+    if (tc._count.id >= 2) {
+      const user = await prisma.user.findUnique({
+        where: { id: tc.authorId },
+        select: { name: true, eveCharacterId: true },
+      });
+      if (user) {
+        lexiqueChampion = { name: user.name ?? "Membre", characterId: user.eveCharacterId, count: tc._count.id };
+      }
+    }
+  }
 
   const hasApplication    = !!application;
   const applicationActive = application && application.status !== "REJECTED";
@@ -609,6 +634,60 @@ export default async function MemberDashboardPage() {
                     </CardBody>
                   </Card>
                 </section>
+
+                {/* Gardien du Savoir — top contributeur lexique */}
+                {lexiqueChampion && (
+                  <section>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="font-display font-semibold text-lg text-text-primary">
+                        Lexique
+                      </h2>
+                      <Link
+                        href="/membre/lexique"
+                        className="text-xs text-text-muted hover:text-gold transition-colors inline-flex items-center gap-1"
+                      >
+                        Voir tout <ArrowRight size={11} />
+                      </Link>
+                    </div>
+                    <Link href="/membre/lexique">
+                      <Card interactive className="border-gold/20">
+                        <CardBody className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="relative flex-shrink-0">
+                              {lexiqueChampion.characterId ? (
+                                <Image
+                                  src={`https://images.evetech.net/characters/${lexiqueChampion.characterId}/portrait?size=64`}
+                                  alt={lexiqueChampion.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-full border-2 border-gold/30"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-bg-elevated border-2 border-gold/30 flex items-center justify-center">
+                                  <BookOpenText size={16} className="text-gold/60" />
+                                </div>
+                              )}
+                              <div className="absolute -top-0.5 -right-0.5 bg-gold text-bg-deep rounded-full p-0.5">
+                                <Crown size={8} />
+                              </div>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-gold text-[9px] font-bold tracking-extra-wide uppercase">
+                                Gardien du Savoir
+                              </p>
+                              <p className="text-text-primary text-sm font-display font-semibold truncate">
+                                {lexiqueChampion.name}
+                              </p>
+                              <p className="text-text-muted text-[11px]">
+                                {lexiqueChampion.count} termes contribués
+                              </p>
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    </Link>
+                  </section>
+                )}
 
                 {/* Top Pilotes du mois */}
                 <section>

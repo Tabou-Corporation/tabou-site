@@ -28,10 +28,34 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "3.3",
+    title: "Assemblées Pro & Lexique Communautaire",
+    description: "Comptes rendus enrichis (mentions @membre, liens, sommaire auto, en-tête officiel), lexique communautaire collaboratif, notifications Discord repensées et mise en valeur des contributeurs.",
+    status: "current",
+    changes: [
+      { type: "feature", label: "Mentions @membre dans l'éditeur de texte — portraits EVE, autocomplétion et rendu doré" },
+      { type: "feature", label: "Liens hypertexte dans l'éditeur Tiptap (Ctrl+K)" },
+      { type: "feature", label: "Sommaire automatique des comptes rendus (H2/H3) avec navigation cliquable" },
+      { type: "feature", label: "En-tête officiel avec logo Tabou sur les comptes rendus d'assemblée" },
+      { type: "feature", label: "Lexique communautaire — les membres proposent des termes, le staff modère" },
+      { type: "feature", label: "Champ « Signification » dans le lexique (ex. FC → Fleet Commander)" },
+      { type: "feature", label: "Gardien du Savoir — portrait et titre pour le top contributeur du lexique (page lexique + dashboard)" },
+      { type: "feature", label: "Résumé Discord rédigé manuellement pour les assemblées (remplace l'extraction auto)" },
+      { type: "feature", label: "Bouton « Republier sur Discord » sur la page d'édition des assemblées" },
+      { type: "improvement", label: "Titre cliquable sur les notifications Discord d'assemblée (lien vers le CR)" },
+      { type: "improvement", label: "Notifications Discord marché enrichies — couleurs par type, détails pro, comparaison prix" },
+      { type: "improvement", label: "Aperçu contenu + badge « Nouveau » sur les cartes d'assemblées" },
+      { type: "improvement", label: "Catégories lexique sans approbation requise — modération a posteriori par le staff" },
+      { type: "fix", label: "Republication Discord fiable — webhook awaitable avec feedback d'erreur" },
+      { type: "fix", label: "Top pilotes du mois — agrégation killmails bruts au lieu de /stats/ zKill" },
+      { type: "fix", label: "Lien cliquable sur le titre des notifications Discord marché" },
+    ],
+  },
+  {
     version: "3.2",
     title: "Clarté & Corrections",
     description: "Meilleure lisibilité des horaires (heure française en priorité), comptage des membres corrigé et fiabilité de la synchronisation ESI.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "improvement", label: "Horaires en heure française en premier, UTC entre parenthèses — dashboard, calendrier et notifications Discord" },
       { type: "fix", label: "Saisie calendrier en heure FR, conversion UTC automatique à l'enregistrement" },
