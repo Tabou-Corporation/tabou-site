@@ -271,19 +271,19 @@ model GlossaryTerm {
   id         String   @id @default(cuid())
   /// Le mot ou abréviation (ex: "FC", "SRP", "Broadcast")
   term       String   @db.VarChar(50)
+  /// Description littérale — ce que l'abréviation signifie (ex: "Fleet Commander")
+  literal    String?  @db.VarChar(100)
   /// Définition courte (max 300 caractères)
   definition String   @db.VarChar(300)
-  /// Catégorie : general | pvp | pve | industry | exploration | diplomacy
+  /// Catégorie : general | pvp | pve | industry | exploration
   category   String   @default("general")
-  /// Approuvé par un officier — seuls les termes approuvés sont visibles
-  approved   Boolean  @default(false)
   authorId   String
   createdAt  DateTime @default(now())
 
   author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@unique([term, category])
-  @@index([approved, category])
+  @@index([category])
   @@map("glossary_terms")
 }
 

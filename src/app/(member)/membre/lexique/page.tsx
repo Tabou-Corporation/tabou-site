@@ -15,19 +15,14 @@ export default async function LexiquePage() {
   if (!hasMinRole(role, "member_uz")) redirect("/membre");
 
   const terms = await prisma.glossaryTerm.findMany({
-    where: { approved: true },
     include: { author: { select: { name: true } } },
     orderBy: [{ category: "asc" }, { term: "asc" }],
-  });
-
-  // Count pending proposals by this user
-  const pendingCount = await prisma.glossaryTerm.count({
-    where: { authorId: session.user.id, approved: false },
   });
 
   const serialized = terms.map((t) => ({
     id: t.id,
     term: t.term,
+    literal: t.literal,
     definition: t.definition,
     category: t.category,
     authorName: t.author.name ?? "Membre",
@@ -51,7 +46,7 @@ export default async function LexiquePage() {
 
         <Separator gold className="my-6" />
 
-        <LexiqueClient terms={serialized} pendingCount={pendingCount} />
+        <LexiqueClient terms={serialized} />
       </Container>
     </div>
   );

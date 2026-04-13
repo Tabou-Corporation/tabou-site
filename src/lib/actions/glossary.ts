@@ -15,11 +15,12 @@ interface ActionResult {
 }
 
 const VALID_CATEGORIES = [
-  "general", "pvp", "pve", "industry", "exploration", "diplomacy",
+  "general", "pvp", "pve", "industry", "exploration",
 ];
 
 const LIMITS = {
   term: 50,
+  literal: 100,
   definition: 300,
 } as const;
 
@@ -41,7 +42,7 @@ async function requireOfficer() {
   return session.user;
 }
 
-// ── Proposer un terme (membre) ───────────────────────────────────────────────
+// ── Proposer un terme (membre) — visible immédiatement ──────────────────────
 
 export async function proposeTerm(
   _prev: ActionResult,
@@ -50,11 +51,13 @@ export async function proposeTerm(
   const user = await requireMember();
 
   const term = (formData.get("term") as string | null)?.trim() ?? "";
+  const literal = (formData.get("literal") as string | null)?.trim() || null;
   const definition = (formData.get("definition") as string | null)?.trim() ?? "";
   const category = (formData.get("category") as string | null) ?? "general";
 
   if (!term) return { error: "Le terme est requis." };
   if (term.length > LIMITS.term) return { error: `Le terme ne peut pas dépasser ${LIMITS.term} caractères.` };
+  if (literal && literal.length > LIMITS.literal) return { error: `La description littérale ne peut pas dépasser ${LIMITS.literal} caractères.` };
   if (!definition) return { error: "La définition est requise." };
   if (definition.length > LIMITS.definition) return { error: `La définition ne peut pas dépasser ${LIMITS.definition} caractères.` };
   if (!VALID_CATEGORIES.includes(category)) return { error: "Catégorie invalide." };
@@ -68,33 +71,16 @@ export async function proposeTerm(
   await prisma.glossaryTerm.create({
     data: {
       term: term.toUpperCase(),
+      literal,
       definition,
       category,
       authorId: user.id!,
-      approved: false,
     },
   });
 
   revalidatePath("/membre/lexique");
   revalidatePath("/staff/lexique");
   return { success: true };
-}
-
-// ── Approuver un terme (officier) ────────────────────────────────────────────
-
-export async function approveTerm(id: string): Promise<ActionResult> {
-  await requireOfficer();
-  try {
-    await prisma.glossaryTerm.update({
-      where: { id },
-      data: { approved: true },
-    });
-    revalidatePath("/membre/lexique");
-    revalidatePath("/staff/lexique");
-    return { success: true };
-  } catch {
-    return { error: "Terme introuvable." };
-  }
 }
 
 // ── Modifier un terme (officier) ─────────────────────────────────────────────
@@ -107,12 +93,14 @@ export async function updateTerm(
 
   const id = formData.get("id") as string | null;
   const term = (formData.get("term") as string | null)?.trim() ?? "";
+  const literal = (formData.get("literal") as string | null)?.trim() || null;
   const definition = (formData.get("definition") as string | null)?.trim() ?? "";
   const category = (formData.get("category") as string | null) ?? "general";
 
   if (!id) return { error: "Terme introuvable." };
   if (!term) return { error: "Le terme est requis." };
   if (term.length > LIMITS.term) return { error: `Max ${LIMITS.term} caractères.` };
+  if (literal && literal.length > LIMITS.literal) return { error: `Max ${LIMITS.literal} caractères.` };
   if (!definition) return { error: "La définition est requise." };
   if (definition.length > LIMITS.definition) return { error: `Max ${LIMITS.definition} caractères.` };
   if (!VALID_CATEGORIES.includes(category)) return { error: "Catégorie invalide." };
@@ -120,7 +108,7 @@ export async function updateTerm(
   try {
     await prisma.glossaryTerm.update({
       where: { id },
-      data: { term: term.toUpperCase(), definition, category },
+      data: { term: term.toUpperCase(), literal, definition, category },
     });
     revalidatePath("/membre/lexique");
     revalidatePath("/staff/lexique");

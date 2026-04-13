@@ -15,20 +15,18 @@ export default async function StaffLexiquePage() {
 
   const terms = await prisma.glossaryTerm.findMany({
     include: { author: { select: { name: true } } },
-    orderBy: [{ approved: "asc" }, { createdAt: "desc" }],
+    orderBy: [{ category: "asc" }, { term: "asc" }],
   });
 
   const serialized = terms.map((t) => ({
     id: t.id,
     term: t.term,
+    literal: t.literal,
     definition: t.definition,
     category: t.category,
-    approved: t.approved,
     authorName: t.author.name ?? "Membre",
     createdAt: t.createdAt.toISOString(),
   }));
-
-  const pendingCount = terms.filter((t) => !t.approved).length;
 
   return (
     <div className="py-10 sm:py-14">
@@ -41,9 +39,7 @@ export default async function StaffLexiquePage() {
             Lexique — Modération
           </h1>
           <p className="text-text-muted text-sm mt-1.5">
-            {pendingCount > 0
-              ? `${pendingCount} terme${pendingCount > 1 ? "s" : ""} en attente de validation`
-              : "Tous les termes sont validés"}
+            {terms.length} terme{terms.length > 1 ? "s" : ""} dans le lexique
           </p>
         </div>
 

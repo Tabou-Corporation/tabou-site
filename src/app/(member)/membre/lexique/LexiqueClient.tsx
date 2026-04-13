@@ -14,14 +14,14 @@ const GLOSSARY_CATEGORIES: Record<string, string> = {
   pve: "PVE",
   industry: "Industrie",
   exploration: "Exploration",
-  diplomacy: "Diplomatie",
 };
 
-const CATEGORY_ORDER = ["general", "pvp", "pve", "industry", "exploration", "diplomacy"];
+const CATEGORY_ORDER = ["general", "pvp", "pve", "industry", "exploration"];
 
 interface Term {
   id: string;
   term: string;
+  literal: string | null;
   definition: string;
   category: string;
   authorName: string;
@@ -30,16 +30,14 @@ interface Term {
 
 interface Props {
   terms: Term[];
-  pendingCount: number;
 }
 
-export function LexiqueClient({ terms, pendingCount }: Props) {
+export function LexiqueClient({ terms }: Props) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formState, formAction, pending] = useActionState(proposeTerm, {});
 
-  // Close form on success
   const wasSuccess = formState.success;
 
   const filtered = useMemo(() => {
@@ -54,6 +52,7 @@ export function LexiqueClient({ terms, pendingCount }: Props) {
       result = result.filter(
         (t) =>
           t.term.toLowerCase().includes(q) ||
+          (t.literal?.toLowerCase().includes(q) ?? false) ||
           t.definition.toLowerCase().includes(q)
       );
     }
@@ -68,12 +67,10 @@ export function LexiqueClient({ terms, pendingCount }: Props) {
       if (!map.has(t.category)) map.set(t.category, []);
       map.get(t.category)!.push(t);
     }
-    // Sort categories by CATEGORY_ORDER
     const sorted = new Map<string, Term[]>();
     for (const cat of CATEGORY_ORDER) {
       if (map.has(cat)) sorted.set(cat, map.get(cat)!);
     }
-    // Add any remaining
     for (const [cat, items] of map) {
       if (!sorted.has(cat)) sorted.set(cat, items);
     }
@@ -100,7 +97,7 @@ export function LexiqueClient({ terms, pendingCount }: Props) {
           />
           <input
             type="text"
-            placeholder="Rechercher un terme ou une définition…"
+            placeholder="Rechercher un terme, une abréviation ou une définition…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-bg-elevated border border-border rounded pl-9 pr-3 py-2.5 text-text-primary text-sm placeholder:text-text-muted focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40 transition-colors"
@@ -121,7 +118,7 @@ export function LexiqueClient({ terms, pendingCount }: Props) {
             {wasSuccess ? (
               <div className="text-center py-2">
                 <p className="text-green-400 text-sm font-medium">
-                  Terme proposé avec succès ! Il sera visible après validation par un officier.
+                  Terme ajouté au lexique !
                 </p>
                 <button
                   type="button"
@@ -136,7 +133,7 @@ export function LexiqueClient({ terms, pendingCount }: Props) {
                 <p className="text-text-secondary text-sm font-medium">
                   Proposer un nouveau terme
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-text-muted text-xs">
                       Terme / Abréviation <span className="text-red-400">*</span>
@@ -150,19 +147,31 @@ export function LexiqueClient({ terms, pendingCount }: Props) {
                       className="w-full bg-bg-deep border border-border rounded px-3 py-2 text-text-primary text-sm placeholder:text-text-muted focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40 transition-colors"
                     />
                   </div>
-                  <div className="sm:col-span-2 space-y-1">
+                  <div className="space-y-1">
                     <label className="text-text-muted text-xs">
-                      Définition courte <span className="text-red-400">*</span>
+                      Signification <span className="text-text-muted/60">(optionnel)</span>
                     </label>
                     <input
-                      name="definition"
+                      name="literal"
                       type="text"
-                      required
-                      maxLength={300}
-                      placeholder="Le joueur qui dirige la flotte et donne les ordres…"
+                      maxLength={100}
+                      placeholder='Fleet Commander, Ship Replacement Program…'
                       className="w-full bg-bg-deep border border-border rounded px-3 py-2 text-text-primary text-sm placeholder:text-text-muted focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40 transition-colors"
                     />
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-text-muted text-xs">
+                    Définition courte <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    name="definition"
+                    type="text"
+                    required
+                    maxLength={300}
+                    placeholder="Le joueur qui dirige la flotte et donne les ordres tactiques…"
+                    className="w-full bg-bg-deep border border-border rounded px-3 py-2 text-text-primary text-sm placeholder:text-text-muted focus:border-gold/60 focus:outline-none focus:ring-1 focus:ring-gold/40 transition-colors"
+                  />
                 </div>
                 <div className="flex items-end gap-3">
                   <div className="space-y-1">
@@ -180,17 +189,12 @@ export function LexiqueClient({ terms, pendingCount }: Props) {
                     </select>
                   </div>
                   <Button type="submit" size="sm" disabled={pending}>
-                    {pending ? <><Spinner /> Envoi…</> : "Soumettre"}
+                    {pending ? <><Spinner /> Envoi…</> : "Ajouter au lexique"}
                   </Button>
                 </div>
                 {formState.error && (
                   <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded px-3 py-1.5">
                     {formState.error}
-                  </p>
-                )}
-                {pendingCount > 0 && (
-                  <p className="text-text-muted text-xs">
-                    Vous avez {pendingCount} terme{pendingCount > 1 ? "s" : ""} en attente de validation.
                   </p>
                 )}
               </form>
@@ -243,30 +247,37 @@ export function LexiqueClient({ terms, pendingCount }: Props) {
           </CardBody>
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {[...grouped.entries()].map(([category, items]) => (
             <div key={category}>
-              <p className="text-text-muted text-xs font-semibold uppercase tracking-extra-wide mb-2">
-                {GLOSSARY_CATEGORIES[category] ?? category}
-                <span className="text-text-muted/50 ml-1.5">({items.length})</span>
-              </p>
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="gold" className="text-2xs">
+                  {GLOSSARY_CATEGORIES[category] ?? category}
+                </Badge>
+                <span className="text-text-muted/40 text-xs">
+                  {items.length} terme{items.length > 1 ? "s" : ""}
+                </span>
+                <div className="flex-1 border-t border-border/50" />
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {items.map((t) => (
                   <Card key={t.id}>
                     <CardBody className="py-3 px-4">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <p className="text-gold font-semibold text-sm font-mono tracking-wide">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-gold font-semibold text-sm font-mono tracking-wide">
                           {t.term}
-                        </p>
-                        <Badge variant="muted" className="text-2xs flex-shrink-0">
-                          {GLOSSARY_CATEGORIES[t.category] ?? t.category}
-                        </Badge>
+                        </span>
+                        {t.literal && (
+                          <span className="text-text-muted text-xs italic truncate">
+                            {t.literal}
+                          </span>
+                        )}
                       </div>
                       <p className="text-text-secondary text-xs leading-relaxed">
                         {t.definition}
                       </p>
                       <p className="text-text-muted text-2xs mt-2">
-                        proposé par {t.authorName}
+                        par {t.authorName}
                       </p>
                     </CardBody>
                   </Card>
