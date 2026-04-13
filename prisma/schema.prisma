@@ -107,6 +107,7 @@ model User {
   notifications        Notification[]
   transactionsAsSeller MarketTransaction[] @relation("TransactionSeller")
   transactionsAsBuyer  MarketTransaction[] @relation("TransactionBuyer")
+  glossaryTerms        GlossaryTerm[]
 
   @@index([role])
   @@map("users")
@@ -262,6 +263,28 @@ model Assembly {
 
   @@index([heldAt])
   @@map("assemblies")
+}
+
+// ─── Lexique communautaire ────────────────────────────────────────────────
+
+model GlossaryTerm {
+  id         String   @id @default(cuid())
+  /// Le mot ou abréviation (ex: "FC", "SRP", "Broadcast")
+  term       String   @db.VarChar(50)
+  /// Définition courte (max 300 caractères)
+  definition String   @db.VarChar(300)
+  /// Catégorie : general | pvp | pve | industry | exploration | diplomacy
+  category   String   @default("general")
+  /// Approuvé par un officier — seuls les termes approuvés sont visibles
+  approved   Boolean  @default(false)
+  authorId   String
+  createdAt  DateTime @default(now())
+
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([term, category])
+  @@index([approved, category])
+  @@map("glossary_terms")
 }
 
 // ─── V9 : Marché entre membres ────────────────────────────────────────────

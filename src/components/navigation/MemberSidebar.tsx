@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Megaphone, Calendar, BookOpen, Users,
+  LayoutDashboard, Megaphone, Calendar, BookOpen, BookOpenText, Users,
   User, FileText, MessageSquare, ExternalLink, Scroll,
   ClipboardList, Megaphone as MegaphoneIcon, BookPlus, CalendarPlus,
   UsersRound, LayoutGrid, PanelLeft, Shield, History, Store, Bell,
@@ -147,6 +147,7 @@ export function MemberSidebar({ pendingCount = 0, unreadMarketCount = 0, discord
             <NavItem href="/membre/annonces"   icon={Megaphone}   label="Annonces" />
             <NavItem href="/membre/calendrier" icon={Calendar}    label="Calendrier" />
             <NavItem href="/membre/guides"      icon={BookOpen}    label="Guides" />
+            <NavItem href="/membre/lexique"    icon={BookOpenText} label="Lexique" />
             <NavItem href="/membre/assemblees" icon={Scroll}      label="Assemblées" />
             <NavItem href="/membre/annuaire"   icon={Users}       label="Annuaire" />
             <NavItem href="/membre/marche"     icon={Store}       label="Marche" badge={unreadMarketCount} />
@@ -181,6 +182,7 @@ export function MemberSidebar({ pendingCount = 0, unreadMarketCount = 0, discord
             {/* Gestion de contenu */}
             <NavItem href="/staff/annonces"    icon={MegaphoneIcon} label="Annonces"     />
             <NavItem href="/staff/guides"      icon={BookPlus}      label="Guides"       />
+            <NavItem href="/staff/lexique"     icon={BookOpenText}  label="Lexique"      />
             <NavItem href="/staff/calendrier"  icon={CalendarPlus}  label="Événements"   />
             <NavItem href="/staff/assemblees"  icon={Scroll}        label="Assemblées"   />
           </div>
@@ -283,8 +285,9 @@ export function MemberMobileNav({ pendingCount = 0, unreadMarketCount = 0 }: Sid
           <>
             <MobileNavItem href="/membre/annonces"   icon={Megaphone} label="Annonces" />
             <MobileNavItem href="/membre/calendrier" icon={Calendar}  label="Calendrier" />
-            <MobileNavItem href="/membre/guides"      icon={BookOpen}  label="Guides" />
-            <MobileNavItem href="/membre/assemblees" icon={Scroll}    label="Assemblées" />
+            <MobileNavItem href="/membre/guides"      icon={BookOpen}     label="Guides" />
+            <MobileNavItem href="/membre/lexique"    icon={BookOpenText} label="Lexique" />
+            <MobileNavItem href="/membre/assemblees" icon={Scroll}       label="Assemblées" />
             <MobileNavItem href="/membre/annuaire"   icon={Users}     label="Annuaire" />
             <MobileNavItem href="/membre/marche"     icon={Store}     label="Marche" badge={unreadMarketCount} />
           </>
@@ -309,6 +312,7 @@ export function MemberMobileNav({ pendingCount = 0, unreadMarketCount = 0 }: Sid
             )}
             <MobileNavItem href="/staff/annonces"   icon={MegaphoneIcon} label="Annonces" />
             <MobileNavItem href="/staff/guides"      icon={BookPlus}      label="Guides" />
+            <MobileNavItem href="/staff/lexique"     icon={BookOpenText}  label="Lexique" />
             <MobileNavItem href="/staff/calendrier"  icon={CalendarPlus}  label="Événements" />
             <MobileNavItem href="/staff/assemblees"  icon={Scroll}        label="Assemblées" />
           </>
