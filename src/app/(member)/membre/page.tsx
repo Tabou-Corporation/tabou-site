@@ -194,7 +194,7 @@ export default async function MemberDashboardPage() {
   let lexiqueChampion: { name: string; characterId: string | null; count: number } | null = null;
   if (topLexiqueContributors.length > 0) {
     const tc = topLexiqueContributors[0]!;
-    if (tc._count.id >= 2) {
+    if (tc._count.id >= 1) {
       const user = await prisma.user.findUnique({
         where: { id: tc.authorId },
         select: { name: true, eveCharacterId: true },

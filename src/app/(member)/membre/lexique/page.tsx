@@ -75,7 +75,7 @@ export default async function LexiquePage() {
         <Separator gold className="my-6" />
 
         {/* Top contributeur — Gardien du Savoir */}
-        {topContributor && topContributor.count >= 2 && (
+        {topContributor && (
           <div className="mb-6">
             <Card className="border-gold/20 overflow-hidden">
               <CardBody className="py-4 px-5">
