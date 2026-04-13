@@ -468,7 +468,10 @@ export async function republishAssemblyToDiscord(id: string): Promise<ActionResu
   const assembly = await prisma.assembly.findUnique({ where: { id } });
   if (!assembly) return { success: false, error: "Assemblée introuvable." };
 
-  notifyNewAssembly({
+  // Import send + webhook directly to await the result (notifyNewAssembly is fire-and-forget)
+  const { sendAssemblyWebhook } = await import("@/lib/discord-notify");
+
+  const sent = await sendAssemblyWebhook({
     assemblyId: assembly.id,
     title: assembly.title,
     type: assembly.type,
@@ -478,5 +481,6 @@ export async function republishAssemblyToDiscord(id: string): Promise<ActionResu
     authorName: user.name ?? null,
   });
 
+  if (!sent) return { success: false, error: "Webhook Discord non configuré ou inaccessible." };
   return { success: true };
 }

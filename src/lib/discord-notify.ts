@@ -187,7 +187,7 @@ export function notifyNewGuide(params: {
 
 // ── Assemblées ───────────────────────────────────────────────────────────────
 
-export function notifyNewAssembly(params: {
+interface AssemblyNotifParams {
   assemblyId: string;
   title: string;
   type: string;
@@ -195,49 +195,71 @@ export function notifyNewAssembly(params: {
   hasVideo: boolean;
   discordSummary?: string | null;
   authorName?: string | null;
-}): void {
+}
+
+function buildAssemblyPayload(params: AssemblyNotifParams) {
   const typeLabel = params.type === "extraordinary" ? "Extraordinaire" : "Mensuelle";
   const dateStr = params.heldAt.toLocaleDateString("fr-FR", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 
+  const fields = [
+    { name: "📋 Type", value: typeLabel, inline: true },
+    { name: "📅 Date", value: dateStr, inline: true },
+    ...(params.authorName ? [{ name: "✍️ Rédigé par", value: params.authorName, inline: true }] : []),
+    ...(params.hasVideo ? [{ name: "🎬 Vidéo", value: "✅ Disponible", inline: true }] : []),
+  ];
+
+  return {
+    embeds: [{
+      title: `🏛️ ${params.title}`,
+      url: `${SITE_URL}/membre/assemblees/${params.assemblyId}`,
+      description: params.discordSummary || undefined,
+      color: 0x8B5CF6,
+      thumbnail: {
+        url: "https://images.evetech.net/corporations/98809880/logo?size=128",
+      },
+      fields,
+      footer: {
+        text: "Tabou Corporation — Assemblées",
+        icon_url: "https://images.evetech.net/corporations/98809880/logo?size=32",
+      },
+      timestamp: new Date().toISOString(),
+    }],
+    components: [{
+      type: 1,
+      components: [{
+        type: 2, style: 5,
+        label: "📖 Lire le compte-rendu complet",
+        url: `${SITE_URL}/membre/assemblees/${params.assemblyId}`,
+      }],
+    }],
+  };
+}
+
+/** Fire-and-forget — pour la création d'assemblée */
+export function notifyNewAssembly(params: AssemblyNotifParams): void {
   const run = async () => {
     const url = await getWebhookUrl("assembliesWebhookUrl");
-
-    const fields = [
-      { name: "📋 Type", value: typeLabel, inline: true },
-      { name: "📅 Date", value: dateStr, inline: true },
-      ...(params.authorName ? [{ name: "✍️ Rédigé par", value: params.authorName, inline: true }] : []),
-      ...(params.hasVideo ? [{ name: "🎬 Vidéo", value: "✅ Disponible", inline: true }] : []),
-    ];
-
-    await send(url, {
-      embeds: [{
-        title: `🏛️ ${params.title}`,
-        url: `${SITE_URL}/membre/assemblees/${params.assemblyId}`,
-        description: params.discordSummary || undefined,
-        color: 0x8B5CF6,
-        thumbnail: {
-          url: "https://images.evetech.net/corporations/98809880/logo?size=128",
-        },
-        fields,
-        footer: {
-          text: "Tabou Corporation — Assemblées",
-          icon_url: "https://images.evetech.net/corporations/98809880/logo?size=32",
-        },
-        timestamp: new Date().toISOString(),
-      }],
-      components: [{
-        type: 1,
-        components: [{
-          type: 2, style: 5,
-          label: "📖 Lire le compte-rendu complet",
-          url: `${SITE_URL}/membre/assemblees/${params.assemblyId}`,
-        }],
-      }],
-    });
+    await send(url, buildAssemblyPayload(params));
   };
   void run();
+}
+
+/** Awaitable — pour le republish, retourne true si envoyé */
+export async function sendAssemblyWebhook(params: AssemblyNotifParams): Promise<boolean> {
+  const url = await getWebhookUrl("assembliesWebhookUrl");
+  if (!url) return false;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildAssemblyPayload(params)),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 // ── Événements calendrier (auto à la création) ──────────────────────────────
