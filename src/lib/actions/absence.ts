@@ -13,9 +13,9 @@ import type { UserRole } from "@/types/roles";
 
 const absenceSchema = z.object({
   start: z.coerce.date(),
-  end: z.coerce.date(),
+  end: z.coerce.date().nullable(),
   reason: z.string().max(120).optional(),
-}).refine((d) => d.end > d.start, {
+}).refine((d) => !d.end || d.end > d.start, {
   message: "La date de fin doit être après la date de début.",
 });
 
@@ -24,6 +24,15 @@ const absenceSchema = z.object({
 export interface AbsenceState {
   error?: string;
   success?: boolean;
+}
+
+// ── Parse end — vide ou "indefinite" → null ──────────────────────────────
+
+function parseEnd(formData: FormData): Date | null {
+  const raw = (formData.get("end") as string | null)?.trim();
+  if (!raw || raw === "indefinite") return null;
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 // ── Déclarer / modifier son absence ───────────────────────────────────────
@@ -37,7 +46,7 @@ export async function setAbsence(
 
   const result = absenceSchema.safeParse({
     start: formData.get("start"),
-    end: formData.get("end"),
+    end: parseEnd(formData),
     reason: (formData.get("reason") as string | null)?.trim() || undefined,
   });
 
@@ -94,7 +103,7 @@ export async function setAbsenceForMember(
 
   const result = absenceSchema.safeParse({
     start: formData.get("start"),
-    end: formData.get("end"),
+    end: parseEnd(formData),
     reason: (formData.get("reason") as string | null)?.trim() || undefined,
   });
 
@@ -118,7 +127,7 @@ export async function setAbsenceForMember(
     meta: {
       targetUserId,
       start: result.data.start.toISOString(),
-      end: result.data.end.toISOString(),
+      end: result.data.end?.toISOString() ?? "indefinite",
       reason: result.data.reason,
     },
   });

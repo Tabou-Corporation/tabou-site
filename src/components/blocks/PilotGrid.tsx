@@ -16,9 +16,11 @@ const ROLE_ORDER: Record<string, number> = {
 };
 
 function isMemberAbsent(m: PilotData): boolean {
-  if (!m.absenceStart || !m.absenceEnd) return false;
+  if (!m.absenceStart) return false;
   const now = Date.now();
-  return new Date(m.absenceStart).getTime() <= now && now <= new Date(m.absenceEnd).getTime();
+  const start = new Date(m.absenceStart).getTime();
+  if (!m.absenceEnd) return start <= now; // indéterminé
+  return start <= now && now <= new Date(m.absenceEnd).getTime();
 }
 
 interface PilotGridProps {

@@ -31,9 +31,11 @@ const isHighRank = (role: string) =>
   ["officer", "director", "ceo", "admin"].includes(role);
 
 function isAbsent(pilot: PilotData): boolean {
-  if (!pilot.absenceStart || !pilot.absenceEnd) return false;
+  if (!pilot.absenceStart) return false;
   const now = Date.now();
-  return new Date(pilot.absenceStart).getTime() <= now && now <= new Date(pilot.absenceEnd).getTime();
+  const start = new Date(pilot.absenceStart).getTime();
+  if (!pilot.absenceEnd) return start <= now; // indéterminé
+  return start <= now && now <= new Date(pilot.absenceEnd).getTime();
 }
 
 export function PilotCard({
