@@ -28,10 +28,23 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "3.4",
+    title: "Absences & Disponibilités",
+    description: "Les membres peuvent déclarer leur indisponibilité directement depuis leur profil — durée fixe, présets 1/2/3 mois ou durée indéterminée. L'annuaire regroupe les membres en pause dans un onglet dédié.",
+    status: "current",
+    changes: [
+      { type: "feature", label: "Déclaration d'absence depuis le profil membre — durée 1 mois, 2 mois, 3 mois, dates précises ou indéterminée" },
+      { type: "feature", label: "Motif optionnel pour l'absence (vacances, déménagement, pause gaming…)" },
+      { type: "feature", label: "Onglet « En pause » dans l'annuaire — regroupe les membres absents avec badge et portrait désaturé" },
+      { type: "feature", label: "Les directeurs peuvent gérer l'absence de n'importe quel membre depuis la fiche staff" },
+      { type: "improvement", label: "Absence indéterminée : pas de date de retour — le membre revient quand il veut" },
+    ],
+  },
+  {
     version: "3.3",
     title: "Assemblées Pro & Lexique Communautaire",
     description: "Comptes rendus enrichis (mentions @membre, liens, sommaire auto, en-tête officiel), lexique communautaire collaboratif, notifications Discord repensées et mise en valeur des contributeurs.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "feature", label: "Mentions @membre dans l'éditeur de texte — portraits EVE, autocomplétion et rendu doré" },
       { type: "feature", label: "Liens hypertexte dans l'éditeur Tiptap (Ctrl+K)" },
