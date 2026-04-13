@@ -243,6 +243,7 @@ export function notifyNewAssembly(params: {
     await send(url, {
       embeds: [{
         title: `🏛️ ${params.title}`,
+        url: `${SITE_URL}/membre/assemblees/${params.assemblyId}`,
         description: summaryText,
         color: 0x8B5CF6,
         thumbnail: {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useEffect } from "react";
-import { updateAssembly } from "@/lib/actions/content";
+import { updateAssembly, republishAssemblyToDiscord } from "@/lib/actions/content";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Separator } from "@/components/ui/Separator";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 import { useParams } from "next/navigation";
 
 const inputClass = [
@@ -38,6 +38,8 @@ export default function EditAssemblyPage() {
   const [state, action, pending] = useActionState(updateAssembly, {});
   const [assembly, setAssembly] = useState<AssemblyData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [republishing, setRepublishing] = useState(false);
+  const [republished, setRepublished] = useState(false);
 
   useEffect(() => {
     fetch(`/api/assemblies/${id}`)
@@ -169,9 +171,29 @@ export default function EditAssemblyPage() {
                 </p>
               )}
 
-              <Button type="submit" disabled={pending}>
-                {pending ? <><Spinner />Enregistrement…</> : "Enregistrer les modifications"}
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button type="submit" disabled={pending}>
+                  {pending ? <><Spinner />Enregistrement…</> : "Enregistrer les modifications"}
+                </Button>
+                <button
+                  type="button"
+                  disabled={republishing}
+                  onClick={async () => {
+                    setRepublishing(true);
+                    setRepublished(false);
+                    const result = await republishAssemblyToDiscord(id);
+                    setRepublishing(false);
+                    if (result.success) setRepublished(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-[#5865F2]/40 text-[#5865F2] hover:bg-[#5865F2]/10 transition-colors disabled:opacity-50"
+                >
+                  {republishing ? <Spinner /> : <Send size={13} />}
+                  Republier sur Discord
+                </button>
+                {republished && (
+                  <span className="text-green-400 text-xs">Envoyé !</span>
+                )}
+              </div>
             </form>
           </CardBody>
         </Card>

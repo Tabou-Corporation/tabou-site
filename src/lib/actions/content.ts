@@ -457,3 +457,22 @@ export async function deleteAssembly(id: string): Promise<ActionResult> {
     return { success: false, error: "Erreur lors de la suppression de l'assemblée." };
   }
 }
+
+export async function republishAssemblyToDiscord(id: string): Promise<ActionResult> {
+  const user = await requireOfficer();
+
+  const assembly = await prisma.assembly.findUnique({ where: { id } });
+  if (!assembly) return { success: false, error: "Assemblée introuvable." };
+
+  notifyNewAssembly({
+    assemblyId: assembly.id,
+    title: assembly.title,
+    type: assembly.type,
+    heldAt: assembly.heldAt,
+    hasVideo: !!assembly.videoUrl,
+    content: assembly.content,
+    authorName: user.name ?? null,
+  });
+
+  return { success: true };
+}
