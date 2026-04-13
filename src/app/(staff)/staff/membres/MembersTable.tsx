@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Search, ArrowUpDown, ChevronUp, ChevronDown, AlertTriangle } from "lucide-react";
+import { Search, ArrowUpDown, ChevronUp, ChevronDown, AlertTriangle, Pause } from "lucide-react";
 import { AvatarDisplay } from "@/components/ui/AvatarDisplay";
 import { Badge } from "@/components/ui/Badge";
 import { ROLE_LABELS, ROLE_BADGE, ROLE_ORDER } from "@/lib/constants/labels";
@@ -15,6 +15,8 @@ interface SerializedUser {
   role: string;
   createdAt: string; // ISO string
   corporationId: number | null;
+  absenceStart: string | null;
+  absenceEnd: string | null;
 }
 
 const CORP_IDS = [98809880, 98215397]; // Tabou + Urban Zone
@@ -26,6 +28,20 @@ function getSuspendReason(u: SerializedUser): string | null {
     return "Hors corporation";
   }
   return "Suspendu manuellement";
+}
+
+function isOnPause(u: SerializedUser): boolean {
+  if (!u.absenceStart) return false;
+  const now = Date.now();
+  const start = new Date(u.absenceStart).getTime();
+  if (!u.absenceEnd) return start <= now;
+  return start <= now && now <= new Date(u.absenceEnd).getTime();
+}
+
+function pauseLabel(u: SerializedUser): string {
+  if (!u.absenceEnd) return "En pause — durée indéterminée";
+  const end = new Date(u.absenceEnd).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  return `En pause jusqu'au ${end}`;
 }
 
 /** Membre actif dont le corporationId ne correspond pas à Tabou/UZ */
@@ -150,10 +166,12 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
             ) : (
               filtered.map((u) => {
                 const desync = isEsiDesync(u);
+                const paused = isOnPause(u);
                 return (
                 <tr key={u.id} className={cn(
                   "border-b border-border/30 last:border-b-0 group",
-                  desync && "bg-red-950/20"
+                  desync && "bg-red-950/20",
+                  paused && !desync && "bg-amber-950/10"
                 )}>
                   <td className="px-4 py-2.5">
                     <Link href={`/staff/membres/${u.id}`} className="block">
@@ -167,6 +185,12 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                     >
                       <span className="inline-flex items-center gap-1.5 text-text-primary font-display font-semibold text-sm">
                         {u.name ?? "Pilote inconnu"}
+                        {paused && (
+                          <span title={pauseLabel(u)} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold">
+                            <Pause size={8} />
+                            pause
+                          </span>
+                        )}
                         {desync && (
                           <AlertTriangle size={12} className="text-red-400 shrink-0" aria-label="ESI désynchronisé" />
                         )}
@@ -175,6 +199,9 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                         <Badge variant={u.role === "suspended" ? "red" : (ROLE_BADGE[u.role] ?? "muted")} className="text-2xs">
                           {ROLE_LABELS[u.role] ?? u.role}
                         </Badge>
+                        {paused && (
+                          <span className="text-amber-400/70 text-2xs ml-1">{pauseLabel(u)}</span>
+                        )}
                         {getSuspendReason(u) && (
                           <span className="text-red-400/70 text-2xs ml-1">{getSuspendReason(u)}</span>
                         )}
@@ -186,15 +213,20 @@ export function MembersTable({ users }: { users: SerializedUser[] }) {
                   </td>
                   <td className="px-4 py-2.5 hidden sm:table-cell">
                     <Link href={`/staff/membres/${u.id}`} className="block">
-                      <Badge variant={u.role === "suspended" ? "red" : (ROLE_BADGE[u.role] ?? "muted")}>
-                        {ROLE_LABELS[u.role] ?? u.role}
-                      </Badge>
-                      {getSuspendReason(u) && (
-                        <span className="text-red-400/70 text-xs ml-2">{getSuspendReason(u)}</span>
-                      )}
-                      {desync && (
-                        <span className="text-red-400/70 text-xs ml-2">ESI désynchronisé</span>
-                      )}
+                      <span className="inline-flex items-center flex-wrap gap-1.5">
+                        <Badge variant={u.role === "suspended" ? "red" : (ROLE_BADGE[u.role] ?? "muted")}>
+                          {ROLE_LABELS[u.role] ?? u.role}
+                        </Badge>
+                        {paused && (
+                          <span className="text-amber-400/80 text-xs">{pauseLabel(u)}</span>
+                        )}
+                        {getSuspendReason(u) && (
+                          <span className="text-red-400/70 text-xs">{getSuspendReason(u)}</span>
+                        )}
+                        {desync && (
+                          <span className="text-red-400/70 text-xs">ESI désynchronisé</span>
+                        )}
+                      </span>
                     </Link>
                   </td>
                   <td className="px-4 py-2.5 text-text-muted text-xs hidden md:table-cell">

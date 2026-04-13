@@ -6,7 +6,7 @@ import { hasMinRole } from "@/types/roles";
 import { Container } from "@/components/layout/Container";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Separator } from "@/components/ui/Separator";
-import { Users } from "lucide-react";
+import { Users, Pause } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { UserRole } from "@/types/roles";
 import { MembersTable } from "./MembersTable";
@@ -25,39 +25,60 @@ export default async function MembresPage({
   if (!hasMinRole(role, "director")) redirect("/membre");
 
   // Whitelist — seules ces valeurs sont acceptées en searchParam
-  const VALID_FILTERS = ["all", "candidate", "member_uz", "member", "officer", "direction", "director", "ceo", "admin"] as const;
+  const VALID_FILTERS = ["all", "candidate", "member_uz", "member", "officer", "direction", "director", "ceo", "admin", "pause"] as const;
   type ValidFilter = typeof VALID_FILTERS[number];
   const filter: ValidFilter | undefined =
     rawFilter && (VALID_FILTERS as readonly string[]).includes(rawFilter)
       ? (rawFilter as ValidFilter)
       : undefined;
 
-  // "direction" = director + ceo + admin
-  const whereRole = filter === "direction"
-    ? { role: { in: ["director", "ceo", "admin"] } }
-    : filter && filter !== "all"
+  const now = new Date();
+
+  // "direction" = director + ceo + admin ; "pause" = absents actuellement
+  const whereRole =
+    filter === "direction"
+      ? { role: { in: ["director", "ceo", "admin"] } }
+      : filter === "pause"
+      ? {
+          role: { not: "public" },
+          absenceStart: { lte: now },
+          OR: [{ absenceEnd: null }, { absenceEnd: { gte: now } }],
+        }
+      : filter && filter !== "all"
       ? { role: filter }
       : { role: { not: "public" } };
 
-  const users = await prisma.user.findMany({
-    where: whereRole,
-    orderBy: { createdAt: "asc" },
-  });
+  const [users, counts, pauseCount] = await Promise.all([
+    prisma.user.findMany({
+      where: whereRole,
+      select: {
+        id: true, name: true, image: true, role: true,
+        createdAt: true, corporationId: true,
+        absenceStart: true, absenceEnd: true,
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.user.groupBy({ by: ["role"], _count: true }),
+    prisma.user.count({
+      where: {
+        role: { not: "public" },
+        absenceStart: { lte: now },
+        OR: [{ absenceEnd: null }, { absenceEnd: { gte: now } }],
+      },
+    }),
+  ]);
 
-  const counts = await prisma.user.groupBy({
-    by: ["role"],
-    _count: true,
-  });
   const countMap = Object.fromEntries(counts.map((c) => [c.role, c._count]));
   const totalAll = counts.filter(c => c.role !== "public").reduce((sum, c) => sum + c._count, 0);
 
   const tabs = [
-    { key: "all",        label: "Tous",         count: totalAll },
-    { key: "candidate",  label: "Candidats",    count: countMap["candidate"] ?? 0 },
-    { key: "member_uz",  label: "Urban Zone",   count: countMap["member_uz"] ?? 0 },
-    { key: "member",     label: "Membres",      count: countMap["member"] ?? 0 },
-    { key: "officer",    label: "Officiers",    count: countMap["officer"] ?? 0 },
-    { key: "direction",   label: "Direction",     count: (countMap["director"] ?? 0) + (countMap["ceo"] ?? 0) + (countMap["admin"] ?? 0) },
+    { key: "all",       label: "Tous",       count: totalAll },
+    { key: "candidate", label: "Candidats",  count: countMap["candidate"] ?? 0 },
+    { key: "member_uz", label: "Urban Zone", count: countMap["member_uz"] ?? 0 },
+    { key: "member",    label: "Membres",    count: countMap["member"] ?? 0 },
+    { key: "officer",   label: "Officiers",  count: countMap["officer"] ?? 0 },
+    { key: "direction", label: "Direction",  count: (countMap["director"] ?? 0) + (countMap["ceo"] ?? 0) + (countMap["admin"] ?? 0) },
+    { key: "pause",     label: "En pause",   count: pauseCount },
   ];
 
   // Serialize for client component
@@ -68,6 +89,8 @@ export default async function MembresPage({
     role: u.role,
     createdAt: u.createdAt.toISOString(),
     corporationId: u.corporationId,
+    absenceStart: u.absenceStart?.toISOString() ?? null,
+    absenceEnd: u.absenceEnd?.toISOString() ?? null,
   }));
 
   return (
@@ -91,11 +114,16 @@ export default async function MembresPage({
                 href={`/staff/membres${tab.key !== "all" ? `?filter=${tab.key}` : ""}`}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors",
-                  active
+                  tab.key === "pause" && active
+                    ? "bg-amber-500 text-black"
+                    : tab.key === "pause" && !active
+                    ? "bg-bg-elevated text-amber-400 border border-amber-500/30 hover:border-amber-500/60"
+                    : active
                     ? "bg-gold text-text-inverted"
                     : "bg-bg-elevated text-text-secondary border border-border hover:border-border-accent"
                 )}
               >
+                {tab.key === "pause" && <Pause size={10} />}
                 {tab.label}
                 <span className={active ? "opacity-70" : "text-text-muted"}>
                   {tab.count}
