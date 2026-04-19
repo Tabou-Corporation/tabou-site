@@ -20,3 +20,6 @@ Types : `feature` · `improvement` · `fix` · `security`
 <!-- SESSION 2026-04-10 (suite) — intégrée en v3.1 (suivi pro + audit sécurité/perf), fichier remis à zéro -->
 <!-- SESSION 2026-04-12 — intégrée en v3.2 (clarté horaires + corrections membres/ESI), fichier remis à zéro -->
 <!-- SESSION 2026-04-13 — intégrée en v3.4 (absences & disponibilités), fichier remis à zéro -->
+
+improvement | KillFeed Hero : feed mixé Tabou + Urban Zone, trié par date, badge corpo discret sur chaque kill
+improvement | Top pilote du mois : agrégation cross-corp (Tabou + Urban Zone), dédup par killmail, badge corpo sous le portrait

@@ -38,7 +38,7 @@ export function KillFeed({ initialKills }: KillFeedProps) {
     };
   }, [kills.length]);
 
-  // ── Polling API ───────────────────────────────────────────────────
+  // ── Polling API (mixed feed) ──────────────────────────────────────
   useEffect(() => {
     const refresh = async () => {
       try {
@@ -97,15 +97,29 @@ export function KillFeed({ initialKills }: KillFeedProps) {
               )}
               style={{ height: ITEM_HEIGHT }}
             >
-              {/* Icône ship */}
-              <div className="flex-shrink-0 w-12 h-12 rounded-sm overflow-hidden border border-gold/20 bg-bg-elevated">
-                <Image
-                  src={`https://images.evetech.net/types/${kill.shipTypeId}/render?size=64`}
-                  alt={kill.shipName}
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
+              {/* Icône ship + badge corpo en bas-droite */}
+              <div className="relative flex-shrink-0">
+                <div className="w-12 h-12 rounded-sm overflow-hidden border border-gold/20 bg-bg-elevated">
+                  <Image
+                    src={`https://images.evetech.net/types/${kill.shipTypeId}/render?size=64`}
+                    alt={kill.shipName}
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div
+                  className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full overflow-hidden border border-bg-deep bg-bg-deep ring-1 ring-gold/40"
+                  title={kill.corpShortName}
+                >
+                  <Image
+                    src={`https://images.evetech.net/corporations/${kill.corpId}/logo?size=32`}
+                    alt={kill.corpShortName}
+                    width={16}
+                    height={16}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
 
               {/* Infos */}

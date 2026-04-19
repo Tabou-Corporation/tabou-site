@@ -5,7 +5,7 @@
  * Caches : kills 60s · killmails ∞ (immuables) · names 24h
  */
 
-import { ZKILL_CONFIG } from "./config";
+import { CORPS, ZKILL_CONFIG } from "./config";
 import type { KillDisplayEntry, ZkillApiEntry } from "./types";
 
 const ESI = "https://esi.evetech.net/latest";
@@ -28,11 +28,17 @@ export function formatTimeAgo(isoDate: string): string {
   return `${Math.floor(diff / 86400)} j`;
 }
 
-export async function fetchCorpKills(): Promise<KillDisplayEntry[]> {
+/** Lookup du shortName par ID — fallback sur l'ID brut si inconnu */
+function corpShortName(corpId: number): string {
+  const found = Object.values(CORPS).find((c) => c.id === corpId);
+  return found?.shortName ?? String(corpId);
+}
+
+export async function fetchCorpKills(corpId: number = ZKILL_CONFIG.corpId): Promise<KillDisplayEntry[]> {
   try {
     // ── 1. Kills de la corpo (pas les pertes) ──────────────────────────
     const zkillRes = await fetch(
-      `${ZKILL_CONFIG.apiUrl}/kills/corporationID/${ZKILL_CONFIG.corpId}/`,
+      `${ZKILL_CONFIG.apiUrl}/kills/corporationID/${corpId}/`,
       { next: { revalidate: 60 }, signal: AbortSignal.timeout(5_000) }
     );
     if (!zkillRes.ok) throw new Error(`zkill ${zkillRes.status}`);
@@ -72,6 +78,7 @@ export async function fetchCorpKills(): Promise<KillDisplayEntry[]> {
     const nameMap = Object.fromEntries(namesArr.map((n) => [n.id, n.name]));
 
     // ── 4. Assemblage ──────────────────────────────────────────────────
+    const shortName = corpShortName(corpId);
     return valid.map(({ id, km, zkb }) => ({
       id,
       shipName:   nameMap[km.victim.ship_type_id]  ?? "Vaisseau inconnu",
@@ -79,12 +86,35 @@ export async function fetchCorpKills(): Promise<KillDisplayEntry[]> {
       victimName: nameMap[km.victim.character_id]  ?? "Pilote inconnu",
       iskValue:   formatIsk(zkb.totalValue),
       timeAgo:    formatTimeAgo(km.killmail_time),
+      killmailTime: km.killmail_time,
       // zkillboard ne retourne pas toujours le champ url — on le construit
       url: zkb.url ?? `${ZKILL_CONFIG.baseUrl}/kill/${id}/`,
+      corpId,
+      corpShortName: shortName,
     }));
 
   } catch (err) {
     console.error("[KillFeed] Erreur API:", err);
     return [];
   }
+}
+
+/** Mixe les kills de plusieurs corpos, triés par date desc, déduplications, top N. */
+export async function fetchMixedKills(
+  corpIds: number[] = [CORPS.tabou.id, CORPS.urbanZone.id]
+): Promise<KillDisplayEntry[]> {
+  const results = await Promise.all(corpIds.map((id) => fetchCorpKills(id)));
+  const seen = new Set<number>();
+  const merged: KillDisplayEntry[] = [];
+  for (const list of results) {
+    for (const entry of list) {
+      if (seen.has(entry.id)) continue;
+      seen.add(entry.id);
+      merged.push(entry);
+    }
+  }
+  merged.sort(
+    (a, b) => new Date(b.killmailTime).getTime() - new Date(a.killmailTime).getTime()
+  );
+  return merged.slice(0, ZKILL_CONFIG.displayCount);
 }

@@ -22,5 +22,9 @@ export interface KillDisplayEntry {
   victimName: string;
   iskValue: string;   // ex: "450 M" | "1.2 B"
   timeAgo: string;    // ex: "2 min" | "1 h"
+  killmailTime: string; // ISO brut — sert au merge multi-corp
   url: string;
+  /** Corpo qui a scoré le kill — sert à afficher le badge */
+  corpId: number;
+  corpShortName: string;
 }

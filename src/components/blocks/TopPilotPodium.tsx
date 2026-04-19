@@ -35,7 +35,7 @@ export function TopPilotPodium({ pilots }: TopPilotPodiumProps) {
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-4 py-1.5 hover:bg-gold/5 transition-colors group"
           >
-            {/* Portrait + badge rang */}
+            {/* Portrait + badge rang + badge corpo */}
             <div className="relative flex-shrink-0">
               <div className="w-10 h-10 rounded-sm overflow-hidden border border-gold/30 bg-bg-elevated">
                 <Image
@@ -54,6 +54,20 @@ export function TopPilotPodium({ pilots }: TopPilotPodiumProps) {
               >
                 {i + 1}
               </span>
+              {pilot.corpId && (
+                <div
+                  className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full overflow-hidden border border-bg-deep bg-bg-deep ring-1 ring-gold/40"
+                  title={pilot.corpShortName}
+                >
+                  <Image
+                    src={`https://images.evetech.net/corporations/${pilot.corpId}/logo?size=32`}
+                    alt={pilot.corpShortName}
+                    width={16}
+                    height={16}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Infos */}
