@@ -22,7 +22,7 @@ const config: Config = {
         text: {
           primary: "#E8E1D3",
           secondary: "#B8AE98",
-          muted: "#7A7268",
+          muted: "#8A8278",
           inverted: "#050403",
         },
         // Accents

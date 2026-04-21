@@ -14,9 +14,9 @@ export const SITE_CONFIG = {
   links: {
     discord: "https://discord.gg/tabou", // à remplacer par le vrai lien
     recruitment: "/recrutement",
-    zkillboard: "", // V6
-    dotlan: "",     // V6
-    evewho: "",     // V6
+    zkillboard: null, // V6
+    dotlan: null,     // V6
+    evewho: null,     // V6
   },
 
   /** Identité visuelle */

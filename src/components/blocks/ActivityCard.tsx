@@ -42,7 +42,6 @@ export function ActivityCard({ activity, className }: ActivityCardProps) {
         "relative bg-bg-surface border border-border rounded-md",
         "p-6 space-y-4",
         "transition-all duration-[180ms]",
-        "hover:border-border-accent hover:bg-bg-elevated",
         className
       )}
     >
