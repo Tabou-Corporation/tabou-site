@@ -287,8 +287,10 @@ export async function appraiseItems(rawPaste: string): Promise<JaniceAppraisal> 
       jitaSell: jita.sell,
       totalBuy: jita.buy * line.quantity,
       totalSell: jita.sell * line.quantity,
-      amarrBuy: amarr?.buy,
-      totalAmarrBuy: amarr ? amarr.buy * line.quantity : undefined,
+      ...(amarr && {
+        amarrBuy: amarr.buy,
+        totalAmarrBuy: amarr.buy * line.quantity,
+      }),
     };
 
     items.push(item);

@@ -88,8 +88,11 @@ export async function estimateItems(
           quantity: i.quantity,
           jitaBuy: i.jitaBuy,
           totalBuy: i.totalBuy,
+          ...(i.amarrBuy !== undefined && { amarrBuy: i.amarrBuy }),
+          ...(i.totalAmarrBuy !== undefined && { totalAmarrBuy: i.totalAmarrBuy }),
         })),
         totalBuyPrice: result.totalBuyPrice,
+        totalAmarrBuyPrice: result.totalAmarrBuyPrice,
         failures: result.failures,
       },
     };
