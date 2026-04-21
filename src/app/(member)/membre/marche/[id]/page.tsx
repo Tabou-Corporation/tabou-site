@@ -41,6 +41,8 @@ interface ParsedItem {
   quantity: number;
   jitaBuy: number;
   totalBuy: number;
+  amarrBuy?: number;
+  totalAmarrBuy?: number;
 }
 
 export default async function ListingDetailPage({
@@ -79,6 +81,7 @@ export default async function ListingDetailPage({
   try {
     if (listing.items) items = JSON.parse(listing.items) as ParsedItem[];
   } catch { /* items invalides */ }
+  const totalAmarrBuy = items.reduce((sum, it) => sum + (it.totalAmarrBuy ?? 0), 0) || null;
 
   // Serialiser les dates pour le client component
   const serializedOffers = listing.offers.map((o) => ({
@@ -152,7 +155,7 @@ export default async function ListingDetailPage({
 
             {/* Items */}
             {items.length > 0 && (
-              <ItemsTable items={items} totalJitaBuy={listing.totalJitaBuy} />
+              <ItemsTable items={items} totalJitaBuy={listing.totalJitaBuy} totalAmarrBuy={totalAmarrBuy} />
             )}
 
             {/* Offres */}

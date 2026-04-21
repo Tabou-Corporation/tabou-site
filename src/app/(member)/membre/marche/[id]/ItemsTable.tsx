@@ -10,6 +10,8 @@ interface ParsedItem {
   quantity: number;
   jitaBuy: number;
   totalBuy: number;
+  amarrBuy?: number;
+  totalAmarrBuy?: number;
 }
 
 function formatISK(amount: number): string {
@@ -24,13 +26,16 @@ const PREVIEW_COUNT = 8;
 export function ItemsTable({
   items,
   totalJitaBuy,
+  totalAmarrBuy,
 }: {
   items: ParsedItem[];
   totalJitaBuy: number | null;
+  totalAmarrBuy?: number | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const needsCollapse = items.length > PREVIEW_COUNT;
   const visibleItems = expanded || !needsCollapse ? items : items.slice(0, PREVIEW_COUNT);
+  const hasAmarr = items.some((it) => it.amarrBuy != null && it.amarrBuy > 0);
 
   return (
     <Card>
@@ -62,6 +67,7 @@ export function ItemsTable({
                 <th className="text-left pb-2 font-semibold">Item</th>
                 <th className="text-right pb-2 font-semibold">Qte</th>
                 <th className="text-right pb-2 font-semibold">Jita Buy</th>
+                {hasAmarr && <th className="text-right pb-2 font-semibold text-text-muted/70">Amarr Buy</th>}
                 <th className="text-right pb-2 font-semibold">Total</th>
               </tr>
             </thead>
@@ -75,6 +81,11 @@ export function ItemsTable({
                   <td className="py-2 text-text-secondary text-right font-mono text-xs">
                     {formatISK(item.jitaBuy)}
                   </td>
+                  {hasAmarr && (
+                    <td className="py-2 text-text-muted text-right font-mono text-xs">
+                      {item.amarrBuy ? formatISK(item.amarrBuy) : "—"}
+                    </td>
+                  )}
                   <td className="py-2 text-text-primary text-right font-mono">
                     {formatISK(item.totalBuy)}
                   </td>
@@ -95,11 +106,21 @@ export function ItemsTable({
         )}
 
         {totalJitaBuy != null && totalJitaBuy > 0 && (
-          <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
-            <span className="text-text-muted text-xs">Valeur Jita buy totale</span>
-            <span className="text-text-secondary font-mono font-semibold">
-              {formatISK(totalJitaBuy)}
-            </span>
+          <div className="mt-3 pt-3 border-t border-border space-y-1.5">
+            <div className="flex justify-between items-center">
+              <span className="text-text-muted text-xs">Valeur Jita buy totale</span>
+              <span className="text-text-secondary font-mono font-semibold">
+                {formatISK(totalJitaBuy)}
+              </span>
+            </div>
+            {totalAmarrBuy != null && totalAmarrBuy > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-text-muted text-xs">Valeur Amarr buy totale</span>
+                <span className="text-text-muted font-mono text-sm">
+                  {formatISK(totalAmarrBuy)}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </CardBody>

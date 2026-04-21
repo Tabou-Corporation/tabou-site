@@ -254,6 +254,7 @@ export function NewListingForm() {
                       <th className="text-left pb-1 font-semibold">Item</th>
                       <th className="text-right pb-1 font-semibold">Qte</th>
                       <th className="text-right pb-1 font-semibold">Jita Buy</th>
+                      <th className="text-right pb-1 font-semibold text-text-muted/70">Amarr Buy</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -262,14 +263,25 @@ export function NewListingForm() {
                         <td className="py-1.5 text-text-primary">{item.name}</td>
                         <td className="py-1.5 text-text-secondary text-right font-mono">{item.quantity.toLocaleString("fr-FR")}</td>
                         <td className="py-1.5 text-text-secondary text-right font-mono">{formatISK(item.totalBuy)}</td>
+                        <td className="py-1.5 text-text-muted text-right font-mono">
+                          {item.totalAmarrBuy ? formatISK(item.totalAmarrBuy) : "—"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <div className="flex justify-between items-center bg-bg-elevated rounded p-2">
-                <span className="text-text-muted text-xs">Valeur Jita buy totale</span>
-                <span className="text-gold font-display font-bold">{formatISK(appraisal.totalBuyPrice)}</span>
+              <div className="bg-bg-elevated rounded p-2 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-text-muted text-xs">Valeur Jita buy totale</span>
+                  <span className="text-gold font-display font-bold">{formatISK(appraisal.totalBuyPrice)}</span>
+                </div>
+                {appraisal.totalAmarrBuyPrice > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-text-muted text-xs">Valeur Amarr buy totale</span>
+                    <span className="text-text-muted font-mono text-sm">{formatISK(appraisal.totalAmarrBuyPrice)}</span>
+                  </div>
+                )}
               </div>
               {appraisal.failures.length > 0 && (
                 <p className="text-yellow-400 text-[11px]">

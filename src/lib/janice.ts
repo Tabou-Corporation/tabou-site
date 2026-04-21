@@ -12,6 +12,8 @@ const ESI_BASE = "https://esi.evetech.net/latest";
 const FUZZWORK_BASE = "https://market.fuzzwork.co.uk";
 /** Jita 4-4 CNAP station ID */
 const JITA_STATION = 60003760;
+/** Amarr VIII (Oris) - Emperor Family Academy station ID */
+const AMARR_STATION = 60008494;
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +32,10 @@ export interface JaniceItem {
   totalBuy: number;
   /** Prix total Jita sell (quantity × jitaSell) */
   totalSell: number;
+  /** Prix unitaire Amarr buy (comparatif) */
+  amarrBuy?: number;
+  /** Prix total Amarr buy (quantity × amarrBuy) */
+  totalAmarrBuy?: number;
 }
 
 export interface JaniceAppraisal {
@@ -39,6 +45,8 @@ export interface JaniceAppraisal {
   totalBuyPrice: number;
   /** Valeur totale Jita sell */
   totalSellPrice: number;
+  /** Valeur totale Amarr buy (comparatif) */
+  totalAmarrBuyPrice: number;
   /** Items non reconnus (noms bruts) */
   failures: string[];
 }
@@ -183,39 +191,38 @@ async function resolveTypeIds(
   return { resolved, failures };
 }
 
-// ── Fuzzwork : typeIDs → prix Jita ───────────────────────────────────────────
+// ── Fuzzwork : typeIDs → prix par station ────────────────────────────────────
 
 interface FuzzworkPriceEntry {
   buy: { percentile: string; max: string };
   sell: { percentile: string; min: string };
 }
 
-async function fetchPrices(
-  typeIds: number[]
+async function fetchPricesForStation(
+  typeIds: number[],
+  stationId: number
 ): Promise<Map<number, { buy: number; sell: number }>> {
   const prices = new Map<number, { buy: number; sell: number }>();
   if (typeIds.length === 0) return prices;
 
-  // Fuzzwork accepte de longues listes de typeIDs
   const BATCH_SIZE = 200;
   for (let i = 0; i < typeIds.length; i += BATCH_SIZE) {
     const batch = typeIds.slice(i, i + BATCH_SIZE);
     const ids = batch.join(",");
 
     const res = await fetch(
-      `${FUZZWORK_BASE}/aggregates/?station=${JITA_STATION}&types=${ids}`,
+      `${FUZZWORK_BASE}/aggregates/?station=${stationId}&types=${ids}`,
       { headers: { Accept: "application/json" } }
     );
 
     if (!res.ok) {
-      console.error("[appraisal] Fuzzwork erreur", res.status);
+      console.error("[appraisal] Fuzzwork erreur station", stationId, res.status);
       continue;
     }
 
     const data: Record<string, FuzzworkPriceEntry> = await res.json();
     for (const [typeIdStr, entry] of Object.entries(data)) {
       const typeId = parseInt(typeIdStr, 10);
-      // percentile = prix auquel 5% des ordres se trouvent (plus réaliste que max/min)
       const buy = parseFloat(entry.buy.percentile) || parseFloat(entry.buy.max) || 0;
       const sell = parseFloat(entry.sell.percentile) || parseFloat(entry.sell.min) || 0;
       prices.set(typeId, { buy, sell });
@@ -250,35 +257,44 @@ export async function appraiseItems(rawPaste: string): Promise<JaniceAppraisal> 
   const uniqueNames = [...new Set(parsed.map((p) => p.name))];
   const { resolved, failures } = await resolveTypeIds(uniqueNames);
 
-  // 3. Récupérer les prix Jita via Fuzzwork
+  // 3. Récupérer les prix Jita + Amarr en parallèle via Fuzzwork
   const typeIds = [...new Set(resolved.values())];
-  const prices = await fetchPrices(typeIds);
+  const [jitaPrices, amarrPrices] = await Promise.all([
+    fetchPricesForStation(typeIds, JITA_STATION),
+    fetchPricesForStation(typeIds, AMARR_STATION),
+  ]);
 
   // 4. Assembler les résultats
   const items: JaniceItem[] = [];
   let totalBuyPrice = 0;
   let totalSellPrice = 0;
+  let totalAmarrBuyPrice = 0;
 
   for (const line of parsed) {
     const typeId = resolved.get(line.name.toLowerCase());
-    if (!typeId) continue; // non résolu → déjà dans failures
+    if (!typeId) continue;
 
-    const price = prices.get(typeId);
-    if (!price) continue;
+    const jita = jitaPrices.get(typeId);
+    if (!jita) continue;
+
+    const amarr = amarrPrices.get(typeId);
 
     const item: JaniceItem = {
       typeId,
       name: line.name,
       quantity: line.quantity,
-      jitaBuy: price.buy,
-      jitaSell: price.sell,
-      totalBuy: price.buy * line.quantity,
-      totalSell: price.sell * line.quantity,
+      jitaBuy: jita.buy,
+      jitaSell: jita.sell,
+      totalBuy: jita.buy * line.quantity,
+      totalSell: jita.sell * line.quantity,
+      amarrBuy: amarr?.buy,
+      totalAmarrBuy: amarr ? amarr.buy * line.quantity : undefined,
     };
 
     items.push(item);
     totalBuyPrice += item.totalBuy;
     totalSellPrice += item.totalSell;
+    totalAmarrBuyPrice += item.totalAmarrBuy ?? 0;
   }
 
   if (items.length === 0 && failures.length > 0) {
@@ -289,6 +305,7 @@ export async function appraiseItems(rawPaste: string): Promise<JaniceAppraisal> 
     items,
     totalBuyPrice,
     totalSellPrice,
+    totalAmarrBuyPrice,
     failures,
   };
 }
