@@ -39,8 +39,11 @@ export type AppraisalFormState = {
       quantity: number;
       jitaBuy: number;
       totalBuy: number;
+      amarrBuy?: number;
+      totalAmarrBuy?: number;
     }>;
     totalBuyPrice: number;
+    totalAmarrBuyPrice: number;
     failures: string[];
   };
 };
