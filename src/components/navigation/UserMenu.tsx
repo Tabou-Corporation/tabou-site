@@ -52,6 +52,7 @@ export function UserMenu() {
             width={24}
             height={24}
             className="rounded-full"
+            unoptimized
           />
         ) : (
           <User size={16} />

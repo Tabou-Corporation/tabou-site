@@ -44,6 +44,7 @@ export function TopPilotPodium({ pilots }: TopPilotPodiumProps) {
                   width={40}
                   height={40}
                   className="w-full h-full object-cover"
+                  unoptimized
                 />
               </div>
               <span
@@ -65,6 +66,7 @@ export function TopPilotPodium({ pilots }: TopPilotPodiumProps) {
                     width={16}
                     height={16}
                     className="w-full h-full object-cover"
+                    unoptimized
                   />
                 </div>
               )}

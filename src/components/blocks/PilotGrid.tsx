@@ -103,6 +103,7 @@ export function PilotGrid({ members, interactive = true }: PilotGridProps) {
                   "rounded-sm transition-opacity",
                   activeTab === id ? "opacity-100" : "opacity-40"
                 )}
+                unoptimized
               />
             ) : (
               <Pause size={16} className={cn(

@@ -121,6 +121,7 @@ export function PilotModal({ pilot, onClose }: Props) {
                         fill
                         className="object-cover object-top"
                         sizes="120px"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -138,6 +139,7 @@ export function PilotModal({ pilot, onClose }: Props) {
                       width={20}
                       height={20}
                       className="rounded-sm"
+                      unoptimized
                     />
                   </div>
                 </motion.div>

@@ -37,6 +37,7 @@ export function AvatarDisplay({
           `rounded-full ${borderClass} border-gold/20 flex-shrink-0`,
           className
         )}
+        unoptimized
       />
     );
   }

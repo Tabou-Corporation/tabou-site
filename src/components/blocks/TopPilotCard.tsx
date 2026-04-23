@@ -41,6 +41,7 @@ export function TopPilotCard({ pilot, sectionLabel = "Focus", periodLabel = "All
               height={64}
               className="w-full h-full object-cover"
               priority
+              unoptimized
             />
           </div>
           {/* Badge #1 */}

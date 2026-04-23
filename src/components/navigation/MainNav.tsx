@@ -78,6 +78,7 @@ export function MainNav({
                 height={56}
                 className="rounded-sm opacity-90 group-hover:opacity-100 transition-opacity duration-[180ms]"
                 priority
+                unoptimized
               />
               <div className="flex flex-col leading-none">
                 <span className="font-display font-bold text-xl sm:text-2xl text-gold tracking-widest group-hover:text-white transition-colors duration-[180ms]">

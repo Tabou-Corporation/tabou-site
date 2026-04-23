@@ -88,6 +88,7 @@ export default async function LexiquePage() {
                         width={52}
                         height={52}
                         className="rounded-full border-2 border-gold/40 shadow-lg shadow-gold/10"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-[52px] h-[52px] rounded-full bg-bg-elevated border-2 border-gold/40 flex items-center justify-center">

@@ -57,6 +57,7 @@ export default async function ProfilePage() {
                   width={128}
                   height={128}
                   className="rounded-full border-2 border-gold/20"
+                  unoptimized
                 />
               ) : (
                 <div className="w-32 h-32 rounded-full bg-bg-elevated border-2 border-border flex items-center justify-center">
@@ -119,6 +120,7 @@ export default async function ProfilePage() {
                     width={32}
                     height={32}
                     className="rounded-sm"
+                    unoptimized
                   />
                   <h3 className="font-display font-semibold text-base text-text-primary">
                     {role === "member_uz" ? "Corporation Urban Zone" : "Corporation Tabou"}
