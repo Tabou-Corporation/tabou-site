@@ -6,6 +6,13 @@ import { useEffect, useMemo, useState } from "react";
  * Hall of Fame Tabou + Urban Zone — classement all-time des pilotes par kills,
  * fusionné entre les deux corps. Source : zKillboard stats endpoint (toutes
  * régions, depuis la création de chaque corp).
+ *
+ * Refonte hero : le podium est l'élément principal de la section, pas un teaser.
+ * - Hero immersif avec fond gradient + texture
+ * - Podium massif (180px #1, 90px #2/#3) au centre
+ * - Stats corp sobres en dessous
+ * - CTA discret vers le tableau complet
+ * - Tableau classement complet à la suite (id="leaderboard-table")
  */
 
 interface Entry {
@@ -39,7 +46,6 @@ const CORP_SHORT: Record<number, string> = {
   98809880: "T",
   98215397: "UZ",
 };
-// Couleur de signature par corp (utilisée pour le badge + l'éventuel halo)
 const CORP_COLOR: Record<number, string> = {
   98809880: "from-gold/30 to-gold/0 text-gold border-gold/60",
   98215397: "from-sky-400/30 to-sky-400/0 text-sky-300 border-sky-400/60",
@@ -57,6 +63,13 @@ function freshnessLabel(iso: string): string {
   if (min < 1) return "à l'instant";
   if (min < 60) return `il y a ${Math.round(min)}min`;
   return `il y a ${(min / 60).toFixed(1)}h`;
+}
+
+function scrollToTable() {
+  document.getElementById("leaderboard-table")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
 }
 
 export function HallOfFamePanel() {
@@ -79,7 +92,6 @@ export function HallOfFamePanel() {
 
   const entries = useMemo(() => data?.entries ?? [], [data]);
   const totals = useMemo(() => data?.totals ?? [], [data]);
-
   const maxKills = useMemo(() => entries[0]?.kills ?? 1, [entries]);
 
   const allianceTotals = useMemo(() => {
@@ -94,129 +106,288 @@ export function HallOfFamePanel() {
     );
   }, [totals]);
 
-  if (loading) {
-    return (
-      <div className="bg-bg-elevated border border-border rounded-md p-12 text-center text-text-muted text-sm italic">
-        Chargement du classement all-time…
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="bg-bg-elevated border border-border rounded-md p-12 text-center text-red-400 text-sm">
-        Erreur : {error}
-      </div>
-    );
-  }
-  if (entries.length === 0) {
-    return (
-      <div className="bg-bg-elevated border border-border rounded-md p-12 text-center text-text-secondary text-sm">
-        Aucune donnée zKill disponible pour le moment.
-      </div>
-    );
-  }
+  // ─── HERO ─────────────────────────────────────────────────────────────
+  return (
+    <>
+      {/* Hero — fond gradient, full-bleed, démarre direct après la carte */}
+      <section
+        id="hall-of-fame"
+        className="relative overflow-hidden bg-gradient-to-b from-bg-deep via-amber-950/15 to-bg-deep border-y border-gold/20"
+      >
+        {/* Texture étoilée subtile */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.18]"
+          style={{
+            backgroundImage:
+              "radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.6) 50%, transparent 50%)," +
+              "radial-gradient(1px 1px at 60% 70%, rgba(230,194,101,0.5) 50%, transparent 50%)," +
+              "radial-gradient(1px 1px at 80% 20%, rgba(255,255,255,0.4) 50%, transparent 50%)," +
+              "radial-gradient(1.5px 1.5px at 35% 80%, rgba(230,194,101,0.6) 50%, transparent 50%)," +
+              "radial-gradient(1px 1px at 50% 50%, rgba(255,255,255,0.3) 50%, transparent 50%)",
+            backgroundSize: "180px 180px, 240px 240px, 320px 320px, 160px 160px, 280px 280px",
+          }}
+        />
+        {/* Halo doré derrière le podium */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(230,194,101,0.10) 0%, rgba(230,194,101,0.04) 30%, transparent 70%)",
+          }}
+        />
 
+        <div className="relative max-w-7xl mx-auto px-6 py-16 sm:py-20">
+          {/* Header hero — eyebrow + titre */}
+          <div className="text-center mb-12 sm:mb-16">
+            <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-3">
+              ★ Hall of Fame ★
+            </p>
+            <h2 className="font-display font-bold text-3xl sm:text-5xl text-text-primary leading-tight mb-3">
+              Classement all-time
+            </h2>
+            <p className="text-text-secondary text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+              Les pilotes Tabou et Urban Zone qui dominent depuis la création des corps.
+              Toutes régions confondues.
+            </p>
+          </div>
+
+          {loading && (
+            <div className="text-center text-text-muted text-sm italic py-16">
+              Chargement du classement…
+            </div>
+          )}
+          {error && (
+            <div className="text-center text-red-400 text-sm py-16">
+              Erreur : {error}
+            </div>
+          )}
+
+          {/* Podium massif au centre */}
+          {!loading && !error && entries.length > 0 && (
+            <>
+              <PodiumHero entries={entries} />
+
+              {/* Stats corp en dessous, sobres */}
+              <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-3 max-w-4xl mx-auto">
+                {totals.map((t) => (
+                  <CorpStatChip key={t.corpId} total={t} />
+                ))}
+                <AllianceChip
+                  totals={allianceTotals}
+                  pilotCount={entries.length}
+                />
+              </div>
+
+              {/* CTA discret vers le tableau */}
+              <div className="mt-10 text-center">
+                <button
+                  type="button"
+                  onClick={scrollToTable}
+                  className="group inline-flex items-center gap-2 text-gold/80 hover:text-gold font-mono text-xs uppercase tracking-[0.2em] transition-colors"
+                >
+                  <span>Explorer le classement complet</span>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="transition-transform group-hover:translate-y-1"
+                  >
+                    <path
+                      d="M6 9l6 6 6-6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </>
+          )}
+
+          {!loading && !error && entries.length === 0 && (
+            <div className="text-center text-text-secondary text-sm py-16">
+              Aucune donnée zKill disponible pour le moment.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ─── Tableau classement complet (rang 4+) ───────────────────────── */}
+      {!loading && !error && entries.length > 3 && (
+        <section
+          id="leaderboard-table"
+          className="bg-bg-surface py-16 sm:py-20"
+        >
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="mb-8">
+              <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-2">
+                Classement complet
+              </p>
+              <h3 className="font-display text-2xl text-text-primary">
+                Top {entries.length} pilotes
+              </h3>
+            </div>
+
+            <div className="bg-bg-elevated border border-border rounded-md overflow-hidden">
+              <div className="grid grid-cols-[2.5rem_1fr_5rem_minmax(8rem,12rem)] sm:grid-cols-[3rem_1fr_6rem_minmax(10rem,16rem)] items-center gap-3 px-4 py-2 border-b border-border bg-bg-deep/60">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">#</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Pilote</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted text-right">Kills</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Progression</span>
+              </div>
+              <ul className="divide-y divide-border">
+                {entries.slice(3).map((e, i) => (
+                  <LeaderRow
+                    key={e.characterId}
+                    entry={e}
+                    rank={i + 4}
+                    maxKills={maxKills}
+                  />
+                ))}
+              </ul>
+            </div>
+
+            {data && (
+              <p className="mt-6 text-center text-[10px] font-mono uppercase tracking-wider text-text-muted">
+                zKillboard · all-time · mis à jour {freshnessLabel(data.fetchedAt)}
+                {data.fromCache && " · cache"}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
+/* ─────────────────────── Podium hero ─────────────────────── */
+
+function PodiumHero({ entries }: { entries: Entry[] }) {
   const podium = entries.slice(0, 3);
-  const rest = entries.slice(3);
+  if (podium.length === 0) return null;
+
+  // Ordre visuel : 2 (gauche) — 1 (centre, plus grand) — 3 (droite)
+  const ordered = [podium[1], podium[0], podium[2]].filter((p): p is Entry => Boolean(p));
 
   return (
-    <div className="space-y-4">
-      {/* En-tête : totaux corp côte à côte */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {totals.map((t) => (
-          <CorpStatCard key={t.corpId} total={t} />
-        ))}
-        <AllianceCard
-          totals={allianceTotals}
-          pilotCount={entries.length}
-        />
-      </div>
-
-      {/* Podium top 3 */}
-      {podium.length > 0 && (
-        <div className="bg-bg-elevated border border-border rounded-md p-4 sm:p-6">
-          <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-text-muted text-center mb-6">
-            ★ Podium all-time ★
-          </h3>
-          <div className="flex items-end justify-center gap-3 sm:gap-6">
-            {/* Réorganisation visuelle : 2 — 1 — 3 (1er au centre, plus haut) */}
-            {[podium[1], podium[0], podium[2]]
-              .filter((p): p is Entry => Boolean(p))
-              .map((p) => (
-                <PodiumCard
-                  key={p.characterId}
-                  entry={p}
-                  rank={entries.indexOf(p) + 1}
-                />
-              ))}
-          </div>
-        </div>
-      )}
-
-      {/* Tableau complet (top 4+) */}
-      {rest.length > 0 && (
-        <div className="bg-bg-elevated border border-border rounded-md overflow-hidden">
-          <div className="grid grid-cols-[2.5rem_1fr_5rem_minmax(8rem,12rem)] sm:grid-cols-[3rem_1fr_6rem_minmax(10rem,16rem)] items-center gap-3 px-4 py-2 border-b border-border bg-bg-deep/60">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">#</span>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Pilote</span>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted text-right">Kills</span>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Progression</span>
-          </div>
-          <ul className="divide-y divide-border max-h-[640px] overflow-y-auto">
-            {rest.map((e, i) => (
-              <LeaderRow key={e.characterId} entry={e} rank={i + 4} maxKills={maxKills} />
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {data && (
-        <p className="text-center text-[10px] font-mono uppercase tracking-wider text-text-muted">
-          zKillboard · all-time · mis à jour {freshnessLabel(data.fetchedAt)}
-          {data.fromCache && " · cache"}
-        </p>
-      )}
+    <div className="flex items-end justify-center gap-8 sm:gap-16 flex-wrap">
+      {ordered.map((p) => {
+        const rank = entries.indexOf(p) + 1;
+        return <PodiumPillar key={p.characterId} entry={p} rank={rank} />;
+      })}
     </div>
   );
 }
 
-/* ─────────────────────────── Cards / Rows ─────────────────────────── */
+function PodiumPillar({ entry, rank }: { entry: Entry; rank: number }) {
+  const portrait = `https://images.evetech.net/characters/${entry.characterId}/portrait?size=256`;
+  const isFirst = rank === 1;
+  const portraitSize = isFirst ? "w-44 h-44 sm:w-48 sm:h-48" : "w-24 h-24 sm:w-28 sm:h-28";
+  const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉";
+  const ring =
+    rank === 1
+      ? "ring-4 ring-yellow-400/90 shadow-[0_0_60px_rgba(250,204,21,0.45)]"
+      : rank === 2
+      ? "ring-2 ring-zinc-300/70 shadow-[0_0_24px_rgba(255,255,255,0.15)]"
+      : "ring-2 ring-amber-700/70 shadow-[0_0_24px_rgba(180,83,9,0.25)]";
 
-function CorpStatCard({ total }: { total: CorpTotal }) {
+  return (
+    <a
+      href={`https://zkillboard.com/character/${entry.characterId}/`}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="group flex flex-col items-center text-center transition-transform hover:-translate-y-2 duration-300"
+    >
+      {/* Médaille flottante */}
+      <span className={`${isFirst ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl"} drop-shadow-md mb-3`}>
+        {medal}
+      </span>
+
+      {/* Portrait avec halo */}
+      <div className="relative">
+        {isFirst && (
+          <span
+            aria-hidden
+            className="absolute inset-0 rounded-full bg-yellow-400/20 blur-2xl animate-pulse"
+          />
+        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={portrait}
+          alt={entry.characterName ?? `Pilote ${entry.characterId}`}
+          className={`relative ${portraitSize} rounded-full object-cover ${ring} bg-bg-deep`}
+        />
+        <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-mono uppercase tracking-widest bg-bg-deep border border-gold/40 text-gold whitespace-nowrap">
+          #{rank}
+        </span>
+      </div>
+
+      {/* Nom */}
+      <div
+        className={`mt-6 ${isFirst ? "text-xl sm:text-2xl" : "text-base sm:text-lg"} font-display font-bold text-text-primary group-hover:text-gold transition-colors max-w-[12rem] truncate`}
+      >
+        {entry.characterName ?? `Pilote ${entry.characterId}`}
+      </div>
+
+      {/* Badges corps */}
+      <div className="mt-2 flex items-center gap-1.5 flex-wrap justify-center">
+        {entry.corpIds.map((c) => (
+          <CorpBadge key={c} corpId={c} />
+        ))}
+      </div>
+
+      {/* Kills */}
+      <div
+        className={`mt-3 font-mono ${isFirst ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl"} font-bold text-emerald-400 tabular-nums leading-none`}
+      >
+        {entry.kills.toLocaleString("fr-FR")}
+      </div>
+      <div className="mt-1 text-[10px] sm:text-xs font-mono uppercase tracking-widest text-text-muted">
+        kills
+      </div>
+    </a>
+  );
+}
+
+/* ─────────────────────── Stats chips sobres ─────────────────────── */
+
+function CorpStatChip({ total }: { total: CorpTotal }) {
   const ratio =
     total.iskLost > 0 ? (total.iskDestroyed / total.iskLost).toFixed(1) : "∞";
   const colorClass = CORP_COLOR[total.corpId] ?? "from-text-muted/20 to-transparent text-text-secondary border-border";
+  const textCls = colorClass.split(" ").filter((c) => c.startsWith("text-")).join(" ");
+  const borderCls = colorClass.split(" ").filter((c) => c.startsWith("border-")).join(" ");
+  const gradCls = colorClass.split(" ").filter((c) => c.startsWith("from-") || c.startsWith("to-")).join(" ");
 
   return (
-    <div className={`relative overflow-hidden bg-bg-elevated border rounded-md p-4 ${colorClass.split(" ").filter((c) => c.startsWith("border-")).join(" ")}`}>
-      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${colorClass.split(" ").filter((c) => c.startsWith("from-") || c.startsWith("to-")).join(" ")}`} />
+    <div className={`relative overflow-hidden bg-bg-deep/60 backdrop-blur-sm border ${borderCls} rounded-md p-4`}>
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradCls} opacity-50`} />
       <div className="relative">
-        <div className={`text-[10px] font-mono uppercase tracking-[0.2em] ${colorClass.split(" ").filter((c) => c.startsWith("text-")).join(" ")}`}>
+        <div className={`text-[10px] font-mono uppercase tracking-[0.2em] ${textCls}`}>
           {CORP_LABELS[total.corpId] ?? `Corp ${total.corpId}`}
         </div>
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-text-primary tabular-nums">
+        <div className="mt-1.5 flex items-baseline gap-1.5">
+          <span className="text-2xl font-bold text-text-primary tabular-nums">
             {total.shipsDestroyed.toLocaleString("fr-FR")}
           </span>
-          <span className="text-xs text-text-secondary">kills</span>
+          <span className="text-[11px] text-text-secondary">kills</span>
         </div>
-        <div className="mt-2 text-xs text-text-secondary space-y-0.5 font-mono">
-          <div>
-            <span className="text-emerald-400">{formatIsk(total.iskDestroyed)}</span>
-            <span className="text-text-muted"> / </span>
-            <span className="text-red-400">{formatIsk(total.iskLost)}</span>
-            <span className="text-text-muted"> ISK</span>
-          </div>
-          <div className="text-text-muted">
-            Efficacité {ratio} · {total.pilotCount} pilotes
-          </div>
+        <div className="mt-1 text-[11px] text-text-secondary font-mono leading-tight">
+          {formatIsk(total.iskDestroyed)} ISK · efficacité {ratio}
+        </div>
+        <div className="text-[10px] text-text-muted font-mono mt-0.5">
+          {total.pilotCount} pilotes
         </div>
       </div>
     </div>
   );
 }
 
-function AllianceCard({
+function AllianceChip({
   totals,
   pilotCount,
 }: {
@@ -224,78 +395,30 @@ function AllianceCard({
   pilotCount: number;
 }) {
   return (
-    <div className="relative overflow-hidden bg-bg-elevated border border-emerald-500/40 rounded-md p-4">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent" />
+    <div className="relative overflow-hidden bg-bg-deep/60 backdrop-blur-sm border border-emerald-500/40 rounded-md p-4">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/15 to-transparent" />
       <div className="relative">
         <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-300">
           ★ Alliance combinée
         </div>
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-text-primary tabular-nums">
+        <div className="mt-1.5 flex items-baseline gap-1.5">
+          <span className="text-2xl font-bold text-text-primary tabular-nums">
             {totals.shipsDestroyed.toLocaleString("fr-FR")}
           </span>
-          <span className="text-xs text-text-secondary">kills cumulés</span>
+          <span className="text-[11px] text-text-secondary">cumulés</span>
         </div>
-        <div className="mt-2 text-xs text-text-secondary space-y-0.5 font-mono">
-          <div>
-            <span className="text-emerald-400">{formatIsk(totals.iskDestroyed)}</span>
-            <span className="text-text-muted"> ISK détruits</span>
-          </div>
-          <div className="text-text-muted">{pilotCount} pilotes classés</div>
+        <div className="mt-1 text-[11px] text-text-secondary font-mono leading-tight">
+          {formatIsk(totals.iskDestroyed)} ISK détruits
+        </div>
+        <div className="text-[10px] text-text-muted font-mono mt-0.5">
+          {pilotCount} pilotes classés
         </div>
       </div>
     </div>
   );
 }
 
-/** Carte podium pour les rangs 1-3 — 1 = central, plus haut */
-function PodiumCard({ entry, rank }: { entry: Entry; rank: number }) {
-  const portrait = `https://images.evetech.net/characters/${entry.characterId}/portrait?size=128`;
-  const isFirst = rank === 1;
-  const size = isFirst ? "w-24 h-24 sm:w-32 sm:h-32" : "w-16 h-16 sm:w-20 sm:h-20";
-  const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉";
-  const heightClass = isFirst ? "pb-2" : "pb-0";
-  const ring =
-    rank === 1
-      ? "ring-2 ring-yellow-400/80 shadow-[0_0_24px_rgba(250,204,21,0.35)]"
-      : rank === 2
-      ? "ring-2 ring-zinc-300/70"
-      : "ring-2 ring-amber-700/70";
-
-  return (
-    <a
-      href={`https://zkillboard.com/character/${entry.characterId}/`}
-      target="_blank"
-      rel="noreferrer noopener"
-      className={`group flex flex-col items-center text-center ${heightClass} transition-transform hover:-translate-y-1`}
-    >
-      <span className={`text-2xl ${isFirst ? "sm:text-3xl" : ""}`}>{medal}</span>
-      <div className="relative mt-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={portrait}
-          alt={entry.characterName ?? `Pilote ${entry.characterId}`}
-          className={`${size} rounded-full object-cover ${ring} bg-bg-deep`}
-        />
-        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-bg-deep border border-border text-text-primary">
-          #{rank}
-        </span>
-      </div>
-      <div className={`mt-4 ${isFirst ? "text-base sm:text-lg" : "text-sm"} font-semibold text-text-primary group-hover:text-gold transition-colors max-w-[10rem] truncate`}>
-        {entry.characterName ?? `Pilote ${entry.characterId}`}
-      </div>
-      <div className="mt-1 flex items-center gap-1.5 flex-wrap justify-center">
-        {entry.corpIds.map((c) => (
-          <CorpBadge key={c} corpId={c} />
-        ))}
-      </div>
-      <div className={`mt-1 font-mono ${isFirst ? "text-2xl sm:text-3xl" : "text-xl"} font-bold text-emerald-400 tabular-nums`}>
-        {entry.kills.toLocaleString("fr-FR")}
-      </div>
-      <div className="text-[10px] font-mono uppercase tracking-wider text-text-muted">kills</div>
-    </a>
-  );
-}
+/* ─────────────────────── Leaderboard rows ─────────────────────── */
 
 function LeaderRow({
   entry,

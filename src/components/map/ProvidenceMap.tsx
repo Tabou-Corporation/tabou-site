@@ -95,6 +95,8 @@ export function ProvidenceMap({ state, selectedSystemId, onSelectSystem, height 
   const [hover, setHover] = useState<SdeSystem | null>(null);
   const [sovData, setSovData] = useState<SovData | null>(null);
   const [pins, setPins] = useState<PinData[]>([]);
+  // Toggle Providence / Étendue — fusion des deux anciens boutons en un seul état
+  const [viewMode, setViewMode] = useState<"providence" | "wide">("providence");
   // Cache logos d'alliances (id → HTMLImageElement). Persistant.
   const logoCacheRef = useRef<Map<number, HTMLImageElement | null>>(new Map());
 
@@ -744,21 +746,29 @@ export function ProvidenceMap({ state, selectedSystemId, onSelectSystem, height 
         )}
       </div>
 
-      {/* Controls — top right */}
-      <div className="absolute top-3 right-3 flex flex-col gap-1.5 font-mono text-[10px] tracking-widest uppercase">
+      {/* Controls — top right : toggle Providence / Étendue */}
+      <div className="absolute top-3 right-3 font-mono text-[10px] tracking-widest uppercase bg-bg-deep/90 border border-border rounded p-0.5 flex">
         <button
           type="button"
-          onClick={centerOnProvidence}
-          className="px-3 py-1.5 bg-bg-deep/90 border border-gold/30 text-gold hover:bg-gold/10 transition-colors"
+          onClick={() => { setViewMode("providence"); centerOnProvidence(); }}
+          className={`px-3 py-1 rounded-sm transition-colors ${
+            viewMode === "providence"
+              ? "bg-gold/15 text-gold"
+              : "text-text-secondary hover:text-text-primary"
+          }`}
         >
-          Recentrer · Providence
+          Providence
         </button>
         <button
           type="button"
-          onClick={fitAll}
-          className="px-3 py-1.5 bg-bg-deep/90 border border-border text-text-secondary hover:text-text-primary transition-colors"
+          onClick={() => { setViewMode("wide"); fitAll(); }}
+          className={`px-3 py-1 rounded-sm transition-colors ${
+            viewMode === "wide"
+              ? "bg-gold/15 text-gold"
+              : "text-text-secondary hover:text-text-primary"
+          }`}
         >
-          Vue · large
+          Étendue
         </button>
       </div>
 
