@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Section, SectionHeader } from "@/components/blocks/Section";
-import { Separator } from "@/components/ui/Separator";
 import { ProvidenceMap } from "./ProvidenceMap";
 import { SituationPanel } from "./SituationPanel";
 import { SystemPanel } from "./SystemPanel";
 import { HallOfFamePanel } from "./HallOfFamePanel";
+import { PodiumPreviewStrip, ScrollHint } from "./PodiumPreviewStrip";
 import type { MapStateDTO } from "./types";
 
 const POLL_MS = 60_000;
@@ -86,6 +86,9 @@ export function ProvidencePulse({ initialState }: { initialState: MapStateDTO | 
                 )}
               </div>
             </div>
+
+            {/* Option E — scroll hint animé en bas de la carte */}
+            <ScrollHint targetId="hall-of-fame" />
           </div>
         ) : (
           <div className="h-[64vh] min-h-[520px] flex items-center justify-center bg-bg-elevated border border-border rounded-md text-text-muted">
@@ -94,10 +97,11 @@ export function ProvidencePulse({ initialState }: { initialState: MapStateDTO | 
         )}
       </Section>
 
-      <Separator gold />
+      {/* Option B — strip podium preview (remplace Separator) */}
+      <PodiumPreviewStrip targetId="hall-of-fame" />
 
       {/* ── Section 2 : Hall of Fame all-time Tabou + Urban Zone ──────── */}
-      <Section bg="surface" spacing="md">
+      <Section id="hall-of-fame" bg="surface" spacing="md">
         <SectionHeader
           eyebrow="Hall of Fame"
           headline="Classement all-time — Tabou × Urban Zone"
