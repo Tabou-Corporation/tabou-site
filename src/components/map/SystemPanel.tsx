@@ -186,12 +186,91 @@ function campaignPhrase(c: CampaignRow): { title: string; detail: string } {
   return { title: kind, detail: `Démarrée il y a ${diffHuman(since)}.` };
 }
 
+/* ─────────────────── Helpers UI ─────────────────── */
+
+/** Petit label inline pour annoter la source + la fenêtre de chaque chiffre. */
+function SourceTag({ source, window }: { source: "ESI" | "zKill"; window: string }) {
+  return (
+    <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted/80 ml-1.5">
+      · {source} · {window}
+    </span>
+  );
+}
+
+/** Sparkline kills 3h, 12 buckets de 15min — gauche = -3h, droite = maintenant. */
+function SparklineKills({ kills }: { kills: KillSummary[] }) {
+  const buckets = useMemo(() => {
+    const now = Date.now();
+    const arr: number[] = Array.from({ length: 12 }, () => 0);
+    for (const k of kills) {
+      const ageMin = (now - new Date(k.killTime).getTime()) / 60_000;
+      if (ageMin < 0 || ageMin > 180) continue;
+      const idx = 11 - Math.floor(ageMin / 15); // 0 = -3h, 11 = maintenant
+      if (idx >= 0 && idx < 12) arr[idx] = (arr[idx] ?? 0) + 1;
+    }
+    return arr;
+  }, [kills]);
+  const max = Math.max(1, ...buckets);
+  const total = buckets.reduce((a, b) => a + b, 0);
+
+  return (
+    <div>
+      <div className="flex items-end gap-0.5 h-12 mb-1">
+        {buckets.map((v, i) => {
+          const pct = max > 0 ? (v / max) * 100 : 0;
+          const isLastHour = i >= 8; // les 4 derniers buckets = dernière heure
+          let bg = "bg-bg-deep";
+          if (v > 0) {
+            bg = isLastHour ? "bg-gradient-to-t from-red-500/80 to-amber-400/80" : "bg-amber-500/50";
+          }
+          return (
+            <div
+              key={i}
+              className="flex-1 flex items-end h-full"
+              title={`${v} kill${v > 1 ? "s" : ""} · -${(11 - i) * 15} à -${(12 - i) * 15} min`}
+            >
+              <div
+                className={`w-full rounded-t-sm ${bg} transition-all`}
+                style={{ height: v === 0 ? "2px" : `${Math.max(10, pct)}%` }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-between text-[9px] font-mono uppercase tracking-wider text-text-muted">
+        <span>-3h</span>
+        <span>-2h</span>
+        <span>-1h</span>
+        <span className="text-gold">maintenant</span>
+      </div>
+      {total > 0 && (
+        <p className="mt-2 text-[11px] text-text-secondary">
+          <strong className="text-amber-200">{total}</strong> killmail{total > 1 ? "s" : ""} sur 3h ·{" "}
+          <strong className="text-amber-200">
+            {buckets.slice(8).reduce((a, b) => a + b, 0)}
+          </strong>{" "}
+          dans la dernière heure
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function SystemPanel({ system, onClose }: Props) {
   const [detail, setDetail] = useState<DetailPayload | null>(null);
   const [sovInfo, setSovInfo] = useState<SovInfo | null>(null);
   const [kills, setKills] = useState<KillSummary[] | null>(null);
   const [killsLoading, setKillsLoading] = useState(true);
   const [loading, setLoading] = useState(true);
+  // Timestamps de fraîcheur pour chaque source
+  const [esiFetchedAt, setEsiFetchedAt] = useState<number | null>(null);
+  const [zkillFetchedAt, setZkillFetchedAt] = useState<number | null>(null);
+  // Tick toutes les 30s pour recalculer la fraîcheur affichée
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -199,6 +278,8 @@ export function SystemPanel({ system, onClose }: Props) {
     setKillsLoading(true);
     setDetail(null);
     setKills(null);
+    setEsiFetchedAt(null);
+    setZkillFetchedAt(null);
     // Fetch indépendants — sov est rapide (<1s, cache), system détail est lent
     // (~5s getMapState). On affiche le nom d'alliance dès que sov arrive.
     fetch(`/api/map/sov`)
@@ -207,14 +288,24 @@ export function SystemPanel({ system, onClose }: Props) {
       .catch(() => { /* silent */ });
     fetch(`/api/map/system/${system.system.systemId}`)
       .then((r) => r.json())
-      .then((d) => { if (!cancelled) setDetail(d as DetailPayload); })
+      .then((d) => {
+        if (!cancelled) {
+          setDetail(d as DetailPayload);
+          setEsiFetchedAt(Date.now());
+        }
+      })
       .catch(() => { /* keep null */ })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     // Fetch zKill séparément — peut être lent (3-5s) au premier hit
     fetch(`/api/map/kills/system/${system.system.systemId}`)
       .then((r) => r.json())
-      .then((data: KillsPayload) => { if (!cancelled) setKills(data.kills ?? []); })
+      .then((data: KillsPayload) => {
+        if (!cancelled) {
+          setKills(data.kills ?? []);
+          setZkillFetchedAt(Date.now());
+        }
+      })
       .catch(() => { if (!cancelled) setKills([]); })
       .finally(() => { if (!cancelled) setKillsLoading(false); });
     return () => { cancelled = true; };
@@ -281,38 +372,62 @@ export function SystemPanel({ system, onClose }: Props) {
       .slice(0, 5);
   }, [detail?.events]);
 
+  // Fraîcheur des données : on prend le timestamp le plus récent et on retombe sur l'autre
+  const mostRecent = Math.max(esiFetchedAt ?? 0, zkillFetchedAt ?? 0);
+  const freshness = mostRecent > 0 ? diffHuman(Date.now() - mostRecent) : null;
+
   return (
     <aside className="h-full overflow-y-auto bg-bg-elevated border border-border rounded-md">
-      <header className="sticky top-0 bg-bg-elevated/95 backdrop-blur px-5 py-4 border-b border-border flex items-start justify-between z-10 gap-3">
-        <div className="min-w-0">
-          <p className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-1">
-            Détail système
-          </p>
-          <h2 className="font-display text-2xl text-text-primary leading-tight truncate">
-            {system.system.name}
-          </h2>
-          <p className="text-xs text-text-muted mt-0.5">
-            {system.system.regionName} · sec {system.system.security.toFixed(1)}
-          </p>
+      <header className="sticky top-0 bg-bg-elevated/95 backdrop-blur px-5 py-4 border-b border-border z-10">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-1">
+              Détail système
+            </p>
+            <h2 className="font-display text-2xl text-text-primary leading-tight truncate">
+              {system.system.name}
+            </h2>
+            <p className="text-xs text-text-muted mt-0.5">
+              {system.system.regionName} · sec {system.system.security.toFixed(1)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer le panneau"
+            className="p-1.5 hover:bg-bg-deep rounded text-text-secondary transition-colors shrink-0"
+          >
+            <X size={18} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Fermer le panneau"
-          className="p-1.5 hover:bg-bg-deep rounded text-text-secondary transition-colors shrink-0"
-        >
-          <X size={18} />
-        </button>
+        {/* Chip fraîcheur globale — option 4 */}
+        {freshness && (
+          <div className="mt-3 flex items-center gap-2 text-[9px] font-mono uppercase tracking-wider text-text-muted">
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-bg-deep border border-border">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              MAJ il y a {freshness}
+            </span>
+            <span className="text-text-muted/60">
+              {esiFetchedAt ? "ESI" : ""}{esiFetchedAt && zkillFetchedAt ? " + " : ""}{zkillFetchedAt ? "zKill" : ""}
+            </span>
+          </div>
+        )}
       </header>
 
       <div className="p-5 space-y-6 text-sm">
-        {/* 1. Statut global du système */}
+        {/* ━━━ Question 1 : Que se passe-t-il là maintenant ? ━━━ */}
         <section>
+          <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-2">
+            État actuel
+          </h3>
           <div className="flex items-center gap-2 mb-1.5">
             <span aria-hidden className="text-base">{lvl.icon}</span>
             <span className={`font-semibold ${lvl.color}`}>{lvl.txt}</span>
           </div>
-          <p className="text-text-primary leading-snug">{act.headline}</p>
+          <p className="text-text-primary leading-snug">
+            {act.headline}
+            <SourceTag source="ESI" window="1h" />
+          </p>
           <p className="text-text-secondary text-xs mt-1 leading-relaxed">{act.sub}</p>
           {hostileAlliances.length > 0 && (
             <p className="text-amber-200 text-xs mt-2 leading-relaxed bg-amber-500/5 border border-amber-500/30 rounded px-2.5 py-1.5">
@@ -330,9 +445,81 @@ export function SystemPanel({ system, onClose }: Props) {
           )}
         </section>
 
-        {/* 2. Souveraineté */}
+        {/* ━━━ Question 2 : Quand a-t-il pété, et combien ? — Timeline 3h ━━━ */}
+        {(killsLoading || (kills && kills.length > 0)) && (
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase">
+                Activité récente
+                <SourceTag source="zKill" window="3h" />
+              </h3>
+              {kills && kills.length > 0 && (
+                <a
+                  href={`https://zkillboard.com/system/${system.system.systemId}/`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-[10px] text-gold/70 hover:text-gold hover:underline"
+                >
+                  zKill →
+                </a>
+              )}
+            </div>
+
+            {killsLoading ? (
+              <p className="text-xs text-text-muted italic">Chargement depuis zKillboard…</p>
+            ) : kills && kills.length === 0 ? (
+              <p className="text-xs text-text-muted italic">Pas de kill récent.</p>
+            ) : (
+              <>
+                {/* Sparkline timeline — option 3 */}
+                <div className="bg-bg-deep/40 border border-border/50 rounded-md p-3 mb-3">
+                  <SparklineKills kills={kills!} />
+                </div>
+
+                {/* Liste des 5 derniers killmails */}
+                <ul className="space-y-1.5">
+                  {kills!.slice(0, 5).map((k) => {
+                    const ago = diffHuman(Date.now() - new Date(k.killTime).getTime());
+                    const value = formatIsk(k.totalValue);
+                    return (
+                      <li key={k.killId}>
+                        <a
+                          href={k.zkillUrl}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="block hover:bg-bg-deep/40 rounded px-2 py-1.5 -mx-2 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-2 text-xs">
+                            <span className="text-text-primary truncate">
+                              <strong className="text-amber-200">{k.victim.shipName}</strong>
+                              {k.victim.allianceName && (
+                                <span className="text-text-muted"> ({k.victim.allianceName})</span>
+                              )}
+                            </span>
+                            <span className="text-text-muted shrink-0">il y a {ago}</span>
+                          </div>
+                          <div className="text-[11px] text-text-secondary truncate mt-0.5">
+                            {k.attackers.primaryAllianceName ? (
+                              <>par <strong className="text-text-primary">{k.attackers.primaryAllianceName}</strong></>
+                            ) : (
+                              <>par {k.attackers.count} attaquant{k.attackers.count > 1 ? "s" : ""}</>
+                            )}
+                            {k.attackers.primaryAllianceName && ` · ${k.attackers.count} attackers`}
+                            {" · "}<span className="text-text-muted">{value}</span>
+                          </div>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </section>
+        )}
+
+        {/* ━━━ Question 3 : Qui contrôle, et quelles structures ? ━━━ */}
         <section>
-          <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-1.5">
+          <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-2">
             Souveraineté
           </h3>
           {allianceName ? (
@@ -347,17 +534,10 @@ export function SystemPanel({ system, onClose }: Props) {
           {system.recentSovChange && (
             <p className="text-amber-300 text-xs mt-1.5">⚠ Changement de sov dans les 7 derniers jours</p>
           )}
-        </section>
 
-        {/* 3. Structures sov */}
-        <section>
-          <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-1.5">
-            Structures sov
-          </h3>
-          {structures.length === 0 ? (
-            <p className="text-text-secondary italic text-xs">Aucune structure de souveraineté.</p>
-          ) : (
-            <ul className="space-y-2">
+          {/* Structures intégrées dans la même section */}
+          {structures.length > 0 && (
+            <ul className="space-y-2 mt-3">
               {structures.map((s) => {
                 const owner = sovInfo?.alliances.find((a) => a.id === s.allianceId)?.name ?? null;
                 const p = structurePhrase(s, owner);
@@ -373,77 +553,10 @@ export function SystemPanel({ system, onClose }: Props) {
               })}
             </ul>
           )}
-        </section>
 
-        {/* 3b. Combats récents (zKillboard, 3h) */}
-        {(killsLoading || (kills && kills.length > 0)) && (
-          <section>
-            <div className="flex items-center justify-between mb-1.5">
-              <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase">
-                Combats récents (3h)
-              </h3>
-              {kills && kills.length > 0 && (
-                <a
-                  href={`https://zkillboard.com/system/${system.system.systemId}/`}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="text-[10px] text-gold/70 hover:text-gold hover:underline"
-                >
-                  zKill →
-                </a>
-              )}
-            </div>
-            {killsLoading ? (
-              <p className="text-xs text-text-muted italic">Chargement depuis zKillboard…</p>
-            ) : kills && kills.length === 0 ? (
-              <p className="text-xs text-text-muted italic">Pas de kill récent.</p>
-            ) : (
-              <ul className="space-y-1.5">
-                {kills!.slice(0, 5).map((k) => {
-                  const ago = diffHuman(Date.now() - new Date(k.killTime).getTime());
-                  const value = formatIsk(k.totalValue);
-                  return (
-                    <li key={k.killId}>
-                      <a
-                        href={k.zkillUrl}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="block hover:bg-bg-deep/40 rounded px-2 py-1.5 -mx-2 transition-colors"
-                      >
-                        <div className="flex items-center justify-between gap-2 text-xs">
-                          <span className="text-text-primary truncate">
-                            <strong className="text-amber-200">{k.victim.shipName}</strong>
-                            {k.victim.allianceName && (
-                              <span className="text-text-muted"> ({k.victim.allianceName})</span>
-                            )}
-                          </span>
-                          <span className="text-text-muted shrink-0">il y a {ago}</span>
-                        </div>
-                        <div className="text-[11px] text-text-secondary truncate mt-0.5">
-                          {k.attackers.primaryAllianceName ? (
-                            <>par <strong className="text-text-primary">{k.attackers.primaryAllianceName}</strong></>
-                          ) : (
-                            <>par {k.attackers.count} attaquant{k.attackers.count > 1 ? "s" : ""}</>
-                          )}
-                          {k.attackers.primaryAllianceName && ` · ${k.attackers.count} attackers`}
-                          {" · "}<span className="text-text-muted">{value}</span>
-                        </div>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-        )}
-
-        {/* 4. Campagnes sov actives */}
-        {system.activeCampaigns > 0 && (
-          <section>
-            <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-1.5">
-              Campagne sov active
-            </h3>
-            <ul className="space-y-1.5">
+          {/* Campagne sov active intégrée */}
+          {system.activeCampaigns > 0 && campaigns.length > 0 && (
+            <ul className="space-y-1.5 mt-3">
               {campaigns.map((c) => {
                 const p = campaignPhrase(c);
                 return (
@@ -454,10 +567,10 @@ export function SystemPanel({ system, onClose }: Props) {
                 );
               })}
             </ul>
-          </section>
-        )}
+          )}
+        </section>
 
-        {/* 5. Commentaires éditoriaux Tabou */}
+        {/* ━━━ Notes éditoriales Tabou ━━━ */}
         {detail?.comments && detail.comments.length > 0 && (
           <section>
             <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-1.5">
@@ -473,11 +586,11 @@ export function SystemPanel({ system, onClose }: Props) {
           </section>
         )}
 
-        {/* 6. Activité récente (alerts/warn seulement, 24h) */}
+        {/* ━━━ Historique alertes 24h ━━━ */}
         {recentAlerts.length > 0 && (
           <section>
             <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase mb-1.5">
-              Activité récente
+              Historique 24h
             </h3>
             <ul className="space-y-1">
               {recentAlerts.map((e) => {
@@ -496,6 +609,11 @@ export function SystemPanel({ system, onClose }: Props) {
         )}
 
         {loading && <p className="text-xs text-text-muted">Chargement…</p>}
+
+        {/* Footer sources */}
+        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 pt-3 border-t border-border/40">
+          Sources : ESI (compteurs 1h rolling) · zKill (killmails 3h)
+        </p>
       </div>
     </aside>
   );
