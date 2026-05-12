@@ -148,14 +148,26 @@ export async function getCorpKillsAndLosses(
   }
   const uniqueItems = [...dedup.values()];
 
-  // 3. Fetch ESI killmail détaillé (cache 24h, immuable)
-  const enriched = await Promise.all(
-    uniqueItems.map(async (it) => {
-      const url = `https://esi.evetech.net/latest/killmails/${it.zk.killmail_id}/${it.zk.zkb.hash}/`;
-      const r = await esiFetch<EsiKillmail>(url, 86400);
-      return { ...it, km: r.data };
-    }),
-  );
+  // 3. Fetch ESI killmail détaillé (cache 24h, immuable).
+  // ⚠️ Batches de 20 + 1 retry pour éviter timeouts / rate-limit en parallèle massif.
+  const BATCH = 20;
+  const enriched: Array<typeof uniqueItems[number] & { km: EsiKillmail | null }> = [];
+  for (let i = 0; i < uniqueItems.length; i += BATCH) {
+    const slice = uniqueItems.slice(i, i + BATCH);
+    const batch = await Promise.all(
+      slice.map(async (it) => {
+        const url = `https://esi.evetech.net/latest/killmails/${it.zk.killmail_id}/${it.zk.zkb.hash}/`;
+        let r = await esiFetch<EsiKillmail>(url, 86400);
+        // Retry une fois si le fetch a échoué (timeout, 5xx transitoire).
+        if (r.data == null) {
+          await new Promise((res) => setTimeout(res, 200));
+          r = await esiFetch<EsiKillmail>(url, 86400);
+        }
+        return { ...it, km: r.data };
+      }),
+    );
+    enriched.push(...batch);
+  }
   // Filtrage : on garde seulement les killmails qui se sont produits dans nos
   // régions cœur (Providence + Catch).
   const valid = enriched.filter(
