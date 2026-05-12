@@ -22,7 +22,7 @@ interface RawData {
   layoutPositions?: Record<string, { x: number; y: number }>;
 }
 
-const data = raw as RawData;
+const data = raw as unknown as RawData;
 const PROVIDENCE_REGION_ID = data.region.id;
 export const CORE_REGION_IDS = new Set<number>(data.coreRegionIds ?? [PROVIDENCE_REGION_ID]);
 
