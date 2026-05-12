@@ -487,6 +487,144 @@ model SiteContent {
   @@map("site_content")
 }
 
+// ─── V11 : Providence Pulse — Carte géopolitique ─────────────────────────────
+
+/// Cache des réponses ESI (respect ETag + Expires).
+/// Clé = URL complète. body = JSON stringifié. etag/expiresAt selon headers.
+model MapEsiCache {
+  url         String   @id
+  body        String   @db.Text
+  etag        String?
+  expiresAt   DateTime
+  /// Status HTTP de la dernière réponse réussie (200, 304 ne ré-écrit pas le body)
+  lastStatus  Int
+  fetchedAt   DateTime @updatedAt
+
+  @@index([expiresAt])
+  @@map("map_esi_cache")
+}
+
+/// Snapshot courant de la souveraineté par système (ESI /sovereignty/map/).
+/// Une ligne par systemId — écrasée à chaque ingest.
+model MapSovSnapshot {
+  systemId       Int      @id
+  allianceId     Int?
+  corporationId  Int?
+  factionId      Int?
+  updatedAt      DateTime @updatedAt
+
+  @@map("map_sov_snapshots")
+}
+
+/// Structures sov (TCU/IHUB) — ESI /sovereignty/structures/.
+/// Une ligne par structureId.
+model MapStructureSnapshot {
+  structureId        BigInt   @id
+  systemId           Int
+  allianceId         Int?
+  /// "infrastructure_hub" | "territorial_claim_unit"
+  structureTypeId    Int
+  vulnerableStartUtc DateTime?
+  vulnerableEndUtc   DateTime?
+  /// 0..1 — facteur d'occupation (ESI)
+  vulnerabilityOccupancyLevel Float?
+  updatedAt          DateTime @updatedAt
+
+  @@index([systemId])
+  @@map("map_structure_snapshots")
+}
+
+/// Campagnes de souveraineté actives (ESI /sovereignty/campaigns/).
+model MapCampaignSnapshot {
+  campaignId    Int      @id
+  systemId      Int
+  /// "ihub_defense" | "tcu_defense"
+  eventType     String
+  startTime     DateTime
+  defenderId    Int?
+  attackersScore Float?
+  defenderScore  Float?
+  updatedAt     DateTime @updatedAt
+
+  @@index([systemId])
+  @@index([startTime])
+  @@map("map_campaign_snapshots")
+}
+
+/// Compteurs ESI 1h glissante par système (kills + jumps).
+/// Une ligne par systemId — écrasée à chaque ingest.
+model MapSystemActivity {
+  systemId       Int      @id
+  shipKills      Int      @default(0)
+  npcKills       Int      @default(0)
+  podKills       Int      @default(0)
+  shipJumps      Int      @default(0)
+  /// Moyenne mobile 24h des shipKills (pour comparer à la baseline)
+  shipKillsAvg24h Float   @default(0)
+  shipJumpsAvg24h Float   @default(0)
+  updatedAt      DateTime @updatedAt
+
+  @@map("map_system_activity")
+}
+
+/// Événements timeline — auto-générés (changement sov, reinforced, etc.)
+/// ou créés manuellement par un officier (kind = "manual").
+model MapEvent {
+  id          String   @id @default(cuid())
+  /// auto | manual
+  source      String   @default("auto")
+  /// sov_change | structure_reinforced | structure_vulnerable | campaign_started
+  /// | campaign_ended | activity_spike | manual
+  kind        String
+  /// Système concerné (null si évènement régional)
+  systemId    Int?
+  /// Sévérité affichée : info | warn | alert
+  severity    String   @default("info")
+  title       String   @db.VarChar(200)
+  body        String?  @db.Text
+  /// Données structurées JSON (avant/après, structureId, etc.)
+  meta        String?  @db.Text
+  /// Auteur si manual (userId)
+  authorId    String?
+  occurredAt  DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([systemId, occurredAt])
+  @@index([occurredAt])
+  @@index([kind])
+  @@map("map_events")
+}
+
+/// Commentaires éditoriaux Tabou — attachés à un système ou globaux.
+model MapComment {
+  id         String   @id @default(cuid())
+  systemId   Int?
+  authorId   String
+  body       String   @db.Text
+  /// Mis en avant en haut du panel système
+  pinned     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([systemId, pinned, createdAt])
+  @@map("map_comments")
+}
+
+/// Épingles sur la carte (POI éditoriaux).
+model MapPin {
+  id        String   @id @default(cuid())
+  systemId  Int
+  label     String   @db.VarChar(60)
+  /// info | hostile | friendly | objective
+  kind      String   @default("info")
+  note      String?  @db.VarChar(280)
+  authorId  String
+  createdAt DateTime @default(now())
+
+  @@index([systemId])
+  @@map("map_pins")
+}
+
 // ─── V6+ : Characters ESI ────────────────────────────────────────────────────
 // model Character {
 //   characterId    Int      @id

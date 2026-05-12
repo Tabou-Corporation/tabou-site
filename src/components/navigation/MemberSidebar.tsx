@@ -186,6 +186,7 @@ export function MemberSidebar({ pendingCount = 0, unreadMarketCount = 0, discord
             <NavItem href="/staff/lexique"     icon={BookOpenText}  label="Lexique"      />
             <NavItem href="/staff/calendrier"  icon={CalendarPlus}  label="Événements"   />
             <NavItem href="/staff/assemblees"  icon={Scroll}        label="Assemblées"   />
+            <NavItem href="/staff/map"         icon={Shield}        label="Providence Pulse" />
           </div>
         )}
 

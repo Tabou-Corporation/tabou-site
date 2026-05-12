@@ -20,6 +20,11 @@ export const NAVIGATION: NavigationConfig = {
       visibility: "public",
     },
     {
+      label: "Carte",
+      href: "/map",
+      visibility: "public",
+    },
+    {
       label: "Recrutement",
       href: "/recrutement",
       visibility: "public",
