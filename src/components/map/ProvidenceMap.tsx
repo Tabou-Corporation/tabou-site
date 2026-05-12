@@ -59,8 +59,6 @@ const COL = {
 
 const MIN_ZOOM = 0.6;
 const MAX_ZOOM = 16;
-// Régions affichées comme "cœur" — Providence + Catch (CVA détient les deux).
-const PROVIDENCE_REGION_ID = 10000047; // gardé pour les labels région principale
 
 const PIN_COLORS: Record<PinData["kind"], string> = {
   info: "#7FB8FF",

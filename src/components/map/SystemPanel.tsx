@@ -109,7 +109,7 @@ function activityPhrase(s: MapSystemDTO): { headline: string; sub: string } {
   if (!s.activity) {
     return { headline: "Pas de données d'activité ESI", sub: "Le worker n'a pas encore tourné." };
   }
-  const { shipKills, shipJumps, shipKillsAvg24h, shipJumpsAvg24h, podKills, npcKills } = s.activity;
+  const { shipKills, shipJumps, shipKillsAvg24h, podKills, npcKills } = s.activity;
 
   let headline: string;
   if (shipKills === 0) headline = "Aucun kill cette heure";
