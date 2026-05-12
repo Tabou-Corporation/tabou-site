@@ -408,10 +408,18 @@ export function ProvidenceMap({ state, selectedSystemId, onSelectSystem, height 
       const c = colorForSystem(sys.systemId, sys.regionId);
       const sx = sys.coords.x * s.zoom + s.offsetX;
       const sy = sys.coords.y * s.zoom + s.offsetY;
-      const r = sys.inRegion ? nodeR : nodeR * 0.50;
+      const t = tensionBySystem.get(sys.systemId);
+
+      // Option C — taille de node hiérarchique selon niveau d'activité
+      const activityMult = !sys.inRegion ? 0.45
+        : !t || t.level === "calm" ? 0.72
+        : t.level === "watch"      ? 1.00
+        : t.level === "warm"       ? 1.18
+        : t.level === "hot"        ? 1.38
+        : 1.55; // burning
+      const r = nodeR * activityMult;
 
       // Anneau de tension — proportionnel au score (visible dès "watch")
-      const t = tensionBySystem.get(sys.systemId);
       if (t && sys.inRegion && t.level !== "calm") {
         const isHot = t.level === "hot" || t.level === "burning";
         ctx.strokeStyle = LEVEL_COLORS[t.level];
@@ -459,15 +467,23 @@ export function ProvidenceMap({ state, selectedSystemId, onSelectSystem, height 
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // Nom du système — toujours visible pour inRegion
-      if (sys.inRegion || s.zoom > 5.5) {
+      // Option B — labels adaptatifs : actifs uniquement si activité, hover ou sélection
+      const isHovered = hover?.systemId === sys.systemId;
+      const isSelected = sys.systemId === selectedSystemId;
+      const hasActivity = sys.inRegion && t && t.level !== "calm";
+      const showLabel = isHovered || isSelected || hasActivity || s.zoom > 7 || !sys.inRegion && s.zoom > 5.5;
+      if (showLabel) {
         const fontSize = Math.max(8, Math.min(13, 6 + s.zoom * 0.48));
-        ctx.font = `${fontSize}px monospace`;
+        ctx.font = `${isSelected || isHovered ? "bold " : ""}${fontSize}px monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
         ctx.shadowColor = "rgba(0,0,0,0.98)";
         ctx.shadowBlur = 5;
-        ctx.fillStyle = sys.inRegion ? "#DADAE8" : "#606075";
+        // Label plus lumineux pour les systèmes actifs
+        ctx.fillStyle = isSelected ? "#F0B030"
+          : isHovered ? "#FFFFFF"
+          : hasActivity ? "#E8E8F8"
+          : sys.inRegion ? "#AAAABF" : "#606075";
         ctx.fillText(sys.name, sx, sy - r - 3);
         ctx.shadowBlur = 0;
         ctx.textBaseline = "alphabetic";

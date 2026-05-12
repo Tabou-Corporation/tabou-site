@@ -58,33 +58,41 @@ export function ProvidencePulse({ initialState }: { initialState: MapStateDTO | 
           <div className="space-y-6">
             <SituationPanel state={state} onPickSystem={setSelectedId} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-              <div className="h-[64vh] min-h-[520px]">
-                <ProvidenceMap
-                  state={state}
-                  selectedSystemId={selectedId}
-                  onSelectSystem={setSelectedId}
-                />
-              </div>
+            {/* Option A — carte pleine largeur, SystemPanel en slide-over */}
+            <div className="relative h-[72vh] min-h-[580px]">
+              <ProvidenceMap
+                state={state}
+                selectedSystemId={selectedId}
+                onSelectSystem={setSelectedId}
+              />
 
-              <div className="h-[64vh] min-h-[520px]">
-                {selectedSystem ? (
-                  <SystemPanel
-                    system={selectedSystem}
-                    onClose={() => setSelectedId(null)}
-                  />
-                ) : (
-                  <aside className="h-full bg-bg-elevated border border-border rounded-md p-6 flex flex-col items-center justify-center text-center">
-                    <div className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-3">
-                      Détail système
-                    </div>
-                    <p className="text-text-secondary text-sm leading-relaxed max-w-xs">
-                      Cliquez sur un système de la carte (ou sur une alerte ci-dessus)
-                      pour voir tension, sov, structures et combats récents.
-                    </p>
-                  </aside>
+              {/* Slide-over drawer — s'ouvre par-dessus la carte sans la réduire */}
+              <div
+                className={`
+                  absolute inset-y-0 right-0 z-20
+                  w-full sm:w-[400px]
+                  transition-transform duration-300 ease-in-out
+                  ${selectedSystem ? "translate-x-0" : "translate-x-full"}
+                `}
+              >
+                {selectedSystem && (
+                  <div className="h-full bg-bg-deep/95 border-l border-border shadow-2xl overflow-y-auto backdrop-blur-sm">
+                    <SystemPanel
+                      system={selectedSystem}
+                      onClose={() => setSelectedId(null)}
+                    />
+                  </div>
                 )}
               </div>
+
+              {/* Hint discret quand rien n'est sélectionné */}
+              {!selectedSystem && (
+                <div className="absolute bottom-4 right-4 pointer-events-none">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted bg-bg-deep/80 border border-border px-3 py-1.5 rounded">
+                    Cliquez sur un système
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Option E — scroll hint animé en bas de la carte */}
