@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/map-sync",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 * * * *"
     }
   ]
 }
