@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/Separator";
 import { ProvidenceMap } from "./ProvidenceMap";
 import { SituationPanel } from "./SituationPanel";
 import { SystemPanel } from "./SystemPanel";
-import { CorpActivityPanel } from "./CorpActivityPanel";
+import { HallOfFamePanel } from "./HallOfFamePanel";
 import type { MapStateDTO } from "./types";
 
 const POLL_MS = 60_000;
@@ -17,7 +17,7 @@ const POLL_MS = 60_000;
  *
  *  Section 1 — Situation actuelle (alertes prioritaires) + carte interactive
  *              avec drill-down dans une fenêtre latérale.
- *  Section 2 — Activité Tabou + Urban Zone (kills/losses 30j, Providence + Catch).
+ *  Section 2 — Hall of Fame all-time Tabou + Urban Zone (classement pilotes, source zKill stats).
  *
  * Les anciens panneaux (légende, sources externes, timeline géopolitique) ont
  * été retirés : la légende est implicite dans la SituationPanel, la fraîcheur
@@ -96,14 +96,14 @@ export function ProvidencePulse({ initialState }: { initialState: MapStateDTO | 
 
       <Separator gold />
 
-      {/* ── Section 2 : Activité corp Tabou + Urban Zone ──────────────── */}
+      {/* ── Section 2 : Hall of Fame all-time Tabou + Urban Zone ──────── */}
       <Section bg="surface" spacing="md">
         <SectionHeader
-          eyebrow="Activité opérationnelle"
-          headline="Tabou & Urban Zone — 30 jours"
-          description="Kills et losses des pilotes Tabou et Urban Zone, filtrés sur Providence et Catch. Cliquez sur une ligne pour focaliser la carte sur le système concerné."
+          eyebrow="Hall of Fame"
+          headline="Classement all-time — Tabou × Urban Zone"
+          description="Classement cumulé des pilotes par kills depuis la création de chaque corporation, toutes régions confondues. Source : zKillboard."
         />
-        <CorpActivityPanel onPickSystem={setSelectedId} />
+        <HallOfFamePanel />
       </Section>
     </>
   );
