@@ -185,7 +185,7 @@ export function CorpActivityPanel({
 
         {!loading && view === "chrono" && entries.length > 0 && (
           <ul className="divide-y divide-border max-h-[640px] overflow-y-auto">
-            {entries.slice(0, 80).map((e) => (
+            {entries.slice(0, 300).map((e) => (
               <ChronoRow key={e.killId} entry={e} onPickSystem={onPickSystem} />
             ))}
           </ul>

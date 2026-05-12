@@ -92,7 +92,7 @@ export interface CorpKillEntry {
 export async function getCorpKillsAndLosses(
   corpIds: number[],
   _unusedPastSeconds = 0,
-  limitPerCorp = 50,
+  limitPerCorp = 300,
 ): Promise<{ entries: CorpKillEntry[]; fromCache: boolean }> {
   void _unusedPastSeconds;
   const allItems: Array<{ corpId: number; side: "kill" | "loss"; zk: ZkillItem }> = [];
