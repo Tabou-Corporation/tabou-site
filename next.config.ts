@@ -17,6 +17,13 @@ const nextConfig: NextConfig = {
 
   // Headers de sécurité minimaux
   async headers() {
+    const isDev = process.env.NODE_ENV !== "production";
+    // En dev, Next.js Fast Refresh utilise eval() — requis pour HMR.
+    // En prod, on garde la CSP stricte sans unsafe-eval.
+    const scriptSrc = isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+      : "script-src 'self' 'unsafe-inline'";
+
     return [
       {
         source: "/(.*)",
@@ -29,11 +36,8 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // Images : domaines EVE + hebergements connus uniquement
               "img-src 'self' https://images.evetech.net https://i.imgur.com https://imgur.com https://cdn.discordapp.com https://*.githubusercontent.com data:",
-              // unsafe-inline requis par Next.js (hydration) et Framer Motion (styles inline)
-              // TODO : migrer vers nonces CSP quand Next.js le supportera nativement
-              "script-src 'self' 'unsafe-inline'",
+              scriptSrc,
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self'",
               "connect-src 'self'",

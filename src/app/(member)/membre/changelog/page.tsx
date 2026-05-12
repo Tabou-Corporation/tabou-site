@@ -28,10 +28,31 @@ interface Version {
 
 const VERSIONS: Version[] = [
   {
+    version: "3.5",
+    title: "Providence Pulse",
+    description: "Carte de situation interactive publique couvrant Providence et Catch : combats actifs, mouvements de flotte, campagnes de souveraineté. Données ESI temps réel + zKillboard. Panneau d'activité Tabou & Urban Zone (kills/losses 30 jours).",
+    status: "current",
+    changes: [
+      { type: "feature", label: "Page /map publique — Providence Pulse, carte interactive Providence + Catch (204 systèmes)" },
+      { type: "feature", label: "Layout graphe force-directed (Fruchterman-Reingold) — aucun nœud ne se chevauche, liaisons stargates fidèles" },
+      { type: "feature", label: "Panneau Situation actuelle — synthèse en langage naturel : campagnes sov, combats actifs, trafic intense" },
+      { type: "feature", label: "Workers ESI : souveraineté, structures sov, campagnes, kills/jumps — ETag + cache Vercel, fallback DB" },
+      { type: "feature", label: "Score de tension composite par système (activité PvP, mouvement de flotte, guerre sov, structures, politique)" },
+      { type: "feature", label: "Panneau détail système — souveraineté, structures reinforcées, kills récents (3h), alliance hostile détectée" },
+      { type: "feature", label: "Panneau activité Tabou & Urban Zone — kills/losses 30 jours filtrés Providence+Catch, portraits pilotes, icônes ships" },
+      { type: "feature", label: "Vue Par pilote — agrégation K/L/ISK par character, ship les plus utilisés, lien zKill" },
+      { type: "feature", label: "Admin /staff/map (officer+) — sync manuelle, commentaires éditoriaux, épingles par système" },
+      { type: "feature", label: "Cron Vercel toutes les 5 min sur /api/cron/map-sync — données toujours fraîches" },
+      { type: "improvement", label: "KillFeed Hero — feed mixé Tabou + Urban Zone, trié par date, badge corpo discret sur chaque kill" },
+      { type: "improvement", label: "Top pilote du mois — agrégation cross-corp (Tabou + Urban Zone), dédup par killmail" },
+      { type: "improvement", label: "Alignement design system complet — PageHeader, Section, SectionHeader sur la page carte" },
+    ],
+  },
+  {
     version: "3.4",
     title: "Absences & Disponibilités",
     description: "Les membres peuvent déclarer leur indisponibilité directement depuis leur profil — durée fixe, présets 1/2/3 mois ou durée indéterminée. L'annuaire regroupe les membres en pause dans un onglet dédié.",
-    status: "current",
+    status: "released",
     changes: [
       { type: "feature", label: "Déclaration d'absence depuis le profil membre — durée 1 mois, 2 mois, 3 mois, dates précises ou indéterminée" },
       { type: "feature", label: "Motif optionnel pour l'absence (vacances, déménagement, pause gaming…)" },
