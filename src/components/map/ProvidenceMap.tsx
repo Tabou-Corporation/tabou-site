@@ -67,6 +67,20 @@ const PIN_COLORS: Record<PinData["kind"], string> = {
   objective: "#FFCB55",
 };
 
+// Helper : convertit "#RRGGBB" en "rgba(r,g,b,a)" pour radial gradients
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Rang d'intensité pour comparer deux levels et garder le plus chaud
+const LEVEL_RANK: Record<string, number> = {
+  calm: 0, watch: 1, warm: 2, hot: 3, burning: 4,
+};
+
 export function ProvidenceMap({ state, selectedSystemId, onSelectSystem, height = "100%" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -396,11 +410,61 @@ export function ProvidenceMap({ state, selectedSystemId, onSelectSystem, height 
     }
     ctx.stroke();
 
-    // ── Nodes système (style Wanderer)
+    // ── Timing animations
     const pulseT = (Date.now() % 2200) / 2200;
     const pulse = 0.55 + 0.45 * Math.sin(pulseT * Math.PI * 2);
     const nodeR = Math.max(3.5, Math.min(10, s.zoom * 0.75));
     const logoSize = Math.max(12, Math.min(20, s.zoom * 1.8));
+
+    // ── 1. Glow diffus sous les systèmes actifs (radial gradient coloré)
+    //      Donne une lueur de fond proportionnelle au niveau d'activité.
+    for (const sys of SDE_SYSTEMS) {
+      if (!sys.inRegion) continue;
+      if (sys.coords.x < wx0 - 14 || sys.coords.x > wx1 + 14) continue;
+      if (sys.coords.y < wy0 - 14 || sys.coords.y > wy1 + 14) continue;
+      const t = tensionBySystem.get(sys.systemId);
+      if (!t || t.level === "calm") continue;
+      const sx = sys.coords.x * s.zoom + s.offsetX;
+      const sy = sys.coords.y * s.zoom + s.offsetY;
+      const baseR = nodeR * (t.level === "watch" ? 3.0 : t.level === "warm" ? 4.0 : t.level === "hot" ? 5.5 : 7.0);
+      // Pulse modulant la portée du glow (effet "respiration")
+      const glowR = baseR * (0.85 + 0.15 * pulse);
+      const baseAlpha = t.level === "watch" ? 0.18 : t.level === "warm" ? 0.24 : t.level === "hot" ? 0.32 : 0.42;
+      const color = LEVEL_COLORS[t.level];
+      const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
+      grad.addColorStop(0, hexToRgba(color, baseAlpha));
+      grad.addColorStop(0.6, hexToRgba(color, baseAlpha * 0.3));
+      grad.addColorStop(1, hexToRgba(color, 0));
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ── 2. Gates "illuminées" — segments entre deux systèmes actifs
+    //      La connexion s'allume avec la couleur du level le plus chaud.
+    for (const [a, b] of SDE_JUMPS) {
+      const sa = SDE_BY_ID.get(a);
+      const sb = SDE_BY_ID.get(b);
+      if (!sa || !sb) continue;
+      if (!CORE_REGION_IDS.has(sa.regionId) || !CORE_REGION_IDS.has(sb.regionId)) continue;
+      const ta = tensionBySystem.get(a);
+      const tb = tensionBySystem.get(b);
+      const lvlA = ta?.level ?? "calm";
+      const lvlB = tb?.level ?? "calm";
+      if (lvlA === "calm" && lvlB === "calm") continue;
+      // On prend le level le plus chaud des deux extrémités
+      const warmer = (LEVEL_RANK[lvlA] ?? 0) >= (LEVEL_RANK[lvlB] ?? 0) ? lvlA : lvlB;
+      const isHot = warmer === "hot" || warmer === "burning";
+      ctx.strokeStyle = LEVEL_COLORS[warmer];
+      ctx.globalAlpha = isHot ? 0.35 + 0.35 * pulse : 0.25 + 0.10 * pulse;
+      ctx.lineWidth = Math.max(1.2, s.zoom * (isHot ? 0.15 : 0.10));
+      ctx.beginPath();
+      ctx.moveTo(sa.coords.x * s.zoom + s.offsetX, sa.coords.y * s.zoom + s.offsetY);
+      ctx.lineTo(sb.coords.x * s.zoom + s.offsetX, sb.coords.y * s.zoom + s.offsetY);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
 
     for (const sys of SDE_SYSTEMS) {
       if (sys.coords.x < wx0 - 14 || sys.coords.x > wx1 + 14) continue;
@@ -419,16 +483,37 @@ export function ProvidenceMap({ state, selectedSystemId, onSelectSystem, height 
         : 1.55; // burning
       const r = nodeR * activityMult;
 
-      // Anneau de tension — proportionnel au score (visible dès "watch")
+      // Anneau de tension — pulse pour TOUS les niveaux actifs (watch → burning)
       if (t && sys.inRegion && t.level !== "calm") {
         const isHot = t.level === "hot" || t.level === "burning";
         ctx.strokeStyle = LEVEL_COLORS[t.level];
-        // Pulse uniquement pour hot/burning ; statique pour watch/warm
-        ctx.globalAlpha = isHot ? 0.35 + 0.45 * pulse : 0.30 + 0.10 * Math.min(1, t.tension.score * 2);
-        ctx.lineWidth = Math.max(1, s.zoom * (isHot ? 0.14 : 0.10));
+        // Tous les levels pulsent maintenant, intensité variable selon le niveau
+        const pulseStrength = isHot ? 0.45 : 0.30;
+        const baseAlpha = isHot ? 0.40 : 0.35;
+        ctx.globalAlpha = baseAlpha + pulseStrength * pulse;
+        ctx.lineWidth = Math.max(1, s.zoom * (isHot ? 0.16 : 0.11));
         ctx.beginPath();
         ctx.arc(sx, sy, r + 5, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // Shockwave ripple — ondes concentriques qui partent du système hot/burning
+      if (t && sys.inRegion && (t.level === "hot" || t.level === "burning")) {
+        const waveCount = t.level === "burning" ? 2 : 1;
+        const waveSpread = nodeR * 4.5;
+        for (let i = 0; i < waveCount; i++) {
+          // Décalage de phase pour avoir 2 ondes successives
+          const phase = ((Date.now() / 1700 + i * 0.5) % 1);
+          const wr = r + phase * waveSpread;
+          const alpha = (1 - phase) * 0.55;
+          ctx.strokeStyle = LEVEL_COLORS[t.level];
+          ctx.globalAlpha = alpha;
+          ctx.lineWidth = Math.max(1, s.zoom * 0.11);
+          ctx.beginPath();
+          ctx.arc(sx, sy, wr, 0, Math.PI * 2);
+          ctx.stroke();
+        }
         ctx.globalAlpha = 1;
       }
       // Halo de traffic (jumps/h élevés) — cyan diffus
@@ -489,26 +574,36 @@ export function ProvidenceMap({ state, selectedSystemId, onSelectSystem, height 
         ctx.textBaseline = "alphabetic";
       }
 
-      // Badge kills — petit pastille rouge en haut-droite si shipKills > 0
+      // Badge kills — pastille rouge animée si shipKills > 0
       if (t && t.activity && sys.inRegion && t.activity.shipKills > 0 && s.zoom > 3) {
         const bx = sx + r * 0.85;
         const by = sy - r * 0.85;
         const badgeR = Math.max(5, Math.min(9, s.zoom * 0.7));
-        // Halo pulsé pour signaler de l'activité fraîche
-        ctx.fillStyle = "#FF3030";
-        ctx.globalAlpha = 0.25 + 0.35 * pulse;
+        // Onde expansive autour du badge (effet "alerte fraîche")
+        const ringPhase = (Date.now() / 1400) % 1;
+        ctx.strokeStyle = "#FF4848";
+        ctx.globalAlpha = (1 - ringPhase) * 0.6;
+        ctx.lineWidth = Math.max(1, s.zoom * 0.10);
         ctx.beginPath();
-        ctx.arc(bx, by, badgeR + 2, 0, Math.PI * 2);
+        ctx.arc(bx, by, badgeR + ringPhase * badgeR * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        // Halo pulsé statique
+        ctx.fillStyle = "#FF3030";
+        ctx.globalAlpha = 0.30 + 0.45 * pulse;
+        ctx.beginPath();
+        ctx.arc(bx, by, badgeR + 3, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
-        // Disque rouge plein
+        // Disque rouge plein + léger scale pulsant
+        const badgeScale = 1 + 0.10 * pulse;
         ctx.fillStyle = "#0C0C14";
         ctx.beginPath();
-        ctx.arc(bx, by, badgeR + 1, 0, Math.PI * 2);
+        ctx.arc(bx, by, (badgeR + 1) * badgeScale, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#FF4848";
         ctx.beginPath();
-        ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
+        ctx.arc(bx, by, badgeR * badgeScale, 0, Math.PI * 2);
         ctx.fill();
         // Chiffre kills
         const kills = t.activity.shipKills;
