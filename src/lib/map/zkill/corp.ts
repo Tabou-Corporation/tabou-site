@@ -59,12 +59,22 @@ export interface CorpKillEntry {
   side: "kill" | "loss";
   /** Corporation Tabou/UZ impliquée (l'une des `targetCorpIds`) */
   involvedCorpId: number;
-  /** Pilote Tabou/UZ impliqué : victime (loss) ou final blow / first attacker (kill) */
+  /** Pilote Tabou/UZ "principal" : victime (loss) ou final blow / first attacker (kill) — pour l'affichage chronologique */
   pilot: {
     characterId: number | null;
     characterName: string | null;
     shipTypeId: number | null;
   };
+  /**
+   * TOUS les pilotes Tabou/UZ présents sur ce killmail (attackers ou victime).
+   * Utilisé pour l'agrégation par pilote : chaque participant gagne +1.
+   */
+  participants: Array<{
+    characterId: number;
+    characterName: string | null;
+    shipTypeId: number | null;
+    corpId: number;
+  }>;
   /** Vaisseau "central" du killmail : si loss = victime, si kill = victime aussi */
   ship: {
     typeId: number;
@@ -153,24 +163,50 @@ export async function getCorpKillsAndLosses(
       e.km != null && CORE_SYSTEM_IDS.has(e.km.solar_system_id),
   );
 
-  // 4a. Identifier le pilote "intéressant" pour chaque kill (Tabou/UZ).
+  // Toutes les corps cibles (pour identifier les participants Tabou/UZ dans n'importe quel killmail)
+  const targetCorps = new Set<number>(corpIds);
+
+  // 4a. Identifier le pilote "principal" pour l'affichage chronologique (final blow Tabou/UZ ou victime).
   const pilotByKill = new Map<number, { characterId: number | null; shipTypeId: number | null }>();
+  // 4a-bis. Identifier TOUS les pilotes Tabou/UZ impliqués pour l'agrégation par pilote.
+  const participantsByKill = new Map<number, Array<{ characterId: number; shipTypeId: number | null; corpId: number }>>();
+
   for (const e of valid) {
     let pilotChar: number | null = null;
     let pilotShip: number | null = null;
+    const participants: Array<{ characterId: number; shipTypeId: number | null; corpId: number }> = [];
+
     if (e.side === "loss") {
       pilotChar = e.km.victim.character_id ?? null;
       pilotShip = e.km.victim.ship_type_id;
+      if (e.km.victim.character_id && e.km.victim.corporation_id && targetCorps.has(e.km.victim.corporation_id)) {
+        participants.push({
+          characterId: e.km.victim.character_id,
+          shipTypeId: e.km.victim.ship_type_id,
+          corpId: e.km.victim.corporation_id,
+        });
+      }
     } else {
-      const ours = e.km.attackers.filter((a) => a.corporation_id === e.corpId);
+      const ours = e.km.attackers.filter((a) => a.corporation_id && targetCorps.has(a.corporation_id));
       const final = ours.find((a) => a.final_blow) ?? ours[0];
       pilotChar = final?.character_id ?? null;
       pilotShip = final?.ship_type_id ?? null;
+      // Tous les pilotes Tabou/UZ qui ont contribué au kill
+      for (const a of ours) {
+        if (a.character_id && a.corporation_id) {
+          participants.push({
+            characterId: a.character_id,
+            shipTypeId: a.ship_type_id ?? null,
+            corpId: a.corporation_id,
+          });
+        }
+      }
     }
     pilotByKill.set(e.km.killmail_id, { characterId: pilotChar, shipTypeId: pilotShip });
+    participantsByKill.set(e.km.killmail_id, participants);
   }
 
-  // 4b. Collect IDs à résoudre (ships victimes + alliances victimes + pilotes Tabou/UZ).
+  // 4b. Collect IDs à résoudre (ships + alliances + tous les pilotes Tabou/UZ).
   const toResolve = new Set<number>();
   for (const e of valid) {
     toResolve.add(e.km.victim.ship_type_id);
@@ -178,12 +214,18 @@ export async function getCorpKillsAndLosses(
     const p = pilotByKill.get(e.km.killmail_id);
     if (p?.characterId) toResolve.add(p.characterId);
     if (p?.shipTypeId) toResolve.add(p.shipTypeId);
+    const parts = participantsByKill.get(e.km.killmail_id) ?? [];
+    for (const part of parts) {
+      toResolve.add(part.characterId);
+      if (part.shipTypeId) toResolve.add(part.shipTypeId);
+    }
   }
   const names = await resolveNames([...toResolve]);
 
   // 5. Assemblage final
   const entries: CorpKillEntry[] = valid.map((e) => {
     const p = pilotByKill.get(e.km.killmail_id) ?? { characterId: null, shipTypeId: null };
+    const parts = participantsByKill.get(e.km.killmail_id) ?? [];
     return {
       killId: e.km.killmail_id,
       killTime: e.km.killmail_time,
@@ -194,6 +236,12 @@ export async function getCorpKillsAndLosses(
         characterName: p.characterId ? names.get(p.characterId) ?? null : null,
         shipTypeId: p.shipTypeId,
       },
+      participants: parts.map((part) => ({
+        characterId: part.characterId,
+        characterName: names.get(part.characterId) ?? null,
+        shipTypeId: part.shipTypeId,
+        corpId: part.corpId,
+      })),
       ship: {
         typeId: e.km.victim.ship_type_id,
         name: names.get(e.km.victim.ship_type_id) ?? `Ship #${e.km.victim.ship_type_id}`,

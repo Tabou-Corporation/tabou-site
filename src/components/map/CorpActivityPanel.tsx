@@ -18,6 +18,12 @@ interface CorpKillEntry {
   side: "kill" | "loss";
   involvedCorpId: number;
   pilot: { characterId: number | null; characterName: string | null; shipTypeId: number | null };
+  participants: Array<{
+    characterId: number;
+    characterName: string | null;
+    shipTypeId: number | null;
+    corpId: number;
+  }>;
   ship: { typeId: number; name: string };
   victim: { allianceId: number | null; allianceName: string | null; corporationId: number | null };
   solarSystemId: number;
@@ -99,22 +105,41 @@ export function CorpActivityPanel({
       corpId: number;
       lastActivity: number;
     }>();
+    // Pour ne pas compter plusieurs fois le même pilote sur un même killmail
+    // (un pilote pourrait apparaître plusieurs fois dans les attackers — rare mais possible).
+    const seen = new Set<string>();
     for (const e of entries) {
-      const pid = e.pilot.characterId;
-      if (!pid) continue;
       const t = new Date(e.killTime).getTime();
-      const prev = byPilot.get(pid) ?? {
-        name: e.pilot.characterName,
-        kills: 0, losses: 0, iskKilled: 0, iskLost: 0,
-        shipExamples: new Set<number>(), corpId: e.involvedCorpId,
-        lastActivity: 0,
-      };
-      if (!prev.name && e.pilot.characterName) prev.name = e.pilot.characterName;
-      if (e.side === "kill") { prev.kills++; prev.iskKilled += e.totalValue; }
-      else { prev.losses++; prev.iskLost += e.totalValue; }
-      if (e.pilot.shipTypeId) prev.shipExamples.add(e.pilot.shipTypeId);
-      if (t > prev.lastActivity) prev.lastActivity = t;
-      byPilot.set(pid, prev);
+      const participants = e.participants ?? [];
+      // Fallback rétrocompat : si le backend n'a pas renvoyé `participants`, on retombe
+      // sur le pilote principal pour ne pas perdre l'affichage.
+      const list = participants.length > 0
+        ? participants
+        : (e.pilot.characterId
+            ? [{
+                characterId: e.pilot.characterId,
+                characterName: e.pilot.characterName,
+                shipTypeId: e.pilot.shipTypeId,
+                corpId: e.involvedCorpId,
+              }]
+            : []);
+      for (const part of list) {
+        const key = `${e.killId}-${part.characterId}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const prev = byPilot.get(part.characterId) ?? {
+          name: part.characterName,
+          kills: 0, losses: 0, iskKilled: 0, iskLost: 0,
+          shipExamples: new Set<number>(), corpId: part.corpId,
+          lastActivity: 0,
+        };
+        if (!prev.name && part.characterName) prev.name = part.characterName;
+        if (e.side === "kill") { prev.kills++; prev.iskKilled += e.totalValue; }
+        else { prev.losses++; prev.iskLost += e.totalValue; }
+        if (part.shipTypeId) prev.shipExamples.add(part.shipTypeId);
+        if (t > prev.lastActivity) prev.lastActivity = t;
+        byPilot.set(part.characterId, prev);
+      }
     }
     return [...byPilot.entries()]
       .map(([id, v]) => ({ id, ...v }))
