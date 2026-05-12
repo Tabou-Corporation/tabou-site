@@ -446,7 +446,18 @@ export function SystemPanel({ system, onClose }: Props) {
         </section>
 
         {/* ━━━ Question 2 : Quand a-t-il pété, et combien ? — Timeline 3h ━━━ */}
-        {(killsLoading || (kills && kills.length > 0)) && (
+        {(killsLoading || (kills && kills.length > 0) || (system.activity?.shipKills ?? 0) > 0) && (() => {
+          // Détection du décalage ESI / zKill : ESI 1h annonce X kills mais zKill
+          // n'a encore que Y < X killmails sur la dernière heure → délai d'ingestion.
+          const esiKills1h = system.activity?.shipKills ?? 0;
+          const zkillKills1h = (kills ?? []).filter((k) => {
+            const ageMin = (Date.now() - new Date(k.killTime).getTime()) / 60_000;
+            return ageMin <= 60;
+          }).length;
+          const lagDetected = !killsLoading && esiKills1h > zkillKills1h;
+          const missing = esiKills1h - zkillKills1h;
+
+          return (
           <section>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-gold text-[10px] font-semibold tracking-extra-wide uppercase">
@@ -465,10 +476,19 @@ export function SystemPanel({ system, onClose }: Props) {
               )}
             </div>
 
+            {/* Note de décalage ESI ↔ zKill (latence d'ingestion typique 5-15 min) */}
+            {lagDetected && (
+              <p className="text-[11px] text-amber-300/90 italic bg-amber-500/5 border border-amber-500/20 rounded px-2.5 py-1.5 mb-3 leading-relaxed">
+                <span className="not-italic">ⓘ</span> {missing} killmail{missing > 1 ? "s" : ""} annoncé{missing > 1 ? "s" : ""} par ESI mais pas encore indexé{missing > 1 ? "s" : ""} par zKill — latence d&apos;ingestion typique 5-15 min.
+              </p>
+            )}
+
             {killsLoading ? (
               <p className="text-xs text-text-muted italic">Chargement depuis zKillboard…</p>
             ) : kills && kills.length === 0 ? (
-              <p className="text-xs text-text-muted italic">Pas de kill récent.</p>
+              <p className="text-xs text-text-muted italic">
+                {esiKills1h > 0 ? "Pas encore de killmail indexé sur zKill." : "Pas de kill récent."}
+              </p>
             ) : (
               <>
                 {/* Sparkline timeline — option 3 */}
@@ -515,7 +535,8 @@ export function SystemPanel({ system, onClose }: Props) {
               </>
             )}
           </section>
-        )}
+          );
+        })()}
 
         {/* ━━━ Question 3 : Qui contrôle, et quelles structures ? ━━━ */}
         <section>
