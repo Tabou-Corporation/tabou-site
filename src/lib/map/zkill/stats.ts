@@ -79,8 +79,24 @@ interface EsiKillmail {
 export interface HallOfFameEntry {
   characterId: number;
   characterName: string | null;
+  /** Kills "dans la corp" (depuis l'arrivée du pilote dans Tabou/UZ). */
   kills: number;
   corpIds: number[];
+  /** Enrichissement carrière (top N pilotes uniquement) — optionnel. */
+  career?: {
+    kills: number;
+    iskDestroyed: number;
+    soloKills: number;
+    iskDestroyedSolo: number;
+    dangerRatio: number;
+    avgGangSize: number;
+    /** Top 3 vaisseaux favoris (les plus joués pour killer). */
+    favoriteShips: Array<{ shipTypeId: number; shipName: string | null; kills: number }>;
+    /** Kills ce mois calendaire. */
+    killsThisMonth: number;
+    /** Kills mois précédent (pour comparer la tendance). */
+    killsLastMonth: number;
+  };
 }
 
 export interface HallOfFameCorpTotal {
@@ -355,6 +371,11 @@ export async function getHallOfFame(
     corpIds: r.corpIds,
   }));
 
+  // ─── Enrichissement par pilote (top 20) — batch career stats ───
+  // 1 call zKill /api/stats/characterID/{id}/ par pilote, caché 6h via esiFetch.
+  // On limite à 20 pour garder l'appel léger (les leaders sont ce qui compte).
+  await enrichTopPilotsWithCareerStats(entries.slice(0, 20));
+
   const topShips: TopShipEntry[] = topShipIds.map((id) => ({
     shipTypeId: id,
     shipName: names.get(id) ?? null,
@@ -396,6 +417,86 @@ export async function getHallOfFame(
 }
 
 /* ────────────────── Helpers ────────────────── */
+
+interface ZkillCharacterRaw {
+  shipsDestroyed?: number;
+  iskDestroyed?: number;
+  soloKills?: number;
+  iskDestroyedSolo?: number;
+  dangerRatio?: number;
+  avgGangSize?: number;
+  topAllTime?: Array<{ type: string; data: Array<{ shipTypeID?: number; kills?: number }> }>;
+  months?: Record<string, { year: number; month: number; shipsDestroyed?: number }>;
+}
+
+async function enrichTopPilotsWithCareerStats(entries: HallOfFameEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+
+  // 1. Fetch en parallèle bornée (batch de 5 pour ne pas spammer zKill).
+  const BATCH = 5;
+  const results = new Map<number, ZkillCharacterRaw>();
+  for (let i = 0; i < entries.length; i += BATCH) {
+    const slice = entries.slice(i, i + BATCH);
+    await Promise.all(slice.map(async (e) => {
+      const url = `https://zkillboard.com/api/stats/characterID/${e.characterId}/`;
+      try {
+        const r = await esiFetch<ZkillCharacterRaw>(url, 6 * 3600);
+        if (r.data) results.set(e.characterId, r.data);
+      } catch { /* silent */ }
+    }));
+  }
+
+  if (results.size === 0) return;
+
+  // 2. Récupère les noms des vaisseaux favoris (collecte unique des shipTypeIDs).
+  const shipIdsToResolve = new Set<number>();
+  for (const raw of results.values()) {
+    const ships = raw.topAllTime?.find((t) => t.type === "ship")?.data ?? [];
+    for (const s of ships.slice(0, 3)) {
+      if (s.shipTypeID) shipIdsToResolve.add(s.shipTypeID);
+    }
+  }
+  const shipNames = await resolveNames([...shipIdsToResolve]);
+
+  // 3. Calcul mois courant + précédent (UTC).
+  const now = new Date();
+  const yNow = now.getUTCFullYear();
+  const mNow = now.getUTCMonth() + 1;
+  const prevDate = new Date(Date.UTC(yNow, mNow - 2, 1));
+  const yPrev = prevDate.getUTCFullYear();
+  const mPrev = prevDate.getUTCMonth() + 1;
+  const keyNow = `${yNow}${String(mNow).padStart(2, "0")}`;
+  const keyPrev = `${yPrev}${String(mPrev).padStart(2, "0")}`;
+
+  // 4. Patch les entries avec leur career stats.
+  for (const e of entries) {
+    const raw = results.get(e.characterId);
+    if (!raw) continue;
+
+    const ships = raw.topAllTime?.find((t) => t.type === "ship")?.data ?? [];
+    const favoriteShips = ships.slice(0, 3).map((s) => ({
+      shipTypeId: s.shipTypeID ?? 0,
+      shipName: s.shipTypeID ? shipNames.get(s.shipTypeID) ?? null : null,
+      kills: s.kills ?? 0,
+    })).filter((s) => s.shipTypeId > 0);
+
+    const monthsMap = raw.months ?? {};
+    const killsThisMonth = monthsMap[keyNow]?.shipsDestroyed ?? 0;
+    const killsLastMonth = monthsMap[keyPrev]?.shipsDestroyed ?? 0;
+
+    e.career = {
+      kills: raw.shipsDestroyed ?? 0,
+      iskDestroyed: raw.iskDestroyed ?? 0,
+      soloKills: raw.soloKills ?? 0,
+      iskDestroyedSolo: raw.iskDestroyedSolo ?? 0,
+      dangerRatio: raw.dangerRatio ?? 0,
+      avgGangSize: raw.avgGangSize ?? 0,
+      favoriteShips,
+      killsThisMonth,
+      killsLastMonth,
+    };
+  }
+}
 
 async function fetchKillmailDetail(killId: number): Promise<BiggestKill | null> {
   // 1. zKill detail pour récupérer le hash + totalValue

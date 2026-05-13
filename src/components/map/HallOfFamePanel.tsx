@@ -15,12 +15,27 @@ import { useEffect, useMemo, useState } from "react";
  * - Tableau classement complet à la suite (id="leaderboard-table")
  */
 
+interface CareerStats {
+  kills: number;
+  iskDestroyed: number;
+  soloKills: number;
+  iskDestroyedSolo: number;
+  dangerRatio: number;
+  avgGangSize: number;
+  favoriteShips: Array<{ shipTypeId: number; shipName: string | null; kills: number }>;
+  killsThisMonth: number;
+  killsLastMonth: number;
+}
+
 interface Entry {
   characterId: number;
   characterName: string | null;
   kills: number;
   corpIds: number[];
+  career?: CareerStats;
 }
+
+type SortMode = "kills" | "solo" | "isk" | "month";
 
 interface CorpTotal {
   corpId: number;
@@ -125,6 +140,7 @@ export function HallOfFamePanel() {
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>("kills");
 
   useEffect(() => {
     let cancelled = false;
@@ -141,7 +157,6 @@ export function HallOfFamePanel() {
 
   const entries = useMemo(() => data?.entries ?? [], [data]);
   const totals = useMemo(() => data?.totals ?? [], [data]);
-  const maxKills = useMemo(() => entries[0]?.kills ?? 1, [entries]);
 
   const allianceTotals = useMemo(() => {
     return totals.reduce(
@@ -301,14 +316,14 @@ export function HallOfFamePanel() {
         </section>
       )}
 
-      {/* ─── Tableau classement complet (rang 4+) ───────────────────────── */}
+      {/* ─── Tableau classement complet — tabs de tri + lignes enrichies ── */}
       {!loading && !error && entries.length > 3 && (
         <section
           id="leaderboard-table"
           className="bg-bg-surface py-16 sm:py-20"
         >
           <div className="max-w-5xl mx-auto px-6">
-            <div className="mb-8">
+            <div className="mb-6">
               <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-2">
                 Classement complet
               </p>
@@ -317,29 +332,15 @@ export function HallOfFamePanel() {
               </h3>
             </div>
 
-            <div className="bg-bg-elevated border border-border rounded-md overflow-hidden">
-              <div className="grid grid-cols-[2.5rem_1fr_5rem_minmax(8rem,12rem)] sm:grid-cols-[3rem_1fr_6rem_minmax(10rem,16rem)] items-center gap-3 px-4 py-2 border-b border-border bg-bg-deep/60">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">#</span>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Pilote</span>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted text-right">Kills</span>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Progression</span>
-              </div>
-              <ul className="divide-y divide-border">
-                {entries.slice(3).map((e, i) => (
-                  <LeaderRow
-                    key={e.characterId}
-                    entry={e}
-                    rank={i + 4}
-                    maxKills={maxKills}
-                  />
-                ))}
-              </ul>
-            </div>
+            {/* Tabs de tri */}
+            <SortTabs mode={sortMode} onChange={setSortMode} />
+
+            <SortedLeaderboard entries={entries} mode={sortMode} />
 
             {data && (
               <p className="mt-6 text-center text-[10px] font-mono uppercase tracking-wider text-text-muted">
                 zKillboard · all-time · mis à jour {freshnessLabel(data.fetchedAt)}
-                {data.fromCache && " · cache"}
+                {data.fromCache && " · cache"} · enrichissement carrière sur top 20
               </p>
             )}
           </div>
@@ -347,6 +348,88 @@ export function HallOfFamePanel() {
       )}
     </>
   );
+}
+
+/* ─────────────────────── Tri / Tabs ─────────────────────── */
+
+function SortTabs({ mode, onChange }: { mode: SortMode; onChange: (m: SortMode) => void }) {
+  const tabs: Array<{ key: SortMode; label: string; sub: string }> = [
+    { key: "kills",  label: "Kills",      sub: "all-time corp" },
+    { key: "solo",   label: "Solo",       sub: "kills solo carrière" },
+    { key: "isk",    label: "ISK détruits", sub: "carrière" },
+    { key: "month",  label: "Ce mois-ci", sub: "kills mois courant" },
+  ];
+  return (
+    <div className="flex flex-wrap gap-2 mb-4">
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => onChange(t.key)}
+          className={`px-3 py-2 rounded border transition-colors ${
+            mode === t.key
+              ? "bg-gold/15 border-gold/60 text-gold"
+              : "bg-bg-elevated border-border text-text-secondary hover:text-text-primary hover:border-text-muted"
+          }`}
+        >
+          <span className="text-xs font-mono uppercase tracking-wider font-semibold">{t.label}</span>
+          <span className="block text-[9px] font-mono text-text-muted/70 mt-0.5">{t.sub}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SortedLeaderboard({ entries, mode }: { entries: Entry[]; mode: SortMode }) {
+  const sorted = useMemo(() => {
+    const arr = [...entries];
+    if (mode === "solo") arr.sort((a, b) => (b.career?.soloKills ?? -1) - (a.career?.soloKills ?? -1));
+    else if (mode === "isk") arr.sort((a, b) => (b.career?.iskDestroyed ?? -1) - (a.career?.iskDestroyed ?? -1));
+    else if (mode === "month") arr.sort((a, b) => (b.career?.killsThisMonth ?? -1) - (a.career?.killsThisMonth ?? -1));
+    return arr;
+  }, [entries, mode]);
+
+  // Valeur max selon le mode pour la barre de progression
+  const max = useMemo(() => {
+    if (sorted.length === 0) return 1;
+    const first = sorted[0]!;
+    if (mode === "kills") return first.kills || 1;
+    if (mode === "solo") return first.career?.soloKills || 1;
+    if (mode === "isk") return first.career?.iskDestroyed || 1;
+    if (mode === "month") return first.career?.killsThisMonth || 1;
+    return 1;
+  }, [sorted, mode]);
+
+  return (
+    <div className="bg-bg-elevated border border-border rounded-md overflow-hidden">
+      <div className="grid grid-cols-[2.5rem_1fr_minmax(5rem,7rem)_minmax(7rem,10rem)] sm:grid-cols-[3rem_1fr_minmax(6rem,8rem)_minmax(9rem,14rem)] items-center gap-3 px-4 py-2 border-b border-border bg-bg-deep/60">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">#</span>
+        <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Pilote</span>
+        <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted text-right">
+          {sortLabel(mode)}
+        </span>
+        <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Progression</span>
+      </div>
+      <ul className="divide-y divide-border">
+        {sorted.map((e, i) => (
+          <LeaderRow
+            key={e.characterId}
+            entry={e}
+            rank={i + 1}
+            mode={mode}
+            maxValue={max}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function sortLabel(mode: SortMode): string {
+  if (mode === "solo") return "Kills solo";
+  if (mode === "isk") return "ISK détruits";
+  if (mode === "month") return "Ce mois";
+  return "Kills";
 }
 
 /* ─────────────────────── Podium hero ─────────────────────── */
@@ -508,14 +591,42 @@ function AllianceChip({
 function LeaderRow({
   entry,
   rank,
-  maxKills,
+  mode,
+  maxValue,
 }: {
   entry: Entry;
   rank: number;
-  maxKills: number;
+  mode: SortMode;
+  maxValue: number;
 }) {
   const portrait = `https://images.evetech.net/characters/${entry.characterId}/portrait?size=64`;
-  const pct = Math.round((entry.kills / maxKills) * 100);
+
+  // Valeur affichée selon le mode de tri actif
+  let value: number;
+  let valueDisplay: string;
+  if (mode === "solo") {
+    value = entry.career?.soloKills ?? 0;
+    valueDisplay = value.toLocaleString("fr-FR");
+  } else if (mode === "isk") {
+    value = entry.career?.iskDestroyed ?? 0;
+    valueDisplay = formatIsk(value);
+  } else if (mode === "month") {
+    value = entry.career?.killsThisMonth ?? 0;
+    valueDisplay = value.toLocaleString("fr-FR");
+  } else {
+    value = entry.kills;
+    valueDisplay = value.toLocaleString("fr-FR");
+  }
+
+  const pct = maxValue > 0 ? Math.round((value / maxValue) * 100) : 0;
+
+  // Tendance ce mois vs mois précédent (visible en mode kills)
+  const thisMonth = entry.career?.killsThisMonth ?? 0;
+  const lastMonth = entry.career?.killsLastMonth ?? 0;
+  const trend = thisMonth > lastMonth + 2 ? "up" : thisMonth < lastMonth - 2 ? "down" : "flat";
+
+  // Achievements automatiques
+  const achievements = computeAchievements(entry);
 
   return (
     <li>
@@ -523,7 +634,7 @@ function LeaderRow({
         href={`https://zkillboard.com/character/${entry.characterId}/`}
         target="_blank"
         rel="noreferrer noopener"
-        className="grid grid-cols-[2.5rem_1fr_5rem_minmax(8rem,12rem)] sm:grid-cols-[3rem_1fr_6rem_minmax(10rem,16rem)] items-center gap-3 px-4 py-2.5 hover:bg-bg-deep/40 transition-colors"
+        className="grid grid-cols-[2.5rem_1fr_minmax(5rem,7rem)_minmax(7rem,10rem)] sm:grid-cols-[3rem_1fr_minmax(6rem,8rem)_minmax(9rem,14rem)] items-center gap-3 px-4 py-3 hover:bg-bg-deep/40 transition-colors"
       >
         <span className="font-mono text-sm text-text-muted text-center tabular-nums">{rank}</span>
 
@@ -532,24 +643,55 @@ function LeaderRow({
           <img
             src={portrait}
             alt=""
-            width={32}
-            height={32}
-            className="w-8 h-8 rounded-full object-cover bg-bg-deep shrink-0"
+            width={36}
+            height={36}
+            className="w-9 h-9 rounded-full object-cover bg-bg-deep shrink-0"
           />
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-text-primary truncate">
-              {entry.characterName ?? `Pilote ${entry.characterId}`}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-sm font-semibold text-text-primary truncate">
+                {entry.characterName ?? `Pilote ${entry.characterId}`}
+              </span>
+              {achievements.map((a) => (
+                <AchievementBadge key={a.id} icon={a.icon} tip={a.tip} />
+              ))}
             </div>
-            <div className="mt-0.5 flex items-center gap-1.5">
+            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
               {entry.corpIds.map((c) => (
                 <CorpBadge key={c} corpId={c} small />
               ))}
+              {/* Vaisseaux favoris (mini icônes) */}
+              {entry.career?.favoriteShips.slice(0, 3).map((s) => (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  key={s.shipTypeId}
+                  src={`https://images.evetech.net/types/${s.shipTypeId}/icon?size=32`}
+                  alt={s.shipName ?? ""}
+                  title={`${s.shipName ?? "Ship"} · ${s.kills.toLocaleString("fr-FR")} kills`}
+                  className="w-4 h-4 rounded-sm bg-bg-deep opacity-80"
+                />
+              ))}
+              {/* Trend ce mois (visible en mode kills uniquement, et seulement si différent) */}
+              {mode === "kills" && entry.career && (thisMonth > 0 || lastMonth > 0) && (
+                <span
+                  className={`text-[9px] font-mono uppercase tracking-wider px-1 py-0.5 rounded border ${
+                    trend === "up"
+                      ? "text-emerald-400 border-emerald-500/40 bg-emerald-500/10"
+                      : trend === "down"
+                      ? "text-red-400 border-red-500/40 bg-red-500/10"
+                      : "text-text-muted border-border bg-bg-deep/60"
+                  }`}
+                  title={`${thisMonth} kills ce mois · ${lastMonth} mois dernier`}
+                >
+                  {trend === "up" ? "↗" : trend === "down" ? "↘" : "→"} {thisMonth}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         <span className="font-mono font-semibold text-emerald-400 text-right tabular-nums">
-          {entry.kills.toLocaleString("fr-FR")}
+          {valueDisplay}
         </span>
 
         <div className="relative h-2 rounded-full bg-bg-deep overflow-hidden">
@@ -560,6 +702,46 @@ function LeaderRow({
         </div>
       </a>
     </li>
+  );
+}
+
+/* ─────────────────────── Achievements ─────────────────────── */
+
+interface Achievement {
+  id: string;
+  icon: string;
+  tip: string;
+}
+
+function computeAchievements(entry: Entry): Achievement[] {
+  const acc: Achievement[] = [];
+  const c = entry.career;
+  // Paliers de kills carrière
+  if (c) {
+    if (c.kills >= 10000) acc.push({ id: "10k", icon: "👑", tip: "10 000+ kills carrière" });
+    else if (c.kills >= 5000) acc.push({ id: "5k", icon: "💎", tip: "5 000+ kills carrière" });
+    else if (c.kills >= 1000) acc.push({ id: "1k", icon: "🎖️", tip: "1 000+ kills carrière" });
+    else if (c.kills >= 100) acc.push({ id: "100", icon: "🏅", tip: "100+ kills carrière" });
+    // Solo hunter
+    if (c.soloKills >= 100) acc.push({ id: "soloMaster", icon: "🥷", tip: "Solo Master (100+ solo kills)" });
+    else if (c.soloKills >= 10) acc.push({ id: "soloHunter", icon: "🗡️", tip: "Solo Hunter (10+ solo kills)" });
+    // Glass cannon / Danger
+    if (c.dangerRatio >= 80) acc.push({ id: "danger", icon: "⚡", tip: `Danger Index ${c.dangerRatio}% — pilote redoutable` });
+    // ISK Wallet (≥1 trillion)
+    if (c.iskDestroyed >= 1_000_000_000_000) acc.push({ id: "trillion", icon: "💰", tip: "1+ trillion ISK détruit" });
+  }
+  return acc.slice(0, 3); // Limite affichage
+}
+
+function AchievementBadge({ icon, tip }: { icon: string; tip: string }) {
+  return (
+    <span
+      className="text-sm leading-none cursor-help"
+      title={tip}
+      aria-label={tip}
+    >
+      {icon}
+    </span>
   );
 }
 
