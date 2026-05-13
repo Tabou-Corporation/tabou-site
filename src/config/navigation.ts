@@ -25,6 +25,11 @@ export const NAVIGATION: NavigationConfig = {
       visibility: "public",
     },
     {
+      label: "Hall of Fame",
+      href: "/hall-of-fame",
+      visibility: "public",
+    },
+    {
       label: "Recrutement",
       href: "/recrutement",
       visibility: "public",

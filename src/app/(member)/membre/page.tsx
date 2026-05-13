@@ -18,6 +18,7 @@ import type { UserRole } from "@/types/roles";
 import { ROLE_LABELS, ROLE_BADGE_VARIANT } from "@/lib/constants/labels";
 import { fetchTopPilotsPodium } from "@/lib/zkillboard/top-pilot";
 import { TopPilotPodium } from "@/components/blocks/TopPilotPodium";
+import { HallOfFameHomeCard } from "@/components/map/HallOfFameHomeCard";
 
 // ── Labels ──────────────────────────────────────────────────────────────
 
@@ -705,6 +706,14 @@ export default async function MemberDashboardPage() {
                       )}
                     </CardBody>
                   </Card>
+                </section>
+
+                {/* Hall of Fame all-time (teaser → /hall-of-fame) */}
+                <section>
+                  <h2 className="font-display font-semibold text-lg text-text-primary mb-4">
+                    Hall of Fame all-time
+                  </h2>
+                  <HallOfFameHomeCard />
                 </section>
               </div>
             </div>

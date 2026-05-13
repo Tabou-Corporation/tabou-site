@@ -9,6 +9,7 @@ import {
   User, FileText, MessageSquare, ExternalLink, Scroll,
   ClipboardList, Megaphone as MegaphoneIcon, BookPlus, CalendarPlus,
   UsersRound, LayoutGrid, PanelLeft, Shield, History, Store, Bell,
+  Map as MapIcon, Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { hasMinRole, canManageRecruitment, parseSpecialties } from "@/types/roles";
@@ -152,6 +153,8 @@ export function MemberSidebar({ pendingCount = 0, unreadMarketCount = 0, discord
             <NavItem href="/membre/assemblees" icon={Scroll}      label="Assemblées" />
             <NavItem href="/membre/annuaire"   icon={Users}       label="Annuaire" />
             <NavItem href="/membre/marche"     icon={Store}       label="Marche" badge={unreadMarketCount} />
+            <NavItem href="/map"               icon={MapIcon}     label="Carte Providence" />
+            <NavItem href="/hall-of-fame"      icon={Trophy}      label="Hall of Fame" />
           </>
         )}
         {role === "candidate" && (
@@ -292,6 +295,8 @@ export function MemberMobileNav({ pendingCount = 0, unreadMarketCount = 0 }: Sid
             <MobileNavItem href="/membre/assemblees" icon={Scroll}       label="Assemblées" />
             <MobileNavItem href="/membre/annuaire"   icon={Users}     label="Annuaire" />
             <MobileNavItem href="/membre/marche"     icon={Store}     label="Marche" badge={unreadMarketCount} />
+            <MobileNavItem href="/map"               icon={MapIcon}   label="Carte" />
+            <MobileNavItem href="/hall-of-fame"      icon={Trophy}    label="Hall of Fame" />
           </>
         )}
         {role === "candidate" && (

@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Trophy } from "lucide-react";
 import { Section } from "@/components/blocks/Section";
 import { ProvidenceMap } from "./ProvidenceMap";
 import { SituationPanel } from "./SituationPanel";
 import { SystemPanel } from "./SystemPanel";
-import { HallOfFamePanel } from "./HallOfFamePanel";
+import { HallOfFameTeaser } from "./HallOfFameTeaser";
 import type { MapStateDTO } from "./types";
 
 const POLL_MS = 60_000;
@@ -55,6 +57,18 @@ export function ProvidencePulse({ initialState }: { initialState: MapStateDTO | 
       <Section bg="default" spacing="md">
         {state ? (
           <div className="space-y-6">
+            {/* Cross-link Hall of Fame — option 3 */}
+            <div className="flex justify-end">
+              <Link
+                href="/hall-of-fame"
+                className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-gold/70 hover:text-gold transition-colors"
+              >
+                <Trophy size={13} className="text-gold" />
+                <HallOfFameTeaser />
+                <span className="opacity-60 group-hover:opacity-100 transition-opacity">→</span>
+              </Link>
+            </div>
+
             <SituationPanel state={state} onPickSystem={setSelectedId} />
 
             {/* Option A — carte pleine largeur, SystemPanel en slide-over */}
@@ -102,8 +116,6 @@ export function ProvidencePulse({ initialState }: { initialState: MapStateDTO | 
         )}
       </Section>
 
-      {/* ── Section 2 : Hall of Fame hero (full-bleed, gère son layout) ── */}
-      <HallOfFamePanel />
     </>
   );
 }
