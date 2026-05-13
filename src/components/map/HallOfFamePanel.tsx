@@ -213,7 +213,6 @@ export function HallOfFamePanel() {
             </h2>
             <p className="text-text-secondary text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
               Les pilotes Tabou et Urban Zone qui dominent depuis la création des corps.
-              Toutes régions confondues.
             </p>
           </div>
 
