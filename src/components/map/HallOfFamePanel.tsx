@@ -31,9 +31,58 @@ interface CorpTotal {
   pilotCount: number;
 }
 
+interface BiggestKill {
+  killId: number;
+  totalValue: number;
+  killTime: string;
+  solarSystemId: number;
+  victimShipTypeId: number;
+  victimShipName: string | null;
+  victimCharacterId: number | null;
+  victimCharacterName: string | null;
+  victimCorpId: number | null;
+  finalBlowCharacterId: number | null;
+  finalBlowCharacterName: string | null;
+  finalBlowCorpId: number | null;
+  zkillUrl: string;
+}
+
+interface HeatmapData {
+  matrix: number[][];
+  byHour: number[];
+  max: number;
+  peakHour: { hour: number; count: number };
+}
+
+interface ShipClassRow {
+  category: string;
+  shipsDestroyed: number;
+  shipsLost: number;
+  iskDestroyed: number;
+}
+
+interface TopShipEntry {
+  shipTypeId: number;
+  shipName: string | null;
+  kills: number;
+}
+
+interface SoloStats {
+  soloKills: number;
+  iskDestroyedSolo: number;
+  soloRatio: number;
+  dangerRatio: number;
+  avgGangSize: number;
+}
+
 interface Payload {
   entries: Entry[];
   totals: CorpTotal[];
+  biggestKill: BiggestKill | null;
+  heatmap: HeatmapData;
+  shipClasses: ShipClassRow[];
+  topShips: TopShipEntry[];
+  soloStats: SoloStats;
   fromCache: boolean;
   fetchedAt: string;
 }
@@ -207,14 +256,50 @@ export function HallOfFamePanel() {
               </div>
             </>
           )}
-
-          {!loading && !error && entries.length === 0 && (
-            <div className="text-center text-text-secondary text-sm py-16">
-              Aucune donnée zKill disponible pour le moment.
-            </div>
-          )}
         </div>
       </section>
+
+      {/* ─── Combat Intelligence : best kill + heatmap + ship classes + solo ── */}
+      {!loading && !error && data && (
+        <section className="bg-bg-surface py-16 sm:py-20 border-b border-border">
+          <div className="max-w-7xl mx-auto px-6 space-y-10">
+            <div className="text-center">
+              <p className="text-gold text-xs font-semibold tracking-extra-wide uppercase mb-2">
+                Combat intelligence
+              </p>
+              <h3 className="font-display text-2xl sm:text-3xl text-text-primary">
+                Records, prime time et style de jeu
+              </h3>
+            </div>
+
+            {/* Best kill — hero card */}
+            {data.biggestKill && <BiggestKillCard kill={data.biggestKill} />}
+
+            {/* Grille : Heatmap + Solo combat */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <HeatmapCard heatmap={data.heatmap} />
+              </div>
+              <div>
+                <SoloCard solo={data.soloStats} />
+              </div>
+            </div>
+
+            {/* Grille : Ship classes + Top ships */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ShipClassesCard rows={data.shipClasses} />
+              <TopShipsCard ships={data.topShips} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Empty state hors hero pour ne pas casser la structure du hero */}
+      {!loading && !error && entries.length === 0 && (
+        <section className="bg-bg-surface py-12 text-center text-text-secondary text-sm">
+          Aucune donnée zKill disponible pour le moment.
+        </section>
+      )}
 
       {/* ─── Tableau classement complet (rang 4+) ───────────────────────── */}
       {!loading && !error && entries.length > 3 && (
@@ -490,5 +575,315 @@ function CorpBadge({ corpId, small = false }: { corpId: number; small?: boolean 
     >
       {CORP_SHORT[corpId] ?? `#${corpId}`}
     </span>
+  );
+}
+
+/* ─────────────────────── Combat Intelligence ─────────────────────── */
+
+const DAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+function BiggestKillCard({ kill }: { kill: BiggestKill }) {
+  const shipIcon = `https://images.evetech.net/types/${kill.victimShipTypeId}/render?size=256`;
+  const date = new Date(kill.killTime).toLocaleDateString("fr-FR", {
+    day: "numeric", month: "short", year: "numeric",
+  });
+  const ago = Math.floor((Date.now() - new Date(kill.killTime).getTime()) / (86400 * 1000));
+
+  return (
+    <a
+      href={kill.zkillUrl}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="group block relative overflow-hidden bg-gradient-to-r from-red-950/40 via-amber-950/30 to-bg-deep border border-red-500/40 rounded-md hover:border-red-400/70 transition-colors"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          background: "radial-gradient(circle at 20% 50%, rgba(220,38,38,0.35) 0%, transparent 60%)",
+        }}
+      />
+      <div className="relative flex items-center gap-4 sm:gap-6 p-5 sm:p-7">
+        {/* Render vaisseau */}
+        <div className="relative shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={shipIcon}
+            alt={kill.victimShipName ?? "Vaisseau"}
+            className="w-24 h-24 sm:w-32 sm:h-32 rounded-md object-cover bg-bg-deep ring-2 ring-red-500/40 group-hover:ring-red-400/70 transition-all"
+          />
+          <span className="absolute -top-2 -left-2 text-3xl drop-shadow-lg">💀</span>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-red-300 text-[10px] font-mono uppercase tracking-[0.2em] mb-1">
+            ★ Best Kill all-time
+          </p>
+          <h4 className="font-display font-bold text-xl sm:text-3xl text-text-primary leading-tight truncate">
+            {kill.victimShipName ?? `Vaisseau #${kill.victimShipTypeId}`}
+          </h4>
+          <p className="mt-1 text-sm text-text-secondary truncate">
+            détruit par{" "}
+            <strong className="text-amber-200">
+              {kill.finalBlowCharacterName ?? "Pilote inconnu"}
+            </strong>
+            {kill.finalBlowCorpId && CORP_SHORT[kill.finalBlowCorpId] && (
+              <span className="text-text-muted"> ({CORP_LABELS[kill.finalBlowCorpId]})</span>
+            )}
+          </p>
+          {kill.victimCharacterName && (
+            <p className="mt-0.5 text-xs text-text-muted truncate">
+              victime : {kill.victimCharacterName}
+            </p>
+          )}
+          <div className="mt-3 flex items-baseline gap-3 flex-wrap">
+            <span className="font-mono text-2xl sm:text-4xl font-bold text-emerald-400 tabular-nums">
+              {formatIsk(kill.totalValue)}
+            </span>
+            <span className="text-text-secondary text-sm">ISK détruits</span>
+          </div>
+          <p className="mt-2 text-[10px] font-mono uppercase tracking-wider text-text-muted">
+            {date} · il y a {ago > 365 ? `${(ago / 365).toFixed(1)} an${ago / 365 >= 2 ? "s" : ""}` : `${ago}j`} ·{" "}
+            <span className="text-gold/70 group-hover:text-gold">voir sur zKill →</span>
+          </p>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+function HeatmapCard({ heatmap }: { heatmap: HeatmapData }) {
+  const peak = heatmap.peakHour;
+  const maxHourly = Math.max(1, ...heatmap.byHour);
+
+  return (
+    <div className="h-full bg-bg-elevated border border-border rounded-md p-5">
+      <div className="flex items-baseline justify-between mb-1 gap-3 flex-wrap">
+        <h4 className="text-gold text-[10px] font-mono uppercase tracking-[0.2em]">
+          Prime time PvP
+        </h4>
+        <span className="text-[11px] text-text-secondary font-mono">
+          Pic à <strong className="text-amber-200">{String(peak.hour).padStart(2, "0")}h00 UTC</strong>
+          {" · "}{peak.count} kills
+        </span>
+      </div>
+      <p className="text-xs text-text-muted mb-4">
+        Heures auxquelles la corporation fight le plus (cumul historique, UTC).
+      </p>
+
+      {/* Bars agrégées 24h */}
+      <div className="flex items-end gap-[3px] h-20 mb-3">
+        {heatmap.byHour.map((v, h) => {
+          const pct = (v / maxHourly) * 100;
+          const isPeak = h === peak.hour;
+          return (
+            <div
+              key={h}
+              className="flex-1 flex items-end h-full"
+              title={`${String(h).padStart(2, "0")}h : ${v} kills`}
+            >
+              <div
+                className={`w-full rounded-t-sm transition-all ${
+                  isPeak
+                    ? "bg-gradient-to-t from-red-500 to-amber-400 shadow-[0_0_8px_rgba(220,38,38,0.4)]"
+                    : v === 0
+                    ? "bg-bg-deep"
+                    : "bg-gradient-to-t from-amber-600/60 to-amber-400/40"
+                }`}
+                style={{ height: v === 0 ? "2px" : `${Math.max(8, pct)}%` }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-between text-[9px] font-mono uppercase tracking-wider text-text-muted">
+        <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>
+      </div>
+
+      {/* Mini matrice 7×24 (jour × heure) */}
+      <div className="mt-5 pt-4 border-t border-border/40">
+        <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted mb-2">
+          Activité par jour de la semaine
+        </p>
+        <div className="space-y-1">
+          {heatmap.matrix.map((row, d) => (
+            <div key={d} className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-text-muted w-7">{DAY_LABELS[d]}</span>
+              <div className="flex gap-[2px] flex-1">
+                {row.map((v, h) => {
+                  const intensity = heatmap.max > 0 ? v / heatmap.max : 0;
+                  return (
+                    <div
+                      key={h}
+                      className="flex-1 h-2.5 rounded-sm"
+                      style={{
+                        backgroundColor: v === 0
+                          ? "rgba(255,255,255,0.04)"
+                          : `rgba(250, 204, 21, ${0.15 + intensity * 0.75})`,
+                      }}
+                      title={`${DAY_LABELS[d]} ${String(h).padStart(2, "0")}h : ${v} kills`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SoloCard({ solo }: { solo: SoloStats }) {
+  return (
+    <div className="h-full bg-bg-elevated border border-border rounded-md p-5">
+      <h4 className="text-gold text-[10px] font-mono uppercase tracking-[0.2em] mb-1">
+        Combat solo
+      </h4>
+      <p className="text-xs text-text-muted mb-5">
+        Le solo PvP — l&apos;art de combattre seul.
+      </p>
+
+      <div className="space-y-4">
+        <StatTile
+          label="Kills solo"
+          value={solo.soloKills.toLocaleString("fr-FR")}
+          accent="emerald"
+        />
+        <StatTile
+          label="ISK détruits solo"
+          value={formatIsk(solo.iskDestroyedSolo)}
+          accent="emerald"
+        />
+        <StatTile
+          label="Ratio solo"
+          value={`${solo.soloRatio.toFixed(1)} %`}
+          sub="des kills sont en solo"
+        />
+        <StatTile
+          label="Taille moyenne de gang"
+          value={solo.avgGangSize > 0 ? solo.avgGangSize.toFixed(0) : "—"}
+          sub="pilotes par engagement"
+        />
+      </div>
+    </div>
+  );
+}
+
+function StatTile({
+  label, value, sub, accent,
+}: {
+  label: string; value: string; sub?: string; accent?: "emerald" | "amber";
+}) {
+  const valueCls = accent === "emerald" ? "text-emerald-400" : "text-text-primary";
+  return (
+    <div>
+      <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted">{label}</p>
+      <p className={`mt-0.5 font-mono text-2xl font-bold tabular-nums ${valueCls}`}>{value}</p>
+      {sub && <p className="text-[10px] text-text-muted">{sub}</p>}
+    </div>
+  );
+}
+
+function ShipClassesCard({ rows }: { rows: ShipClassRow[] }) {
+  const max = Math.max(1, ...rows.map((r) => r.shipsDestroyed));
+  const totalKills = rows.reduce((acc, r) => acc + r.shipsDestroyed, 0);
+  const visible = rows.filter((r) => r.shipsDestroyed > 0).slice(0, 9);
+
+  return (
+    <div className="h-full bg-bg-elevated border border-border rounded-md p-5">
+      <h4 className="text-gold text-[10px] font-mono uppercase tracking-[0.2em] mb-1">
+        Classes de vaisseaux détruits
+      </h4>
+      <p className="text-xs text-text-muted mb-4">
+        Sur quoi la corp tape (toutes corps cumulées).
+      </p>
+
+      <ul className="space-y-2.5">
+        {visible.map((r) => {
+          const pct = totalKills > 0 ? (r.shipsDestroyed / totalKills) * 100 : 0;
+          const barPct = (r.shipsDestroyed / max) * 100;
+          return (
+            <li key={r.category}>
+              <div className="flex items-baseline justify-between text-xs mb-1">
+                <span className="text-text-primary font-medium">{r.category}</span>
+                <span className="text-text-muted font-mono">
+                  <strong className="text-emerald-400">{r.shipsDestroyed}</strong>
+                  <span className="text-text-muted/60"> · {pct.toFixed(0)}%</span>
+                </span>
+              </div>
+              <div className="relative h-1.5 rounded-full bg-bg-deep overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500/80 to-amber-400/60 rounded-full"
+                  style={{ width: `${barPct}%` }}
+                />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function TopShipsCard({ ships }: { ships: TopShipEntry[] }) {
+  if (ships.length === 0) {
+    return (
+      <div className="h-full bg-bg-elevated border border-border rounded-md p-5">
+        <h4 className="text-gold text-[10px] font-mono uppercase tracking-[0.2em] mb-1">
+          Vaisseaux préférés
+        </h4>
+        <p className="text-xs text-text-muted">Pas de données.</p>
+      </div>
+    );
+  }
+  const max = Math.max(1, ...ships.map((s) => s.kills));
+
+  return (
+    <div className="h-full bg-bg-elevated border border-border rounded-md p-5">
+      <h4 className="text-gold text-[10px] font-mono uppercase tracking-[0.2em] mb-1">
+        Vaisseaux préférés
+      </h4>
+      <p className="text-xs text-text-muted mb-4">
+        Les vaisseaux les plus utilisés pour killer.
+      </p>
+
+      <ul className="space-y-2">
+        {ships.slice(0, 6).map((s, i) => {
+          const pct = (s.kills / max) * 100;
+          return (
+            <li key={s.shipTypeId}>
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://images.evetech.net/types/${s.shipTypeId}/icon?size=32`}
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="w-7 h-7 rounded-sm bg-bg-deep shrink-0"
+                />
+                <span className="text-xs text-text-muted w-4 tabular-nums">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2 mb-1">
+                    <span className="text-sm text-text-primary truncate">
+                      {s.shipName ?? `Ship #${s.shipTypeId}`}
+                    </span>
+                    <span className="text-xs font-mono font-semibold text-emerald-400 tabular-nums shrink-0">
+                      {s.kills.toLocaleString("fr-FR")}
+                    </span>
+                  </div>
+                  <div className="relative h-1 rounded-full bg-bg-deep overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500/80 to-amber-400/40 rounded-full"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
