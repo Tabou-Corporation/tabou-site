@@ -427,13 +427,13 @@ function SortedLeaderboard({ entries, mode }: { entries: Entry[]; mode: SortMode
 
   return (
     <div className="bg-bg-elevated border border-border rounded-md overflow-hidden">
-      <div className="grid grid-cols-[2.5rem_1fr_minmax(5rem,7rem)_minmax(7rem,10rem)] sm:grid-cols-[3rem_1fr_minmax(6rem,8rem)_minmax(9rem,14rem)] items-center gap-3 px-4 py-2 border-b border-border bg-bg-deep/60">
+      <div className="grid grid-cols-[2rem_1fr_minmax(4rem,6rem)] sm:grid-cols-[3rem_1fr_minmax(6rem,8rem)_minmax(9rem,14rem)] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 border-b border-border bg-bg-deep/60">
         <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">#</span>
         <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Pilote</span>
         <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted text-right">
           {sortLabel(mode)}
         </span>
-        <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Progression</span>
+        <span className="hidden sm:block text-[10px] font-mono uppercase tracking-wider text-text-muted">Progression</span>
       </div>
       <ul className="divide-y divide-border">
         {sorted.map((e, i) => (
@@ -659,18 +659,18 @@ function LeaderRow({
         href={`https://zkillboard.com/character/${entry.characterId}/`}
         target="_blank"
         rel="noreferrer noopener"
-        className="grid grid-cols-[2.5rem_1fr_minmax(5rem,7rem)_minmax(7rem,10rem)] sm:grid-cols-[3rem_1fr_minmax(6rem,8rem)_minmax(9rem,14rem)] items-center gap-3 px-4 py-3 hover:bg-bg-deep/40 transition-colors"
+        className="grid grid-cols-[2rem_1fr_minmax(4rem,6rem)] sm:grid-cols-[3rem_1fr_minmax(6rem,8rem)_minmax(9rem,14rem)] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 hover:bg-bg-deep/40 transition-colors"
       >
         <span className="font-mono text-sm text-text-muted text-center tabular-nums">{rank}</span>
 
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={portrait}
             alt=""
             width={36}
             height={36}
-            className="w-9 h-9 rounded-full object-cover bg-bg-deep shrink-0"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover bg-bg-deep shrink-0"
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 min-w-0">
@@ -715,11 +715,12 @@ function LeaderRow({
           </div>
         </div>
 
-        <span className="font-mono font-semibold text-emerald-400 text-right tabular-nums">
+        <span className="font-mono text-sm sm:text-base font-semibold text-emerald-400 text-right tabular-nums">
           {valueDisplay}
         </span>
 
-        <div className="relative h-2 rounded-full bg-bg-deep overflow-hidden">
+        {/* Barre de progression — masquée sur mobile (manque de place) */}
+        <div className="hidden sm:block relative h-2 rounded-full bg-bg-deep overflow-hidden">
           <div
             className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500/80 to-emerald-400/60 rounded-full"
             style={{ width: `${pct}%` }}
