@@ -10,7 +10,10 @@ import { SystemPanel } from "./SystemPanel";
 import { HallOfFameTeaser } from "./HallOfFameTeaser";
 import type { MapStateDTO } from "./types";
 
-const POLL_MS = 60_000;
+// Poll carte : 2min. Les snapshots ESI sont rafraîchis une fois/jour par le
+// worker — inutile de marteler /api/map/state. Le memo-cache serveur (30s)
+// absorbe de toute façon les requêtes rapprochées.
+const POLL_MS = 120_000;
 
 /**
  * Orchestration de la page Providence Pulse, alignée sur le système de design

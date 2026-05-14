@@ -32,7 +32,22 @@ interface EsiName { id: number; name: string; category: string }
 const URL_SOV = "https://esi.evetech.net/latest/sovereignty/map/";
 const URL_NAMES = "https://esi.evetech.net/latest/universe/names/";
 
+/**
+ * Cache mémoire process-level de la réponse sov calculée.
+ * Évite de relire le blob ESI en DB + refaire le POST names à chaque appel.
+ * TTL 5min — la sov EVE bouge très lentement.
+ */
+let sovMemo: { payload: unknown; ts: number } | null = null;
+const SOV_MEMO_TTL_MS = 5 * 60 * 1000;
+
 export async function GET() {
+  // Court-circuit mémoire — zéro lecture DB sur container chaud
+  if (sovMemo && Date.now() - sovMemo.ts < SOV_MEMO_TTL_MS) {
+    return NextResponse.json(sovMemo.payload, {
+      headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=600" },
+    });
+  }
+
   const sovRes = await esiFetch<EsiSov[]>(URL_SOV, 3600);
   if (!sovRes.data) {
     return NextResponse.json(
@@ -92,17 +107,20 @@ export async function GET() {
     };
   }
 
-  return NextResponse.json(
-    {
-      sov,
-      alliances,
-      cvaSystems: filtered.filter((r) => r.alliance_id === CVA_ALLIANCE_ID).map((r) => r.system_id),
-      factionColors: Object.fromEntries(FACTION_COLOR),
-      othersColor: OTHERS_COLOR,
-      cvaColor: CVA_COLOR,
-      fromCache: sovRes.fromCache,
-      fetchedAt: new Date().toISOString(),
-    },
-    { headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=600" } },
-  );
+  const payload = {
+    sov,
+    alliances,
+    cvaSystems: filtered.filter((r) => r.alliance_id === CVA_ALLIANCE_ID).map((r) => r.system_id),
+    factionColors: Object.fromEntries(FACTION_COLOR),
+    othersColor: OTHERS_COLOR,
+    cvaColor: CVA_COLOR,
+    fromCache: sovRes.fromCache,
+    fetchedAt: new Date().toISOString(),
+  };
+
+  sovMemo = { payload, ts: Date.now() };
+
+  return NextResponse.json(payload, {
+    headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=600" },
+  });
 }

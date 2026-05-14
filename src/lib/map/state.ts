@@ -45,7 +45,21 @@ export interface MapState {
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
+/**
+ * Cache mémoire process-level du MapState.
+ * CRITIQUE pour le quota DB : /api/map/state est sollicité toutes les 60s par
+ * chaque onglet carte ouvert. Sans ce cache, c'est 6 requêtes Prisma/minute/onglet.
+ * TTL 30s — les snapshots sont rafraîchis une fois/jour par le worker de toute façon.
+ */
+let mapStateMemo: { data: MapState; ts: number } | null = null;
+const MAP_STATE_TTL_MS = 30 * 1000;
+
 export async function getMapState(): Promise<MapState> {
+  // Court-circuit mémoire — zéro requête DB sur container chaud
+  if (mapStateMemo && Date.now() - mapStateMemo.ts < MAP_STATE_TTL_MS) {
+    return mapStateMemo.data;
+  }
+
   const systemIds = SDE.systems.map((s) => s.systemId);
 
   const [sovRows, activityRows, structureRows, campaignRows, recentSovEvents, cacheRows] = await Promise.all([
@@ -61,7 +75,11 @@ export async function getMapState(): Promise<MapState> {
       },
       select: { systemId: true },
     }),
-    prisma.mapEsiCache.findMany(),
+    // IMPORTANT : on ne sélectionne QUE les métadonnées, jamais la colonne `body`
+    // (gros blobs JSON ~50KB). On ne s'en sert que pour la SourceHealth UI.
+    prisma.mapEsiCache.findMany({
+      select: { url: true, fetchedAt: true, expiresAt: true, lastStatus: true },
+    }),
   ]);
 
   const sovBy = new Map(sovRows.map((s) => [s.systemId, s]));
@@ -187,7 +205,7 @@ export async function getMapState(): Promise<MapState> {
     ? cacheRows.reduce((a, b) => (a.fetchedAt > b.fetchedAt ? a : b)).fetchedAt
     : null;
 
-  return {
+  const result: MapState = {
     systems,
     generatedAt: new Date().toISOString(),
     health: {
@@ -196,4 +214,7 @@ export async function getMapState(): Promise<MapState> {
       sources,
     },
   };
+
+  mapStateMemo = { data: result, ts: Date.now() };
+  return result;
 }
