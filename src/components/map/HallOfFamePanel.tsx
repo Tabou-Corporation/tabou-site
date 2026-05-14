@@ -144,14 +144,32 @@ export function HallOfFamePanel() {
 
   useEffect(() => {
     let cancelled = false;
+
+    async function load(attempt = 0) {
+      try {
+        const r = await fetch("/api/map/stats/corp");
+        const text = await r.text();
+        if (!text) throw new Error("Réponse vide du serveur");
+        let parsed: Payload;
+        try {
+          parsed = JSON.parse(text) as Payload;
+        } catch {
+          throw new Error("Réponse serveur invalide");
+        }
+        if (!parsed.entries) throw new Error("Données indisponibles");
+        if (!cancelled) { setData(parsed); setError(null); setLoading(false); }
+      } catch (e) {
+        // 1 retry après 2s — le 1er hit peut timeout sur cache froid (zKill lent)
+        if (attempt < 1 && !cancelled) {
+          setTimeout(() => { if (!cancelled) void load(attempt + 1); }, 2000);
+          return;
+        }
+        if (!cancelled) { setError(String(e)); setLoading(false); }
+      }
+    }
+
     setLoading(true);
-    fetch("/api/map/stats/corp")
-      .then((r) => r.json())
-      .then((d: Payload) => {
-        if (!cancelled) { setData(d); setError(null); }
-      })
-      .catch((e) => { if (!cancelled) setError(String(e)); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+    void load();
     return () => { cancelled = true; };
   }, []);
 

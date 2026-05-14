@@ -305,20 +305,25 @@ export async function getHallOfFame(
     .slice(0, limit);
 
   // ─── Biggest kill : enrichit le premier de topIskKills via ESI killmail ───
+  // Best-effort, time-boxé : si zKill/ESI traînent, on renvoie null plutôt que
+  // de faire planter toute la route.
   let biggestKill: BiggestKill | null = null;
-  // On choisit le killID le plus "récent" dans topIskKills (ID croissant = plus récent dans EVE)
-  // mais ce qui compte c'est la valeur. zKill ordonne déjà topIskKills par totalValue desc.
   if (topIskKillIds.length > 0) {
-    // On essaie en séquence jusqu'à en trouver un dont l'ESI répond
-    for (const kid of topIskKillIds.slice(0, 5)) {
-      const detail = await fetchKillmailDetail(kid);
-      if (detail) {
-        biggestKill = detail;
-        bestKillId = detail.killId;
-        bestKillValueHint = detail.totalValue;
-        break;
-      }
-    }
+    biggestKill = await withTimeout(
+      (async () => {
+        for (const kid of topIskKillIds.slice(0, 2)) {
+          const detail = await fetchKillmailDetail(kid);
+          if (detail) return detail;
+        }
+        return null;
+      })(),
+      10_000,
+      null,
+    );
+  }
+  if (biggestKill) {
+    bestKillId = biggestKill.killId;
+    bestKillValueHint = biggestKill.totalValue;
   }
   void bestKillId;
   void bestKillValueHint;
@@ -373,8 +378,14 @@ export async function getHallOfFame(
 
   // ─── Enrichissement par pilote (top 20) — batch career stats ───
   // 1 call zKill /api/stats/characterID/{id}/ par pilote, caché 6h via esiFetch.
-  // On limite à 20 pour garder l'appel léger (les leaders sont ce qui compte).
-  await enrichTopPilotsWithCareerStats(entries.slice(0, 20));
+  // Best-effort time-boxé : si ça traîne (cache froid), on renvoie les entries
+  // sans `career` plutôt que de faire planter la route. Le cache se remplira
+  // progressivement aux requêtes suivantes.
+  await withTimeout(
+    enrichTopPilotsWithCareerStats(entries.slice(0, 20)),
+    25_000,
+    undefined,
+  );
 
   const topShips: TopShipEntry[] = topShipIds.map((id) => ({
     shipTypeId: id,
@@ -417,6 +428,18 @@ export async function getHallOfFame(
 }
 
 /* ────────────────── Helpers ────────────────── */
+
+/**
+ * Course une promesse contre un timeout. Si le délai expire, renvoie `fallback`
+ * sans annuler la promesse sous-jacente (les fetchs en cours peupleront quand
+ * même le cache DB pour les prochaines requêtes).
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise.catch(() => fallback),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 interface ZkillCharacterRaw {
   shipsDestroyed?: number;
