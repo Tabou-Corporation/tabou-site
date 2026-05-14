@@ -33,8 +33,23 @@ export async function GET() {
     );
   } catch (err) {
     console.error("[api/map/stats/corp] failed:", err);
+    // Fallback complet : même forme que le payload normal pour que le client
+    // ne crashe jamais, même s'il décide de rendre malgré l'erreur.
     return NextResponse.json(
-      { error: "Stats indisponibles pour le moment.", entries: [], totals: [] },
+      {
+        error: "Stats indisponibles pour le moment.",
+        entries: [],
+        totals: [],
+        biggestKill: null,
+        heatmap: { matrix: [], byHour: [], max: 0, peakHour: { hour: 0, count: 0 } },
+        shipClasses: [],
+        topShips: [],
+        soloStats: {
+          soloKills: 0, iskDestroyedSolo: 0, soloRatio: 0, dangerRatio: 0, avgGangSize: 0,
+        },
+        corpIds: CORP_IDS,
+        fetchedAt: new Date().toISOString(),
+      },
       { status: 503 },
     );
   }

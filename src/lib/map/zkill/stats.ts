@@ -222,7 +222,13 @@ export async function getHallOfFame(
 
   for (const corpId of corpIds) {
     const url = `https://zkillboard.com/api/stats/corporationID/${corpId}/`;
-    const res = await esiFetch<ZkillStatsRaw>(url, 6 * 3600);
+    // Résilience : un échec sur une corp ne doit pas casser toute la route.
+    let res: { data: ZkillStatsRaw | null; fromCache: boolean };
+    try {
+      res = await esiFetch<ZkillStatsRaw>(url, 6 * 3600);
+    } catch {
+      continue;
+    }
     if (res.fromCache) anyCache = true;
     const stats = res.data;
     if (!stats) continue;

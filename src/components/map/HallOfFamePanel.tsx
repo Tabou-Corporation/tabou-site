@@ -150,18 +150,26 @@ export function HallOfFamePanel() {
         const r = await fetch("/api/map/stats/corp");
         const text = await r.text();
         if (!text) throw new Error("Réponse vide du serveur");
-        let parsed: Payload;
+        let parsed: (Payload & { error?: string });
         try {
-          parsed = JSON.parse(text) as Payload;
+          parsed = JSON.parse(text) as Payload & { error?: string };
         } catch {
           throw new Error("Réponse serveur invalide");
         }
-        if (!parsed.entries) throw new Error("Données indisponibles");
+        // Le 503 renvoie { error, entries: [], totals: [] } sans heatmap/etc.
+        // → on le traite comme une erreur, pas comme des données valides.
+        if (!r.ok || parsed.error) {
+          throw new Error(parsed.error || `Erreur ${r.status}`);
+        }
+        if (!parsed.entries || !parsed.heatmap || !parsed.soloStats) {
+          throw new Error("Données incomplètes");
+        }
         if (!cancelled) { setData(parsed); setError(null); setLoading(false); }
       } catch (e) {
-        // 1 retry après 2s — le 1er hit peut timeout sur cache froid (zKill lent)
-        if (attempt < 1 && !cancelled) {
-          setTimeout(() => { if (!cancelled) void load(attempt + 1); }, 2000);
+        // 2 retries espacés — le 1er hit peut timeout sur cache froid (zKill lent),
+        // mais les fetchs en cours peuplent le cache DB en arrière-plan.
+        if (attempt < 2 && !cancelled) {
+          setTimeout(() => { if (!cancelled) void load(attempt + 1); }, 3000);
           return;
         }
         if (!cancelled) { setError(String(e)); setLoading(false); }
@@ -292,7 +300,7 @@ export function HallOfFamePanel() {
       </section>
 
       {/* ─── Combat Intelligence : best kill + heatmap + ship classes + solo ── */}
-      {!loading && !error && data && (
+      {!loading && !error && data && data.heatmap && data.soloStats && (
         <section className="bg-bg-surface py-16 sm:py-20 border-b border-border">
           <div className="max-w-7xl mx-auto px-6 space-y-10">
             <div className="text-center">
@@ -319,8 +327,8 @@ export function HallOfFamePanel() {
 
             {/* Grille : Ship classes + Top ships */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <ShipClassesCard rows={data.shipClasses} />
-              <TopShipsCard ships={data.topShips} />
+              <ShipClassesCard rows={data.shipClasses ?? []} />
+              <TopShipsCard ships={data.topShips ?? []} />
             </div>
           </div>
         </section>
