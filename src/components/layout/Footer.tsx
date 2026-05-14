@@ -43,9 +43,9 @@ export async function Footer() {
                 )}
                 <ul className="space-y-2.5">
                   {group.items.map((item) => {
-                    const href = item.external && item.label === "Discord"
+                    const href = (item.external && item.label === "Discord"
                       ? (discord.inviteUrl || item.href)
-                      : item.href;
+                      : item.href) ?? "#";
                     return (
                       <li key={item.href}>
                         {item.external ? (

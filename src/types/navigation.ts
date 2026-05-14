@@ -6,17 +6,22 @@ import type { ContentVisibility } from "./roles";
  */
 export interface NavItem {
   label: string;
-  href: string;
+  /** Optionnel pour un groupe pur (dropdown sans page propre). */
+  href?: string;
   /** Si vrai, le lien est actif uniquement en correspondance exacte */
   exact?: boolean;
   /** Visibilité minimale requise. Défaut: "public" */
   visibility?: ContentVisibility;
-  /** Sous-items pour dropdown (V4+) */
+  /** Sous-items pour dropdown */
   children?: NavItem[];
   /** Badge contextuel (ex: "Nouveau", "Beta") */
   badge?: string;
   /** Lien externe (ouvre dans un nouvel onglet) */
   external?: boolean;
+  /** Description courte affichée dans le dropdown mega-menu */
+  description?: string;
+  /** Item mis en avant dans le dropdown (traitement visuel spécial) */
+  featured?: boolean;
 }
 
 /**

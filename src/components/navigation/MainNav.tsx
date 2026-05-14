@@ -7,10 +7,12 @@ import { Menu, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils/cn";
 import { NavLink } from "./NavLink";
+import { NavDropdown } from "./NavDropdown";
 import { Button } from "@/components/ui/Button";
 import { UserMenu } from "./UserMenu";
 import { NAVIGATION } from "@/config/navigation";
 import { CORPORATIONS } from "@/lib/constants/corporations";
+import type { NavItem } from "@/types/navigation";
 
 export function MainNav({
   discordUrl,
@@ -53,6 +55,24 @@ export function MainNav({
     ? { ...discordNav, href: discordUrl ?? discordNav.href }
     : null;
 
+  // Filtre de visibilité + gestion du flag showPilotes (dans les enfants aussi)
+  const visibleMain = NAVIGATION.main
+    .filter((item) => item.visibility === "public")
+    .map((item) => {
+      if (!item.children) return item;
+      return {
+        ...item,
+        children: item.children.filter(
+          (c) => c.href !== "/pilotes" || showPilotes,
+        ),
+      };
+    });
+
+  // Aplatissement pour le menu mobile : groupes → liens à plat
+  const mobileItems: NavItem[] = visibleMain.flatMap((item) =>
+    item.children ? item.children : [item],
+  );
+
   return (
     <>
       <nav
@@ -89,18 +109,23 @@ export function MainNav({
 
             {/* Navigation desktop */}
             <div className="hidden md:flex items-center gap-8">
-              {NAVIGATION.main
-                .filter((item) => item.visibility === "public")
-                .filter((item) => item.href !== "/pilotes" || showPilotes)
-                .map((item) => (
+              {visibleMain.map((item) =>
+                item.children ? (
+                  <NavDropdown
+                    key={item.label}
+                    label={item.label}
+                    items={item.children}
+                  />
+                ) : (
                   <NavLink
                     key={item.href}
-                    href={item.href}
+                    href={item.href ?? "#"}
                     label={item.label}
                     {...(item.exact !== undefined ? { exact: item.exact } : {})}
                     {...(item.external !== undefined ? { external: item.external } : {})}
                   />
-                ))}
+                ),
+              )}
             </div>
 
             {/* Actions desktop */}
@@ -162,20 +187,17 @@ export function MainNav({
         )}
       >
         <div className="px-4 py-6 space-y-1">
-          {NAVIGATION.main
-            .filter((item) => item.visibility === "public")
-            .filter((item) => item.href !== "/pilotes" || showPilotes)
-            .map((item) => (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                {...(item.exact !== undefined ? { exact: item.exact } : {})}
-                {...(item.external !== undefined ? { external: item.external } : {})}
-                onClick={() => setIsOpen(false)}
-                className="block py-3 text-base border-b border-border-subtle last:border-0"
-              />
-            ))}
+          {mobileItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href ?? "#"}
+              label={item.label}
+              {...(item.exact !== undefined ? { exact: item.exact } : {})}
+              {...(item.external !== undefined ? { external: item.external } : {})}
+              onClick={() => setIsOpen(false)}
+              className="block py-3 text-base border-b border-border-subtle last:border-0"
+            />
+          ))}
           <div className="pt-4 flex flex-col gap-3">
             {discordLink && (
               <Button

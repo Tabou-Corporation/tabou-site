@@ -9,15 +9,33 @@ import type { NavigationConfig } from "@/types/navigation";
  */
 export const NAVIGATION: NavigationConfig = {
   main: [
+    // ── Groupe "Corporation" — dropdown mega-menu ────────────────────────
     {
-      label: "La Corporation",
-      href: "/corporation",
+      label: "Corporation",
       visibility: "public",
-    },
-    {
-      label: "Activités",
-      href: "/activites",
-      visibility: "public",
+      children: [
+        {
+          label: "La Corporation",
+          href: "/corporation",
+          description: "Histoire, valeurs et organisation de Tabou",
+        },
+        {
+          label: "Activités",
+          href: "/activites",
+          description: "Nos opérations et terrains de jeu dans EVE",
+        },
+        {
+          label: "Pilotes",
+          href: "/pilotes",
+          description: "Le trombinoscope de la corporation",
+        },
+        {
+          label: "Hall of Fame",
+          href: "/hall-of-fame",
+          description: "Classement all-time des pilotes par kills",
+          featured: true,
+        },
+      ],
     },
     {
       label: "Carte",
@@ -25,28 +43,8 @@ export const NAVIGATION: NavigationConfig = {
       visibility: "public",
     },
     {
-      label: "Hall of Fame",
-      href: "/hall-of-fame",
-      visibility: "public",
-    },
-    {
       label: "Recrutement",
       href: "/recrutement",
-      visibility: "public",
-    },
-    {
-      label: "Pilotes",
-      href: "/pilotes",
-      visibility: "public",
-    },
-    {
-      label: "FAQ",
-      href: "/faq",
-      visibility: "public",
-    },
-    {
-      label: "Contact",
-      href: "/contact",
       visibility: "public",
     },
     // ── V2 ───────────────────────────────────────────────────────────────
