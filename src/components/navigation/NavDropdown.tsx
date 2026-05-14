@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Trophy } from "lucide-react";
@@ -10,15 +10,9 @@ import type { NavItem } from "@/types/navigation";
 /**
  * NavDropdown — dropdown mega-menu pour la navigation desktop.
  * Ouverture au hover (desktop) + au clic (accessibilité clavier/tactile).
- * L'item `featured` reçoit un traitement visuel premium avec teaser live
- * (fetch lazy : uniquement à la 1re ouverture du menu).
+ * L'item `featured` reçoit un traitement visuel premium (gradient doré,
+ * halo, icône trophée). Aucun fetch — purement statique, zéro charge DB.
  */
-
-interface TeaserData {
-  characterId: number;
-  characterName: string | null;
-  kills: number;
-}
 
 export function NavDropdown({ label, items }: { label: string; items: NavItem[] }) {
   const children = items;
@@ -32,26 +26,12 @@ export function NavDropdown({ label, items }: { label: string; items: NavItem[] 
     (c) => c.href && c.href !== "/" && pathname.startsWith(c.href),
   );
 
-  // Teaser Hall of Fame — fetch lazy à la 1re ouverture
-  const [teaser, setTeaser] = useState<TeaserData | null>(null);
-  const teaserFetched = useRef(false);
   const featured = children.find((c) => c.featured);
-
-  const loadTeaser = useCallback(() => {
-    if (teaserFetched.current || !featured) return;
-    teaserFetched.current = true;
-    fetch("/api/map/stats/corp")
-      .then((r) => r.json())
-      .then((d: { entries?: TeaserData[] }) => {
-        if (d.entries && d.entries.length > 0) setTeaser(d.entries[0] ?? null);
-      })
-      .catch(() => { /* silent — le fallback statique reste affiché */ });
-  }, [featured]);
+  const regular = children.filter((c) => !c.featured);
 
   function handleEnter() {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     setOpen(true);
-    loadTeaser();
   }
   function handleLeave() {
     closeTimer.current = setTimeout(() => setOpen(false), 120);
@@ -74,8 +54,6 @@ export function NavDropdown({ label, items }: { label: string; items: NavItem[] 
     };
   }, [open]);
 
-  const regular = children.filter((c) => !c.featured);
-
   return (
     <div
       ref={wrapRef}
@@ -85,7 +63,7 @@ export function NavDropdown({ label, items }: { label: string; items: NavItem[] 
     >
       <button
         type="button"
-        onClick={() => { setOpen((v) => !v); loadTeaser(); }}
+        onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
           "relative flex items-center gap-1 text-sm sm:text-lg font-medium tracking-wide transition-colors duration-[180ms]",
@@ -146,7 +124,7 @@ export function NavDropdown({ label, items }: { label: string; items: NavItem[] 
             })}
           </div>
 
-          {/* Item featured — Hall of Fame avec teaser live */}
+          {/* Item featured — traitement visuel premium (statique, zéro fetch) */}
           {featured && (
             <Link
               href={featured.href ?? "#"}
@@ -161,40 +139,16 @@ export function NavDropdown({ label, items }: { label: string; items: NavItem[] 
                 }}
               />
               <div className="relative flex items-center gap-3">
-                {teaser ? (
-                  <div className="relative shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`https://images.evetech.net/characters/${teaser.characterId}/portrait?size=64`}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="w-10 h-10 rounded-full ring-2 ring-gold/50 bg-bg-deep"
-                    />
-                    <span className="absolute -bottom-1 -right-1 bg-gold text-bg-deep rounded-full p-0.5">
-                      <Trophy size={9} />
-                    </span>
-                  </div>
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gold/10 ring-2 ring-gold/40 flex items-center justify-center shrink-0">
-                    <Trophy size={16} className="text-gold" />
-                  </div>
-                )}
+                <div className="w-10 h-10 rounded-full bg-gold/10 ring-2 ring-gold/40 flex items-center justify-center shrink-0">
+                  <Trophy size={16} className="text-gold" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-gold">
                     {featured.label}
                   </span>
-                  {teaser ? (
-                    <span className="block text-xs text-text-secondary truncate">
-                      🥇 <strong className="text-text-primary">{teaser.characterName ?? "—"}</strong>
-                      <span className="text-text-muted"> · </span>
-                      <span className="text-emerald-400">{teaser.kills.toLocaleString("fr-FR")} kills</span>
-                    </span>
-                  ) : (
-                    <span className="block text-xs text-text-muted truncate">
-                      {featured.description ?? "Classement all-time"}
-                    </span>
-                  )}
+                  <span className="block text-xs text-text-muted truncate">
+                    {featured.description ?? "Classement all-time"}
+                  </span>
                 </div>
                 <span className="text-gold/50 group-hover/feat:text-gold group-hover/feat:translate-x-0.5 transition-all text-sm">
                   →

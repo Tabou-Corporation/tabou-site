@@ -28,7 +28,13 @@ export async function GET() {
         fetchedAt: new Date().toISOString(),
       },
       {
-        headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=1800" },
+        // Cache CDN agressif : les stats all-time bougent lentement.
+        // s-maxage = cache edge Vercel (15min), SWR = sert le périmé pendant
+        // qu'on revalide en arrière-plan (1h). Le client ne tape donc presque
+        // jamais la fonction serverless → quasi zéro charge DB Neon.
+        headers: {
+          "Cache-Control": "public, max-age=300, s-maxage=900, stale-while-revalidate=3600",
+        },
       },
     );
   } catch (err) {

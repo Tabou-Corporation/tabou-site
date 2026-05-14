@@ -198,10 +198,29 @@ const SHIP_CATEGORY: Record<number, string> = {
 
 /* ────────────────── Fetch principal ────────────────── */
 
+/**
+ * Cache mémoire process-level du payload calculé.
+ * CRITIQUE pour le quota DB : sur un container serverless chaud, les appels
+ * répétés à getHallOfFame renvoient ce cache SANS relire le moindre blob Neon.
+ * TTL 15 min — les stats all-time bougent lentement.
+ */
+let memoCache: { key: string; data: HallOfFamePayload; ts: number } | null = null;
+const MEMO_TTL_MS = 15 * 60 * 1000;
+
 export async function getHallOfFame(
   corpIds: number[],
   limit = 50,
 ): Promise<HallOfFamePayload> {
+  // ─── Cache mémoire (process-level) — court-circuite tous les reads DB ───
+  const cacheKey = `${corpIds.join(",")}:${limit}`;
+  if (
+    memoCache &&
+    memoCache.key === cacheKey &&
+    Date.now() - memoCache.ts < MEMO_TTL_MS
+  ) {
+    return { ...memoCache.data, fromCache: true };
+  }
+
   let anyCache = false;
   const totals: HallOfFameCorpTotal[] = [];
   const byPilot = new Map<number, { kills: number; corpIds: Set<number> }>();
@@ -415,7 +434,7 @@ export async function getHallOfFame(
     ? (soloKills / (soloKills + soloLossesAgg)) * 100
     : 0;
 
-  return {
+  const payload: HallOfFamePayload = {
     entries,
     totals,
     biggestKill,
@@ -431,6 +450,14 @@ export async function getHallOfFame(
     },
     fromCache: anyCache,
   };
+
+  // On ne met en cache mémoire QUE si on a des données utiles (évite de figer
+  // un payload vide si zKill était down au moment du fetch).
+  if (entries.length > 0) {
+    memoCache = { key: cacheKey, data: payload, ts: Date.now() };
+  }
+
+  return payload;
 }
 
 /* ────────────────── Helpers ────────────────── */
